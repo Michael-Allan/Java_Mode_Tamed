@@ -59,8 +59,18 @@
 
 (defface jtam-modifier-keyword-face
   `((default . (:inherit font-lock-keyword-face)))
-  "The face for a class, interface, constructor, method or field modifier that has keyword form;
-any modifier, that is, except an annotation modifier.")
+  "The face for a keyword-form modifier of a class, interface, constructor, method or field declaration;
+any Java modifier, that is, except an annotation modifier.")
+
+
+
+(defvar jtam-modifier-keyword-pattern
+  (concat
+  "\\<abstract\\|final\\|native"
+  "\\|p\\(?:r\\(?:ivate\\|otected\\)\\|ublic\\)"
+  "\\|s\\(?:t\\(?:atic\\|rictfp\\)\\|ynchronized\\)"
+  "\\|transient\\|volatile\\>")
+  "The regexp pattern of a modifier keyword.  See `jtam-modifier-keyword-face`.")
 
 
 
@@ -77,9 +87,7 @@ any modifier, that is, except an annotation modifier.")
           (let ((face (get-text-property (point) 'face))
                 (face-limit (next-single-property-change (point) 'face (current-buffer) limit)))
             (when (and (eq face 'font-lock-keyword-face)
-                       (re-search-forward
-                        "\\<abstract\\|final\\|native\\|p\\(?:r\\(?:ivate\\|otected\\)\\|ublic\\)\\|s\\(?:t\\(?:atic\\|rictfp\\)\\|ynchronized\\)\\|transient\\|volatile\\>"
-                        face-limit t))
+                       (re-search-forward jtam-modifier-keyword-pattern face-limit t))
               (throw 'result t))
             (goto-char face-limit)))
         (throw 'result nil)))
