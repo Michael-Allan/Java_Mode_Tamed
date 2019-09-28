@@ -16,17 +16,14 @@
 ;; NOTES  (see at bottom)
 ;; ─────
 
-(require 'cc-mode); It includes the definition of Java mode.
-
-
 
 (define-derived-mode java-mode-tamed java-mode
   "Java" "A tamer, more controllable Java mode"
   (set 'font-lock-defaults; ‘It automatically becomes buffer-local when set.’ [FLB]
        ;; Following are the alternative values of `font-lock-keywords`, each ordered
-       ;; according to the value of `font-lock-maximum-decoration` that selects it.
-       '((jtam-keywords-1 jtam-keywords-1 jtam-keywords-2 jtam-keywords-3))))
-         ;;;     nil or 0,              1,              2,         t or 3      [MD]
+       ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
+       '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3))))
+         ;;;       nil or 0,                1,                2,           t or 3
 
 
 
@@ -35,32 +32,32 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-(defun jtam-keywords-1()
+(defun jtam-fontifiers-1()
   "Returns the value of `font-lock-keywords` to use for minimal highlighting."
   'java-font-lock-keywords-1)
 
 
 
-(defun jtam-keywords-2()
+(defun jtam-fontifiers-2()
   "Returns the value of `font-lock-keywords` to use for fast, normal highlighting."
   (append
    java-font-lock-keywords-2
-   jtam-specific-keywords))
+   jtam-specific-fontifiers))
 
 
 
-(defun jtam-keywords-3()
+(defun jtam-fontifiers-3()
   "Returns the value of `font-lock-keywords` to use for accurate, normal highlighting."
   (append
    java-font-lock-keywords-3
-   jtam-specific-keywords))
+   jtam-specific-fontifiers))
 
 
 
 (defface jtam-modifier-keyword-face
   `((default . (:inherit font-lock-keyword-face)))
-  "The face for a keyword-form modifier of a class, interface, constructor, method or field declaration;
-any Java modifier, that is, except an annotation modifier.")
+  "The face for a keyword-form modifier in a class, interface, constructor, method or field declaration;
+for any modifier, that is, except an annotation modifier.")
 
 
 
@@ -74,7 +71,7 @@ any Java modifier, that is, except an annotation modifier.")
 
 
 
-(defconst jtam-specific-keywords
+(defconst jtam-specific-fontifiers
   (list
 
    ;; ═════════════════
@@ -92,7 +89,7 @@ any Java modifier, that is, except an annotation modifier.")
             (goto-char face-limit)))
         (throw 'result nil)))
     '(0 'jtam-modifier-keyword-face t)))
-  "Elements of `jtam-keywords-2` and `jtam-keywords-3` that are specific to Java mode tamed.")
+  "Elements of `jtam-fontifiers-2` and `jtam-fontifiers-3` that are specific to Java mode tamed.")
 
 
 
@@ -107,10 +104,10 @@ any Java modifier, that is, except an annotation modifier.")
 ;;   FLB  Font lock basics.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html
 ;;
-;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords` is
-;;        documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
-;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`, which confirms
-;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html`.
+;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
+;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
+;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
+;;        rectness of `https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html`.
 
 
                                        ;;; Copyright © 2019 Michael Allan and contributors.  Licence MIT.
