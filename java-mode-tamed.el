@@ -74,22 +74,57 @@ for any modifier, that is, except an annotation modifier.")
 (defconst jtam-specific-fontifiers
   (list
 
-   ;; ═════════════════
-   ;; Modifier keywords
-   ;; ═════════════════
-   (cons; Refontify them.
+   ;; Modifier keyword
+   ;; ────────────────
+   (cons; Refontify it using `jtam-modifier-keyword-face`.
     (lambda( limit )
       (catch 'result
         (while (< (point) limit)
           (let ((face (get-text-property (point) 'face))
-                (face-limit (next-single-property-change (point) 'face (current-buffer) limit)))
+                (face-end (next-single-property-change (point) 'face (current-buffer) limit)))
             (when (and (eq face 'font-lock-keyword-face)
-                       (re-search-forward jtam-modifier-keyword-pattern face-limit t))
+                       (re-search-forward jtam-modifier-keyword-pattern face-end t))
               (throw 'result t))
-            (goto-char face-limit)))
+            (goto-char face-end)))
         (throw 'result nil)))
-    '(0 'jtam-modifier-keyword-face t)))
+    '(0 'jtam-modifier-keyword-face t))
+
+   ;; Type identifier
+   ;; ───────────────
+   (list; Refontify it using either `jtam-type-declaration-face` or  `jtam-type-reference-face`.
+    (lambda( limit )
+      (catch 'result
+        (while (< (point) limit)
+          (let ((face (get-text-property (point) 'face))
+                (face-end (next-single-property-change (point) 'face (current-buffer) limit)))
+            (when (eq face 'font-lock-type-face)
+              (let ((face-beg (point)))
+                (when (re-search-backward "\\(?:\\`\\|\\s-\\)\\(\\S-+\\)" nil t)
+                  (let ((pre (match-string 1))); The preceding string of non-whitespace characters.
+                    (when (or (string= pre "class") (string= pre "enum") (string= pre "interface"))
+                      (set-match-data; Capturing the identifier as group 1.
+                       (list face-beg face-end face-beg face-end (current-buffer)))
+                      (throw 'result t))))
+                (set-match-data; Capturing the identifier as group 2.
+                 (list face-beg face-end nil nil face-beg face-end (current-buffer)))
+                (throw 'result t)))
+            (goto-char face-end)))
+        (throw 'result nil)))
+    '(1 'jtam-type-declaration-face t t) '(2 'jtam-type-reference-face t t)))
+
   "Elements of `jtam-fontifiers-2` and `jtam-fontifiers-3` that are specific to Java mode tamed.")
+
+
+
+(defface jtam-type-declaration-face
+  `((default . (:inherit font-lock-type-face)))
+  "The face for the type identifier in a class or interface declaration.")
+
+
+
+(defface jtam-type-reference-face
+  `((default . (:inherit font-lock-type-face)))
+  "The face for the type identifier in a class or interface reference.")
 
 
 
