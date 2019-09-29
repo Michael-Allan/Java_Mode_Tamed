@@ -55,9 +55,8 @@
 
 
 (defface jtam-modifier-keyword-face
-  `((default . (:inherit font-lock-keyword-face)))
-  "The face for a keyword-form modifier in a class, interface, constructor, method or field declaration;
-for any modifier, that is, except an annotation modifier.")
+  `((t . (:inherit font-lock-keyword-face)))
+  "The face for a modifier keyword.  See `jtam-modifier-keyword-pattern`.")
 
 
 
@@ -67,7 +66,9 @@ for any modifier, that is, except an annotation modifier.")
   "\\|p\\(?:r\\(?:ivate\\|otected\\)\\|ublic\\)"
   "\\|s\\(?:t\\(?:atic\\|rictfp\\)\\|ynchronized\\)"
   "\\|transient\\|volatile\\>")
-  "The regexp pattern of a modifier keyword.  See `jtam-modifier-keyword-face`.")
+  "The regexp pattern of keyword-form modifier in a class,
+interface, constructor, method or field declaration; for any
+modifier, that is, except an annotation modifier.")
 
 
 
@@ -117,13 +118,13 @@ for any modifier, that is, except an annotation modifier.")
 
 
 (defface jtam-type-declaration-face
-  `((default . (:inherit font-lock-type-face)))
+  `((t . (:inherit font-lock-type-face)))
   "The face for the type identifier in a class or interface declaration.")
 
 
 
 (defface jtam-type-reference-face
-  `((default . (:inherit font-lock-type-face)))
+  `((t . (:inherit font-lock-type-face)))
   "The face for the type identifier in a class or interface reference.")
 
 
