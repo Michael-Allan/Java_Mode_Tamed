@@ -54,7 +54,7 @@
 
 
 
-(defface jtam-modifier-keyword-face
+(defface jtam-modifier-keyword
   `((t . (:inherit font-lock-keyword-face)))
   "The face for a modifier keyword.  See `jtam-modifier-keyword-pattern`.")
 
@@ -77,7 +77,7 @@ modifier, that is, except an annotation modifier.")
 
    ;; Modifier keyword
    ;; ────────────────
-   (cons; Refontify it using `jtam-modifier-keyword-face`.
+   (cons; Refontify it using face `jtam-modifier-keyword`.
     (lambda( limit )
       (catch 'result
         (while (< (point) limit)
@@ -88,11 +88,11 @@ modifier, that is, except an annotation modifier.")
               (throw 'result t))
             (goto-char face-end)))
         (throw 'result nil)))
-    '(0 'jtam-modifier-keyword-face t))
+    '(0 'jtam-modifier-keyword t))
 
    ;; Type identifier
    ;; ───────────────
-   (list; Refontify it using either `jtam-type-declaration-face` or  `jtam-type-reference-face`.
+   (list; Refontify it using either `jtam-type-declaration` or  `jtam-type-reference` face.
     (lambda( limit )
       (catch 'result
         (while (< (point) limit)
@@ -111,19 +111,19 @@ modifier, that is, except an annotation modifier.")
                 (throw 'result t)))
             (goto-char face-end)))
         (throw 'result nil)))
-    '(1 'jtam-type-declaration-face t t) '(2 'jtam-type-reference-face t t)))
+    '(1 'jtam-type-declaration t t) '(2 'jtam-type-reference t t)))
 
   "Elements of `jtam-fontifiers-2` and `jtam-fontifiers-3` that are specific to Java mode tamed.")
 
 
 
-(defface jtam-type-declaration-face
+(defface jtam-type-declaration
   `((t . (:inherit font-lock-type-face)))
   "The face for the type identifier in a class or interface declaration.")
 
 
 
-(defface jtam-type-reference-face
+(defface jtam-type-reference
   `((t . (:inherit font-lock-type-face)))
   "The face for the type identifier in a class or interface reference.")
 
