@@ -32,6 +32,14 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
+(defgroup java-mode-tamed nil
+  "A tamer, more controllable Java mode"
+  :group 'languages :group 'faces
+  :prefix "jtam-"
+  :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
+
+
+
 (defun jtam-fontifiers-1()
   "Returns the value of `font-lock-keywords` to use for minimal highlighting."
   'java-font-lock-keywords-1)
@@ -56,7 +64,8 @@
 
 (defface jtam-modifier-keyword
   `((t . (:inherit font-lock-keyword-face)))
-  "The face for a modifier keyword.  See `jtam-modifier-keyword-pattern`.")
+  "The face for a modifier keyword.  See `jtam-modifier-keyword-pattern`."
+  :group 'java-mode-tamed)
 
 
 
@@ -119,13 +128,15 @@ modifier, that is, except an annotation modifier.")
 
 (defface jtam-type-declaration
   `((t . (:inherit font-lock-type-face)))
-  "The face for the type identifier in a class or interface declaration.")
+  "The face for the type identifier in a class or interface declaration."
+  :group 'java-mode-tamed)
 
 
 
 (defface jtam-type-reference
   `((t . (:inherit font-lock-type-face)))
-  "The face for the type identifier in a class or interface reference.")
+  "The face for the type identifier in a class or interface reference."
+  :group 'java-mode-tamed)
 
 
 
