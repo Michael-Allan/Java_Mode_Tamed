@@ -1,4 +1,5 @@
-;; The definition of `java-mode-tamed` - a tamer, more controllable Java mode.
+;; The definition of `java-mode-tamed` - a tamer, more controllable                 -*- lexical-binding: t; -*-
+;; Java mode.
 ;;
 ;; USAGE
 ;; ─────
