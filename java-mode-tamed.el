@@ -10,7 +10,7 @@
 ;;
 ;;   Working example:
 ;;
-;;       http://reluk.ca/.emacs
+;;       http://reluk.ca/sys/computer/Havoc/etc/emacs/user-initialization.el
 ;;       http://reluk.ca/.Xresources (pending)
 ;;
 ;;
@@ -33,7 +33,7 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-(defvar java-font-lock-keywords-2); Else byte compiler warns, ‘reference to free variable’.
+(defvar java-font-lock-keywords-2); Suppress compiler warning, ‘reference to free variable’.
 (defvar java-font-lock-keywords-3)
 
 
