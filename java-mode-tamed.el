@@ -33,7 +33,7 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-(defvar java-font-lock-keywords-2); Suppress compiler warning, ‘reference to free variable’.
+(defvar java-font-lock-keywords-2); [FV]
 (defvar java-font-lock-keywords-3)
 
 
@@ -161,6 +161,9 @@ modifier, that is, except an annotation modifier.")
 ;; ─────
 ;;   FLB  Font lock basics.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html
+;;
+;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
+;;        or ‘assignment to free variable’.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
