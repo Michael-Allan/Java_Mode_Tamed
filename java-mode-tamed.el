@@ -80,15 +80,14 @@
 
 
 
-(defvar jtam-modifier-keyword-pattern
+(defconst jtam-modifier-keyword-pattern
   (concat
   "\\<abstract\\|final\\|native"
   "\\|p\\(?:r\\(?:ivate\\|otected\\)\\|ublic\\)"
   "\\|s\\(?:t\\(?:atic\\|rictfp\\)\\|ynchronized\\)"
   "\\|transient\\|volatile\\>")
-  "The regexp pattern of keyword-form modifier in a class,
-interface, constructor, method or field declaration; for any
-modifier, that is, except an annotation modifier.")
+  "The regexp pattern of keyword-form modifier in a class, interface, constructor,
+method or field declaration; for any modifier, that is, except an annotation modifier.")
 
 
 
