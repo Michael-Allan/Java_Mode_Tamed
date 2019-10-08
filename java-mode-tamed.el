@@ -97,7 +97,7 @@ method or field declaration; for any modifier, that is, except an annotation mod
    ;; Modifier keyword
    ;; ────────────────
    (cons; Refontify it using face `jtam-modifier-keyword`.
-    (lambda( limit )
+    (lambda (limit)
       (catch 'result
         (while (< (point) limit)
           (let ((face (get-text-property (point) 'face))
@@ -112,7 +112,7 @@ method or field declaration; for any modifier, that is, except an annotation mod
    ;; Type identifier
    ;; ───────────────
    (list; Refontify it using either `jtam-type-declaration` or  `jtam-type-reference` face.
-    (lambda( limit )
+    (lambda (limit)
       (catch 'result
         (while (< (point) limit)
           (let ((face (get-text-property (point) 'face))
