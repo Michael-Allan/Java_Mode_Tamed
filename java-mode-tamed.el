@@ -18,11 +18,12 @@
 ;; ─────
 
 
-(let ()
+(let (is-initialized)
 
 
   (define-derived-mode java-mode-tamed java-mode
     "Java" "A tamer, more controllable Java mode"
+    (jtam-ensure-initialization)
     (set 'font-lock-defaults; ‘It automatically becomes buffer-local when set.’ [FLB]
          ;; Following are the alternative values of `font-lock-keywords`, each ordered
          ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
@@ -51,6 +52,24 @@
     :group 'languages :group 'faces
     :prefix "jtam-"
     :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
+
+
+
+  (defun jtam-ensure-initialization ()
+    "Finishes any remaining initialization of `java-mode-tamed`."
+    (when (not is-initialized)
+      (setq is-initialized t)
+      (require 'cc-mode)
+      (define-error 'jtam-x "Runtime patch failure")
+      (condition-case x
+          (let ((s 'c-font-lock-<>-arglists)); The symbol of the function.
+            (when (not (functionp s)) (signal 'jtam-x `("No such function loaded" ,s)))
+            (let* ((fl (symbol-file s)); File whence the function was loaded, probably a compiled `.elc`.
+                   (f (locate-library (concat (file-name-base fl) ".el") t))); Related source file `.el`.
+              (when (not f) (signal 'jtam-x `("File has no corresponding source" ,fl)))
+          ;;; (message (prin1-to-string f)); TEST
+              ))
+        (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
 
 
 
