@@ -22,7 +22,7 @@
 
 
   (define-derived-mode java-mode-tamed java-mode
-    "Java" "A tamer, more controllable Java mode"
+    "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
     (jtam-ensure-initialization)
     (set 'font-lock-defaults; ‘It automatically becomes buffer-local when set.’ [FLB]
          ;; Following are the alternative values of `font-lock-keywords`, each ordered
