@@ -59,17 +59,37 @@
     "Finishes any remaining initialization of `java-mode-tamed`."
     (when (not is-initialized)
       (setq is-initialized t)
+
+      ;; Patch the underlying (Java mode) code
+      ;; ─────────────────────────────────────
       (require 'cc-mode)
       (define-error 'jtam-x "Runtime patch failure")
       (condition-case x
           (let ((s 'c-font-lock-<>-arglists)); The symbol of the function.
             (when (not (functionp s)) (signal 'jtam-x `("No such function loaded" ,s)))
             (let* ((fl (symbol-file s)); File whence the function was loaded, probably a compiled `.elc`.
-                   (f (locate-library (concat (file-name-base fl) ".el") t))); Related source file `.el`.
-              (when (not f) (signal 'jtam-x `("File has no corresponding source" ,fl)))
-          ;;; (message (prin1-to-string f)); TEST
-              ))
+                   (f (locate-library (concat (file-name-base fl) ".el") t)); Related source file `.el`.
+                   x y)
+              (when (not f) (signal 'jtam-x `("File has no corresponding `.el` source file" ,fl)))
+              (with-temp-buffer
+                (insert-file-contents f)
+                (if (not (re-search-forward (concat "^(\\s-*defun\\s-+" (symbol-name s) "\\s-*(") nil t))
+                    (signal 'jtam-x `("Function declaration not found in source file" ,s ,f))
+                  (setq x (match-beginning 0))
+                  (setq y (if (re-search-forward "^(" nil 0) (1- (point)) (point)))
+                    ;;; To just before the next top-level declaration, that is, or the end of the buffer.
+                  (narrow-to-region x y); Narrowing the buffer to the function declaration alone.
+                  (goto-char (point-min))
+                  (while (re-search-forward "(\\s-*\\(eq\\)\\s-+[^)]+?-face" nil t)
+                    (replace-match "jtam-faces-are-equivalent"  t t nil 1)); Patching the declaration.
+                  (eval-buffer))))); Redefining the function to the patched version.
         (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
+
+
+
+  (defun jtam-faces-are-equivalent( f1 f2 )
+    "Answers whether the given faces should be treated as equivalent by the underlying (Java mode) code."
+    (eq (jtam-original f1) (jtam-original f2)))
 
 
 
@@ -96,7 +116,7 @@
 
 
   (defface jtam-modifier-keyword
-    `((t . (:inherit font-lock-keyword-face)))
+    `((t . (:inherit font-lock-keyword-face))); [RPI]
     "The face for a modifier keyword.  See `jtam-modifier-keyword-pattern`."
     :group 'java-mode-tamed)
 
@@ -110,6 +130,15 @@
      "\\|transient\\|volatile\\>")
     "The regexp pattern of a keyword-form modifier in a class, interface, constructor,
   method or field declaration; of any modifier, that is, except an annotation modifier.")
+
+
+
+  (defun jtam-original( face )
+    "If \\=`face\\=` is used by \\=`java-mode-tamed\\=` to replace a Java mode face,
+then this function returns the original face it replaces; otherwise it returns \\=`face\\=`."
+    (if (string-prefix-p "jtam-" (symbol-name face))
+        (face-attribute face :inherit nil); [RPI]
+      face))
 
 
 
@@ -159,14 +188,14 @@
 
 
   (defface jtam-type-declaration
-    `((t . (:inherit font-lock-type-face)))
+    `((t . (:inherit font-lock-type-face))); [RPI]
     "The face for the type identifier in a class or interface declaration."
     :group 'java-mode-tamed)
 
 
 
   (defface jtam-type-reference
-    `((t . (:inherit font-lock-type-face)))
+    `((t . (:inherit font-lock-type-face))); [RPI]
     "The face for the type identifier in a class or interface reference."
     :group 'java-mode-tamed)
 
@@ -191,6 +220,9 @@
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
 ;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
 ;;        rectness of `https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html`.
+;;
+;;   RPI  Every replacement face inherits from the face it replaces.  Function `jtam-original`
+;;        depends on this.
 
 
                                        ;;; Copyright © 2019 Michael Allan and contributors.  Licence MIT.
