@@ -56,7 +56,7 @@
 
 
   (defun jtam-ensure-initialization ()
-    "Finishes any remaining initialization of `java-mode-tamed`."
+    "Finishes any remaining initialization of \\=`java-mode-tamed\\=`."
     (when (not is-initialized)
       (setq is-initialized t)
 
@@ -94,13 +94,13 @@
 
 
   (defun jtam-fontifiers-1 ()
-    "Returns the value of `font-lock-keywords` to use for minimal highlighting."
+    "Returns the value of \\=`font-lock-keywords\\=` to use for minimal highlighting."
     'java-font-lock-keywords-1)
 
 
 
   (defun jtam-fontifiers-2 ()
-    "Returns the value of `font-lock-keywords` to use for fast, normal highlighting."
+    "Returns the value of \\=`font-lock-keywords\\=` to use for fast, normal highlighting."
     (append
      java-font-lock-keywords-2
      jtam-specific-fontifiers))
@@ -108,7 +108,7 @@
 
 
   (defun jtam-fontifiers-3 ()
-    "Returns the value of `font-lock-keywords` to use for accurate, normal highlighting."
+    "Returns the value of \\=`font-lock-keywords\\=` to use for accurate, normal highlighting."
     (append
      java-font-lock-keywords-3
      jtam-specific-fontifiers))
@@ -117,7 +117,7 @@
 
   (defface jtam-modifier-keyword
     `((t . (:inherit font-lock-keyword-face))); [RPI]
-    "The face for a modifier keyword.  See `jtam-modifier-keyword-pattern`."
+    "The face for a modifier keyword.  See \\=`jtam-modifier-keyword-pattern\\=`."
     :group 'java-mode-tamed)
 
 
@@ -183,7 +183,8 @@ then this function returns the original face it replaces; otherwise it returns \
           (throw 'result nil)))
       '(1 'jtam-type-declaration t t) '(2 'jtam-type-reference t t)))
 
-    "Elements of `jtam-fontifiers-2` and `jtam-fontifiers-3` that are specific to `java-mode-tamed`.")
+    "Elements of \\=`jtam-fontifiers-2\\=` and \\=`jtam-fontifiers-3\\=`
+that are specific to \\=`java-mode-tamed\\=`.")
 
 
 
