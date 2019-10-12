@@ -65,7 +65,8 @@
       (require 'cc-mode)
       (define-error 'jtam-x "Runtime patch failure")
       (condition-case x
-          (let ((s 'c-font-lock-<>-arglists)); The symbol of the function.
+          (let ((s 'c-font-lock-<>-arglists); The symbol of the function.
+                original-was-compiled)
             (when (not (functionp s)) (signal 'jtam-x `("No such function loaded" ,s)))
             (let* ((fl (symbol-file s)); File whence the function was loaded, probably a compiled `.elc`.
                    (f (locate-library (concat (file-name-base fl) ".el") t)); Related source file `.el`.
@@ -82,7 +83,12 @@
                   (goto-char (point-min))
                   (while (re-search-forward "(\\s-*\\(eq\\)\\s-+[^)]+?-face" nil t)
                     (replace-match "jtam-faces-are-equivalent"  t t nil 1)); Patching the declaration.
-                  (eval-buffer))))); Redefining the function to the patched version.
+                  (setq original-was-compiled (byte-code-function-p (symbol-function s)))
+                  (eval-buffer)))); Redefining the function to the patched version.
+            (when original-was-compiled; Then recompile the redefined function.
+              (unless (byte-compile s)
+                (display-warning 'java-mode-tamed
+                                 (format "After patching, unable to recompile function `%S`" s)))))
         (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
 
 
