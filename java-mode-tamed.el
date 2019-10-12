@@ -60,10 +60,10 @@
     (when (not is-initialized)
       (setq is-initialized t)
 
-      ;; Patch the underlying (Java mode) code
-      ;; ─────────────────────────────────────
+      ;; Monkey patch the underlying (Java mode) code
+      ;; ────────────────────────────────────────────
       (require 'cc-mode)
-      (define-error 'jtam-x "Runtime patch failure")
+      (define-error 'jtam-x "Monkey patch failure")
       (condition-case x
           (let ((s 'c-font-lock-<>-arglists); The symbol of the function.
                 original-was-compiled)
@@ -88,7 +88,7 @@
             (when original-was-compiled; Then recompile the redefined function.
               (unless (byte-compile s)
                 (display-warning 'java-mode-tamed
-                                 (format "After patching, unable to recompile function `%S`" s)))))
+                                 (format "Unable to recompile monkey-patched function `%S`" s)))))
         (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
 
 
