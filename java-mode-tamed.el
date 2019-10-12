@@ -21,24 +21,10 @@
 (let (is-initialized)
 
 
-  (define-derived-mode java-mode-tamed java-mode
-    "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
-    (jtam-ensure-initialization)
-    (set 'font-lock-defaults; ‘It automatically becomes buffer-local when set.’ [FLB]
-         ;; Following are the alternative values of `font-lock-keywords`, each ordered
-         ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
-         '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3))))
-           ;;;       nil or 0,                1,                2,           t or 3
-
-
-
-  ;; ════════════════════════════════════════════════════════════════════════════════════════════════════
-  ;;  P r e l i m i n a r y   d e c l a r a t i o n s
-  ;; ════════════════════════════════════════════════════════════════════════════════════════════════════
-
-
-  (defvar java-font-lock-keywords-2); [FV]
+  (defvar java-font-lock-keywords-2)
   (defvar java-font-lock-keywords-3)
+    ;;; Suppressing sporadic compiler warnings ‘reference to free variable’
+    ;;; or ‘assignment to free variable’.
 
 
 
@@ -52,44 +38,6 @@
     :group 'languages :group 'faces
     :prefix "jtam-"
     :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
-
-
-
-  (defun jtam-ensure-initialization ()
-    "Finishes any remaining initialization of \\=`java-mode-tamed\\=`."
-    (when (not is-initialized)
-      (setq is-initialized t)
-
-      ;; Monkey patch the underlying (Java mode) code
-      ;; ────────────────────────────────────────────
-      (require 'cc-mode)
-      (define-error 'jtam-x "Monkey patch failure")
-      (condition-case x
-          (let ((s 'c-font-lock-<>-arglists); The symbol of the function.
-                original-was-compiled)
-            (when (not (functionp s)) (signal 'jtam-x `("No such function loaded" ,s)))
-            (let* ((fl (symbol-file s)); File whence the function was loaded, probably a compiled `.elc`.
-                   (f (locate-library (concat (file-name-base fl) ".el") t)); Related source file `.el`.
-                   x y)
-              (when (not f) (signal 'jtam-x `("File has no corresponding `.el` source file" ,fl)))
-              (with-temp-buffer
-                (insert-file-contents f)
-                (if (not (re-search-forward (concat "^(\\s-*defun\\s-+" (symbol-name s) "\\s-*(") nil t))
-                    (signal 'jtam-x `("Function declaration not found in source file" ,s ,f))
-                  (setq x (match-beginning 0))
-                  (setq y (if (re-search-forward "^(" nil 0) (1- (point)) (point)))
-                    ;;; To just before the next top-level declaration, that is, or the end of the buffer.
-                  (narrow-to-region x y); Narrowing the buffer to the function declaration alone.
-                  (goto-char (point-min))
-                  (while (re-search-forward "(\\s-*\\(eq\\)\\s-+[^)]+?-face" nil t)
-                    (replace-match "jtam-faces-are-equivalent"  t t nil 1)); Patching the declaration.
-                  (setq original-was-compiled (byte-code-function-p (symbol-function s)))
-                  (eval-buffer)))); Redefining the function to the patched version.
-            (when original-was-compiled; Then recompile the redefined function.
-              (unless (byte-compile s)
-                (display-warning 'java-mode-tamed
-                                 (format "Unable to recompile monkey-patched function `%S`" s)))))
-        (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
 
 
 
@@ -118,6 +66,45 @@
     (append
      java-font-lock-keywords-3
      jtam-specific-fontifiers))
+
+
+
+  (defun jtam-initialize ()
+    "Finishes the initialization of \\=`java-mode-tamed\\=` and sets `is-initialized`.  Call once only."
+    (eval-when-compile (require 'cl-lib))
+    (cl-assert (not is-initialized))
+    (setq is-initialized t)
+
+    ;; Monkey patch the underlying (Java mode) code
+    ;; ────────────────────────────────────────────
+    (require 'cc-mode)
+    (define-error 'jtam-x "Monkey patch failure")
+    (condition-case x
+        (let ((s 'c-font-lock-<>-arglists); The symbol of the function.
+              original-was-compiled)
+          (when (not (functionp s)) (signal 'jtam-x `("No such function loaded" ,s)))
+          (let* ((fl (symbol-file s)); File whence the function was loaded, probably a compiled `.elc`.
+                 (f (locate-library (concat (file-name-base fl) ".el") t)); Related source file `.el`.
+                 x y)
+            (when (not f) (signal 'jtam-x `("File has no corresponding `.el` source file" ,fl)))
+            (with-temp-buffer
+              (insert-file-contents f)
+              (if (not (re-search-forward (concat "^(\\s-*defun\\s-+" (symbol-name s) "\\s-*(") nil t))
+                  (signal 'jtam-x `("Function declaration not found in source file" ,s ,f))
+                (setq x (match-beginning 0))
+                (setq y (if (re-search-forward "^(" nil 0) (1- (point)) (point)))
+                    ;;; To just before the next top-level declaration, that is, or the end of the buffer.
+                (narrow-to-region x y); Narrowing the buffer to the function declaration alone.
+                (goto-char (point-min))
+                (while (re-search-forward "(\\s-*\\(eq\\)\\s-+[^)]+?-face" nil t)
+                  (replace-match "jtam-faces-are-equivalent"  t t nil 1)); Patching the declaration.
+                (setq original-was-compiled (byte-code-function-p (symbol-function s)))
+                (eval-buffer)))); Redefining the function to the patched version.
+          (when original-was-compiled; Then recompile the redefined function.
+            (unless (byte-compile s)
+              (display-warning 'java-mode-tamed
+                               (format "Unable to recompile monkey-patched function `%S`" s)))))
+      (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
 
 
 
@@ -211,17 +198,26 @@ that are specific to \\=`java-mode-tamed\\=`.")
   ;; ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
+  (define-derived-mode java-mode-tamed java-mode
+    "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
+    (when (not is-initialized) (jtam-initialize))
+    (set 'font-lock-defaults; ‘It automatically becomes buffer-local when set.’ [FLB]
+         ;; Following are the alternative values of `font-lock-keywords`, each ordered
+         ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
+         '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3))))
+           ;;;       nil or 0,                1,                2,           t or 3
+
+
+
   (provide 'java-mode-tamed)); Providing these features
     ;;; of `java-mode-tamed.el` for any who `require` them.
+
 
 
 ;; NOTES
 ;; ─────
 ;;   FLB  Font lock basics.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html
-;;
-;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
-;;        or ‘assignment to free variable’.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
