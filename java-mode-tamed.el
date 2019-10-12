@@ -21,6 +21,9 @@
 (let (is-initialized)
 
 
+  (eval-when-compile (require 'cl-lib))
+
+  (defvar c-maybe-decl-faces)
   (defvar java-font-lock-keywords-2)
   (defvar java-font-lock-keywords-3)
     ;;; Suppressing sporadic compiler warnings ‘reference to free variable’
@@ -71,13 +74,11 @@
 
   (defun jtam-initialize ()
     "Finishes the initialization of \\=`java-mode-tamed\\=` and sets `is-initialized`.  Call once only."
-    (eval-when-compile (require 'cl-lib))
     (cl-assert (not is-initialized))
     (setq is-initialized t)
 
     ;; Monkey patch the underlying (Java mode) code
     ;; ────────────────────────────────────────────
-    (require 'cc-mode)
     (define-error 'jtam-x "Monkey patch failure")
     (condition-case x
         (let ((s 'c-font-lock-<>-arglists); The symbol of the function.
@@ -201,11 +202,16 @@ that are specific to \\=`java-mode-tamed\\=`.")
   (define-derived-mode java-mode-tamed java-mode
     "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
     (when (not is-initialized) (jtam-initialize))
-    (set 'font-lock-defaults; ‘It automatically becomes buffer-local when set.’ [FLB]
+    (set 'c-maybe-decl-faces (append c-maybe-decl-faces '('jtam-modifier-keyword
+                                                          'jtam-type-declaration
+                                                          'jtam-type-reference)))
+    (cl-assert (local-variable-p 'c-maybe-decl-faces))
+    (set 'font-lock-defaults
          ;; Following are the alternative values of `font-lock-keywords`, each ordered
          ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
-         '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3))))
+         '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3)))
            ;;;       nil or 0,                1,                2,           t or 3
+    (cl-assert (local-variable-p 'font-lock-defaults)))
 
 
 
@@ -216,9 +222,6 @@ that are specific to \\=`java-mode-tamed\\=`.")
 
 ;; NOTES
 ;; ─────
-;;   FLB  Font lock basics.
-;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html
-;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
 ;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
