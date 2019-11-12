@@ -130,6 +130,29 @@ by the underlying (Java mode) code."
 
 
 
+  (defun jtam-is-type-declarant (s)
+    "Answers whether the given string `s` is the principle keyword of a type declaration."
+    (or (string= s "class")
+        (string= s "interface")
+        (string= s "enum")))
+
+
+
+  (defun jtam-is-type-modifier-keyword (s)
+    "Answers whether the given string `s` is a type declaration modifier in keyword form,
+e.g. as opposed to annotation form."
+    ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
+    ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
+    (or (string= s "abstract")
+        (string= s "final")
+        (string= s "private")
+        (string= s "protected")
+        (string= s "public")
+        (string= s "static")
+        (string= s "srictfp")))
+
+
+
   (defun jtam-message (format-string &rest arguments)
     "Calls \\=`message\\=` without translation of embedded ‘\\=`’ and ‘\\='’ quotes."
     (message "%s" (format format-string arguments)))
@@ -169,15 +192,15 @@ by the underlying (Java mode) code."
     "Monkey patches the named function of the given source file (string),
 which has the given base name (string), using the named patch function.
 The patch function must return \\=`t\\=` on success, nil on failure."
-    (when (not (functionp function-symbol))
+    (unless (functionp function-symbol)
       (signal 'jtam-x `("No such function loaded" ,function-symbol)))
     (let ((load-file (symbol-file function-symbol)))
-      (when (not (string= (file-name-base load-file) source-base-name))
+      (unless (string= (file-name-base load-file) source-base-name)
         (signal 'jtam-x `("Function loaded from file of base name contradictory to source file"
                           ,function-symbol ,load-file ,source-file))))
     (goto-char (point-min))
-    (when (not (re-search-forward
-                (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t))
+    (unless (re-search-forward
+                (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t)
       (signal 'jtam-x `("Function declaration not found in source file"
                         ,function-symbol ,source-file)))
     (narrow-to-region (match-beginning 0) (jtam-c-lisp-top-declaration-end))
@@ -203,67 +226,127 @@ The patch function must return \\=`t\\=` on success, nil on failure."
   (defconst jtam-specific-fontifiers
     (list
 
+     ;; ════════════════
      ;; Modifier keyword
-     ;; ────────────────
-     (cons; Refontify it using face `jtam-modifier-keyword`. [RP]
+     ;; ════════════════
+     (cons; Refontify each using face `jtam-modifier-keyword`. [RP]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
             (let ((face (get-text-property (point) 'face))
-                  (face-end (next-single-property-change (point) 'face (current-buffer) limit)))
+                  (match-end (next-single-property-change (point) 'face (current-buffer) limit)))
               (when (and (eq face 'font-lock-keyword-face)
-                         (re-search-forward jtam-modifier-keyword-pattern face-end t))
+                         (re-search-forward jtam-modifier-keyword-pattern match-end t))
                 (throw 'to-refontify t))
-              (goto-char face-end)))
+              (goto-char match-end)))
           (throw 'to-refontify nil)))
       '(0 'jtam-modifier-keyword t))
 
-     ;; Type name
-     ;; ─────────
-     (list; Refontify it using either `jtam-type-declaration` or  `jtam-type-reference` face. [RP]
+     ;; ═════════
+     ;; Type name  [↑T]
+     ;; ═════════
+     (list; Refontify each using either `jtam-type-declaration` or  `jtam-type-reference` face. [RP]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
-            (let* ((face-beg (point))
-                   (face (get-text-property face-beg 'face))
-                   (face-end (next-single-property-change face-beg 'face (current-buffer) limit)))
+            (let* ((match-beg (point))
+                   (face (get-text-property match-beg 'face))
+                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
               (when (eq face 'font-lock-type-face)
 
                 ;; Either declaring a type
                 ;; ────────────────
-                (when (and (< (skip-syntax-backward "-") 0); [QSB, FC]
-                           (let ((end (point)))
-                             (and (< (skip-chars-backward jtam-name-character-set) 0)
-                                  (let ((keyword (buffer-substring-no-properties (point) end)))
-                                      ;;; The directly preceding keyword (or name) if any.
-                                    (or (string= keyword "class")
-                                        (string= keyword "interface")
-                                        (string= keyword "enum"))))))
+                (when; Keyword `class`, `enum` or `interface` directly precedes the type name.
+                    (and (< (skip-syntax-backward "-") 0); [QSB, FC]
+                         (let ((p (point)))
+                           (and (< (skip-chars-backward jtam-name-character-set) 0)
+                                (jtam-is-type-declarant (buffer-substring-no-properties (point) p)))))
                   (set-match-data; Capturing the already fontified name as group 1.
-                   (list face-beg face-end face-beg face-end (current-buffer)))
-                  (goto-char face-end)
+                   (list match-beg match-end match-beg match-end (current-buffer)))
+                  (goto-char match-end)
                   (throw 'to-refontify t))
 
                 ;; Or merely referring to one
                 ;; ───────────────────
                 (set-match-data; Capturing the name instead as group 2.
-                 (list face-beg face-end nil nil face-beg face-end (current-buffer)))
-                (goto-char face-end)
+                 (list match-beg match-end nil nil match-beg match-end (current-buffer)))
+                (goto-char match-end)
                 (throw 'to-refontify t))
 
-              (goto-char face-end)))
+              (goto-char match-end)))
           (throw 'to-refontify nil)))
       '(1 'jtam-type-declaration t t) '(2 'jtam-type-reference t t))
 
-     ;; Type parameter name in a type parameter declaration
-     ;; ───────────────────
-     (cons; Refontify it using face `jtam-type-parameter-declaration`. [RP]
+     (cons; Fontify type declaration names missed by Java mode
+      (lambda (limit)
+        (catch 'to-fontify
+          (while (< (point) limit)
+            (let* ((p (point))
+                   (face (get-text-property p 'face))
+                   (match-end (next-single-property-change p 'face (current-buffer) limit)))
+              (when; A type declarant keyword is found, `class`, `enum` or `interface`.
+                  (and (eq face 'font-lock-keyword-face)
+                       (jtam-is-type-declarant (buffer-substring-no-properties (point) match-end)))
+                (goto-char match-end)
+                (skip-syntax-forward "-"); [FC]
+                (let ((match-beg (point))
+                      (annotation-count 0))
+                  (when (and (> (skip-chars-forward jtam-name-character-set) 0); A name follows.
+                             (<= (point) limit)
+                             (not (get-text-property match-beg 'face))); The name is unfontified.
+                    (setq match-end (point))
+                    (goto-char p); Back to the type declarant keyword.
+                    (skip-syntax-backward "-"); [FC]
+                    (when (eq (char-before (point)) ?@); A ‘@’ marks this declaration as
+                      (backward-char); that of an annotation type.  Move back past the ‘@’.
+                      (skip-syntax-backward "-")); [FC]
+                    (catch 'is-modifier; Thrown as nil on encountering *not* a type declaration modifier.
+                      (while t; Now point should (invariant) be directly after such a modifier.  So test:
+                        (when (eq (char-before (point)) ?\)); Annotation parameters.
+                          (condition-case _x
+                              (forward-sexp -1); Skip past them.
+                            (scan-error (throw 'is-modifier nil)))
+                          (skip-syntax-backward "-")); Holding still the (would be) invariant. [FC]
+                        (setq p (point))
+                        (when (= (skip-chars-backward jtam-name-character-set) 0)
+                          (throw 'is-modifier nil))
+                        ;; The modifier should be either a keyword or an annotation.
+                        (if (jtam-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
+
+                            ;; Keyword, the modifier is a keyword
+                            ;; ───────
+                            (if (= annotation-count 0)
+                                (skip-syntax-backward "-"); [FC]
+                              (set-match-data (list match-beg match-end (current-buffer)))
+                              (goto-char match-end)
+                              (throw 'to-fontify t)); The keyword precedes an annotation.  Java mode
+                                ;;; expects keywords to *succeed* any annotation, which ‘is customary’
+                                ;;; according to the Java specification.  Still it is ‘not required’,
+                                ;;; therefore proceed to apply the missing fontification.
+                                ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
+
+                          ;; Annotation, the modifier is an annotation, or should be
+                          ;; ──────────
+                          (skip-syntax-backward "-"); A form unconventional, but allowed. [FC]
+                          (unless (eq (char-before (point)) ?@)
+                            (throw 'is-modifier nil))
+                          (setq annotation-count (1+ annotation-count))
+                          (backward-char)
+                          (skip-syntax-backward "-"))))))); [FC]
+              (goto-char match-end)))
+          (throw 'to-fontify nil)))
+      '(0 'jtam-type-declaration t))
+
+     ;; ═══════════════════
+     ;; Type parameter name in a type parameter declaration  [↑T]
+     ;; ═══════════════════
+     (cons; Refontify each using face `jtam-type-parameter-declaration`. [RP]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
-            (let* ((face-beg (point))
-                   (face (get-text-property face-beg 'face))
-                   (face-end (next-single-property-change face-beg 'face (current-buffer) limit)))
+            (let* ((match-beg (point))
+                   (face (get-text-property match-beg 'face))
+                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
               (when (and (eq face 'jtam--type-reference-in-parameter-list)
 
                          ;; And directly preceding that already fontified parameter name
@@ -302,7 +385,7 @@ The patch function must return \\=`t\\=` on success, nil on failure."
                                           (throw 'is-proven nil))
                                         (setq c (get-text-property p 'face))
                                         (throw 'is-proven; As the type parameter declaration of:
-                                               (or (eq c 'jtam-type-declaration)
+                                               (or (eq c 'jtam-type-declaration); [↑T]
                                                      ;;; (a) a generic class or interface declaration;
                                                    (not (jtam-faces-are-equivalent
                                                          c 'font-lock-type-face))))))
@@ -310,10 +393,10 @@ The patch function must return \\=`t\\=` on success, nil on failure."
                                      ((char-equal c ?>); Descending into another brace pair.
                                       (setq depth (1+ depth)))))
                              nil)))
-                (set-match-data (list face-beg face-end (current-buffer)))
-                (goto-char face-end)
+                (set-match-data (list match-beg match-end (current-buffer)))
+                (goto-char match-end)
                 (throw 'to-refontify t))
-              (goto-char face-end)))
+              (goto-char match-end)))
           (throw 'to-refontify nil)))
       '(0 'jtam-type-parameter-declaration t)))
 
@@ -383,7 +466,7 @@ or \\=`face\\=` itself if untamed." ; [UAF]
      ;;; '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2))); TEST
      ;;;   ;;;       nil or 0,                1,           t or 2
     (cl-assert (local-variable-p 'font-lock-defaults))
-    (when (not is-initialized)
+    (unless is-initialized
       (setq is-initialized t)
 
       ;; Monkey patch the underlying (Java mode) functions
@@ -392,7 +475,7 @@ or \\=`face\\=` itself if untamed." ; [UAF]
       (condition-case x
           (let ((source-file (locate-library "cc-fonts.el" t))
                 (source-base-name "cc-fonts"))
-            (when (not source-file)
+            (unless source-file
               (signal 'jtam-x `("No such source file on load path: `cc-fonts.el`")))
             (with-temp-buffer
               (insert-file-contents source-file)
@@ -437,6 +520,9 @@ or \\=`face\\=` itself if untamed." ; [UAF]
 
 ;; NOTES
 ;; ─────
+;;   ↑T · This marks section *Type name* of `jtam-specific-fontifiers` and all code that depends on its
+;;        prior execution.
+;;
 ;;   FC · `forward-comment` would be more robust here.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
