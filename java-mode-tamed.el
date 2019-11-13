@@ -130,6 +130,22 @@ by the underlying (Java mode) code."
 
 
 
+  (defun jtam-is-modifier-keyword (s)
+    "Answers whether the given string `s` is a keyword-form modifier in a class, interface, method,
+  constructor or field declaration; any modifier, that is, except an annotation modifier."
+  ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
+  ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
+  ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
+  ;; `ConstructorModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.8.3
+  ;;       `FieldModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.3.1
+    (or (jtam-is-type-modifier-keyword s)
+        (string= s "synchronized")
+        (string= s "volatile")
+        (string= s "transient")
+        (string= s "native")))
+
+
+
   (defun jtam-is-type-declarant (s)
     "Answers whether the given string `s` is the principle keyword of a type declaration."
     (or (string= s "class")
@@ -143,12 +159,12 @@ by the underlying (Java mode) code."
 e.g. as opposed to annotation form."
     ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
     ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
-    (or (string= s "abstract")
+    (or (string= s "public")
         (string= s "final")
-        (string= s "private")
-        (string= s "protected")
-        (string= s "public")
         (string= s "static")
+        (string= s "private")
+        (string= s "abstract")
+        (string= s "protected")
         (string= s "srictfp")))
 
 
@@ -163,22 +179,6 @@ e.g. as opposed to annotation form."
     `((t . (:inherit font-lock-keyword-face))); [UAF, RP]
     "The face for a modifier keyword.  See \\=`jtam-modifier-keyword-pattern\\=`."
     :group 'java-mode-tamed)
-
-
-
-  (defconst jtam-modifier-keyword-pattern
-    (concat
-     "\\<\\(?:abstract\\|final\\|native"
-     "\\|p\\(?:r\\(?:ivate\\|otected\\)\\|ublic\\)"
-     "\\|s\\(?:t\\(?:atic\\|rictfp\\)\\|ynchronized\\)"
-     "\\|transient\\|volatile\\)\\>")
-    "The regexp pattern of a keyword-form modifier in a class, interface, method,
-  constructor or field declaration; of any modifier, that is, except an annotation modifier.")
-  ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
-  ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
-  ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
-  ;; `ConstructorModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.8.3
-  ;;       `FieldModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.3.1
 
 
 
@@ -233,12 +233,14 @@ The patch function must return \\=`t\\=` on success, nil on failure."
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
-            (let ((face (get-text-property (point) 'face))
-                  (match-end (next-single-property-change (point) 'face (current-buffer) limit)))
+            (let* ((match-beg (point))
+                   (face (get-text-property match-beg 'face))
+                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
+              (goto-char match-end)
               (when (and (eq face 'font-lock-keyword-face)
-                         (re-search-forward jtam-modifier-keyword-pattern match-end t))
-                (throw 'to-refontify t))
-              (goto-char match-end)))
+                         (jtam-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
+                (set-match-data (list match-beg match-end (current-buffer)))
+                (throw 'to-refontify t))))
           (throw 'to-refontify nil)))
       '(0 'jtam-modifier-keyword t))
 
