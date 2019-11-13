@@ -68,7 +68,7 @@ Java mode (CC mode) source code."
   (defun jtam--c/put-type-face (range)
     "Called from a monkey patch over the Java-mode code, this function
 overrides Java mode’s application of ‘font-lock-type-face’ in order
-to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP,TA]
+to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP, TA]
     ;; Without this patched override the corresponding refontifications of `jtam-specific-fontifiers`
     ;; alternately appear and disappear.  This occurs because Java mode applies `font-lock-type-face`
     ;; using a mechanism of its own, outside of Font Lock, which puts the two in an endless tug of war.
@@ -134,9 +134,8 @@ for accurate, normal highlighting."
 
 
   (defun jtam-is-modifier-keyword (s)
-    "Answers whether string S is a keyword-form modifier in a class,
-interface, method, constructor or field declaration; any modifier,
-that is, except an annotation modifier."
+    "Answers whether string S is a Java modifier in keyword form.
+See face ‘jtam-modifier-keyword’."
     ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
     ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
     ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
@@ -182,8 +181,10 @@ and \\=`\\='\\=` quotes."
 
   (defface jtam-modifier-keyword; [MDF]
     `((t . (:inherit font-lock-keyword-face))); [UAF, RP]
-    "The face for a keyword-form modifier in a class, interface, method, constructor
-or field declaration; any modifier, that is, except an annotation modifier."
+    "The face for a keyword-form modifier in a class, interface, method,
+constructor or field declaration; any modifier, that is, except an annotation
+modifier.  Use it customize the appearance of these keywords, e.g. to give them
+less prominence than other, more important keywords."
     :group 'java-mode-tamed)
 
 
@@ -415,29 +416,39 @@ to ‘java-mode-tamed’.")
 
   (defface jtam-type-declaration; [MDF]
     `((t . (:inherit font-lock-type-face))); [UAF, RP]
-    "The face for the name of a type declaration."
+    "The face for the identifier of a class or interface in a type declaration.
+Use it to highlight the identifier where it is declared, as opposed to merely
+referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
+See also face ‘jtam-type-reference’."
     :group 'java-mode-tamed)
 
 
 
-  (defface jtam-type-parameter-declaration; [MDF, SF]
+  (defface jtam-type-parameter-declaration; [TP, MDF, SF]
     `((t . (:inherit jtam-type-declaration))); [UAF, RP]
-    "The face for the name of a type parameter in a type parameter declaration." ; [TP]
+    "The face for the identifier of a type parameter in a type parameter declaration.
+Use it to highlight the identifier where it is declared, as opposed to merely
+referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
+See also face ‘jtam-type-reference’."
     :group 'java-mode-tamed)
 
 
 
   (defface jtam-type-reference; [MDF]
     `((t . (:inherit font-lock-type-face))); [UAF, RP]
-    "The face for the name in a type reference."
+    "The face for the identifier of a class, interface or type parameter
+where it appears as a type reference.  See also faces ‘jtam-type-declaration’
+and ‘jtam-type-parameter-declaration’."
     :group 'java-mode-tamed)
 
 
 
-  (defface jtam--type-reference-in-parameter-list; [MDF]
+  (defface jtam--type-reference-in-parameter-list; [TP, TA, MDF]
     `((t . (:inherit jtam-type-reference))); [UAF, RP]
-    "The face for the name in a type reference that appears as an element
-of a type parameter list, one delimited by the symbols ‘<’ and ‘>’." ; [TP,TA]
+    "The face for the identifier of a class, interface or type parameter where it
+appears as a type reference in a type parameter list, one delimited by the sym-
+bols ‘<’ and ‘>’.  Do not customize this face — it is for internal use only —
+leave it to inherit from ‘jtam-type-reference’."
     :group 'java-mode-tamed)
 
 
