@@ -58,15 +58,17 @@
 
 
   (defun jtam-c-lisp-top-declaration-end ()
-    "Returns the position just before the next top-level ELisp declaration, if any, else `point-max`.
-Leaves point indeterminate.  For use on buffers that contain Java mode (CC mode) source code."
+    "Returns the position just before the next top-level ELisp declaration, if any,
+else `point-max`.  Leaves point indeterminate.  For use on buffers that contain
+Java mode (CC mode) source code."
     (if (re-search-forward "^(" nil t) (1- (point)) (point-max)))
 
 
 
-  (defun jtam-c/put-type-face (range)
-    "Overriding Java mode’s application of `font-lock-type-face` in order to stabilize the facing
-of type parameter lists.  This function is called from a monkey patch of the Java-mode code." ; [TP,TA]
+  (defun jtam--c/put-type-face (range)
+    "Called from a monkey patch over the Java-mode code, this function
+overrides Java mode’s application of ‘font-lock-type-face’ in order
+to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP,TA]
     ;; Without this patched override the corresponding refontifications of `jtam-specific-fontifiers`
     ;; alternately appear and disappear.  This occurs because Java mode applies `font-lock-type-face`
     ;; using a mechanism of its own, outside of Font Lock, which puts the two in an endless tug of war.
@@ -102,20 +104,20 @@ of type parameter lists.  This function is called from a monkey patch of the Jav
 
 
   (defun jtam-faces-are-equivalent (f1 f2); [RP]
-    "Answers whether the given faces (symbols) should be treated as equivalent
+    "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
     (eq (jtam-untamed-face f1) (jtam-untamed-face f2)))
 
 
 
   (defun jtam-fontifiers-1 ()
-    "Returns the value of \\=`font-lock-keywords\\=` to use for minimal highlighting."
+    "Returns the value of ‘font-lock-keywords’ to use for minimal highlighting."
     'java-font-lock-keywords-1)
 
 
 
   (defun jtam-fontifiers-2 ()
-    "Returns the value of \\=`font-lock-keywords\\=` to use for fast, normal highlighting."
+    "Returns the value of ‘font-lock-keywords’ to use for fast, normal highlighting."
     (append
      java-font-lock-keywords-2
      jtam-specific-fontifiers))
@@ -123,7 +125,8 @@ by the underlying (Java mode) code."
 
 
   (defun jtam-fontifiers-3 ()
-    "Returns the value of \\=`font-lock-keywords\\=` to use for accurate, normal highlighting."
+    "Returns the value of ‘font-lock-keywords’ to use
+for accurate, normal highlighting."
     (append
      java-font-lock-keywords-3
      jtam-specific-fontifiers))
@@ -131,13 +134,14 @@ by the underlying (Java mode) code."
 
 
   (defun jtam-is-modifier-keyword (s)
-    "Answers whether the given string `s` is a keyword-form modifier in a class, interface, method,
-  constructor or field declaration; any modifier, that is, except an annotation modifier."
-  ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
-  ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
-  ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
-  ;; `ConstructorModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.8.3
-  ;;       `FieldModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.3.1
+    "Answers whether string S is a keyword-form modifier in a class,
+interface, method, constructor or field declaration; any modifier,
+that is, except an annotation modifier."
+    ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
+    ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
+    ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
+    ;; `ConstructorModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.8.3
+    ;;       `FieldModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.3.1
     (or (jtam-is-type-modifier-keyword s)
         (string= s "synchronized")
         (string= s "volatile")
@@ -147,7 +151,7 @@ by the underlying (Java mode) code."
 
 
   (defun jtam-is-type-declarant (s)
-    "Answers whether the given string `s` is the principle keyword of a type declaration."
+    "Answers whether string S is the principle keyword of a type declaration."
     (or (string= s "class")
         (string= s "interface")
         (string= s "enum")))
@@ -155,7 +159,7 @@ by the underlying (Java mode) code."
 
 
   (defun jtam-is-type-modifier-keyword (s)
-    "Answers whether the given string `s` is a type declaration modifier in keyword form,
+    "Answers whether string S is a type declaration modifier in keyword form,
 e.g. as opposed to annotation form."
     ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
     ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
@@ -170,14 +174,16 @@ e.g. as opposed to annotation form."
 
 
   (defun jtam-message (format-string &rest arguments)
-    "Calls \\=`message\\=` without translation of embedded ‘\\=`’ and ‘\\='’ quotes."
+    "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
+and \\=`\\='\\=` quotes."
     (message "%s" (format format-string arguments)))
 
 
 
   (defface jtam-modifier-keyword; [MDF]
     `((t . (:inherit font-lock-keyword-face))); [UAF, RP]
-    "The face for a modifier keyword.  See \\=`jtam-modifier-keyword-pattern\\=`."
+    "The face for a keyword-form modifier in a class, interface, method, constructor
+or field declaration; any modifier, that is, except an annotation modifier."
     :group 'java-mode-tamed)
 
 
@@ -188,10 +194,10 @@ e.g. as opposed to annotation form."
 
 
 
-  (defun jtam-patch (source-file source-base-name function-symbol patch-function)
-    "Monkey patches the named function of the given source file (string),
-which has the given base name (string), using the named patch function.
-The patch function must return \\=`t\\=` on success, nil on failure."
+  (defun jtam--patch (source-file source-base-name function-symbol patch-function)
+    "Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
+which has the given BASE-NAME) using the named PATCH-FUNCTION.  The patch
+function must return t on success, nil on failure."
     (unless (functionp function-symbol)
       (signal 'jtam-x `("No such function loaded" ,function-symbol)))
     (let ((load-file (symbol-file function-symbol)))
@@ -200,7 +206,7 @@ The patch function must return \\=`t\\=` on success, nil on failure."
                           ,function-symbol ,load-file ,source-file))))
     (goto-char (point-min))
     (unless (re-search-forward
-                (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t)
+             (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t)
       (signal 'jtam-x `("Function declaration not found in source file"
                         ,function-symbol ,source-file)))
     (narrow-to-region (match-beginning 0) (jtam-c-lisp-top-declaration-end))
@@ -402,8 +408,8 @@ The patch function must return \\=`t\\=` on success, nil on failure."
           (throw 'to-refontify nil)))
       '(0 'jtam-type-parameter-declaration t)))
 
-    "Elements of \\=`jtam-fontifiers-2\\=` and \\=`jtam-fontifiers-3\\=`
-that are specific to \\=`java-mode-tamed\\=`.")
+    "Elements of ‘jtam-fontifiers-2’ and ‘jtam-fontifiers-3’ that are specific
+to ‘java-mode-tamed’.")
 
 
 
@@ -430,15 +436,15 @@ that are specific to \\=`java-mode-tamed\\=`.")
 
   (defface jtam--type-reference-in-parameter-list; [MDF]
     `((t . (:inherit jtam-type-reference))); [UAF, RP]
-    "The face for the name in a type reference that appears as an element of a type parameter list,
-one delimited by the symbols ‘<’ and ‘>’." ; [TP,TA]
+    "The face for the name in a type reference that appears as an element
+of a type parameter list, one delimited by the symbols ‘<’ and ‘>’." ; [TP,TA]
     :group 'java-mode-tamed)
 
 
 
   (defun jtam-untamed-face (face)
-    "Returns the untamed ancestral face of \\=`face\\=` from which ultimately it inherits,
-or \\=`face\\=` itself if untamed." ; [UAF]
+    "Returns the untamed ancestral face of FACE from which ultimately it inherits,
+or FACE itself if untamed." ; [UAF]
     (while (string-prefix-p "jtam-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil)))
     face)
@@ -482,7 +488,7 @@ or \\=`face\\=` itself if untamed." ; [UAF]
             (with-temp-buffer
               (insert-file-contents source-file)
 
-              (jtam-patch
+              (jtam--patch
                source-file source-base-name 'c-font-lock-<>-arglists
                (lambda ()
                  (let (is-patched)
@@ -491,7 +497,7 @@ or \\=`face\\=` itself if untamed." ; [UAF]
                      (setq is-patched t))
                    is-patched)))
 
-              (jtam-patch
+              (jtam--patch
                source-file source-base-name 'c-font-lock-declarations
                (lambda ()
                  (when (re-search-forward
@@ -501,14 +507,14 @@ or \\=`face\\=` itself if untamed." ; [UAF]
                    (replace-match "jtam-faces-are-equivalent" t t nil 1)
                    t)))
 
-              (jtam-patch
+              (jtam--patch
                source-file source-base-name 'c-fontify-recorded-types-and-refs
                (lambda ()
                  (when (re-search-forward
                         (concat "(c-put-font-lock-face\\s-*(car\\s-*\\(\\w+\\))\\s-*(cdr\\s-*\\1)\\s-*"
                                 "'font-lock-type-face)")
                         nil t)
-                   (replace-match "(jtam-c/put-type-face \\1)" t)
+                   (replace-match "(jtam--c/put-type-face \\1)" t)
                    t)))))
 
         (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
