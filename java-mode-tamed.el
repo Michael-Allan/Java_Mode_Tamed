@@ -103,6 +103,10 @@ to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP, 
 
 
 
+  (defvar jtam--early-initialization-was-begun nil)
+
+
+
   (defun jtam-faces-are-equivalent (f1 f2); [RP]
     "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
@@ -466,6 +470,11 @@ or FACE itself if untamed." ; [UAF]
 
   ;; ════════════════════════════════════════════════════════════════════════════════════════════════════
 
+
+  (unless jtam--early-initialization-was-begun
+    (set 'jtam--early-initialization-was-begun t)
+    (set 'c-default-style (cons '(java-mode-tamed . "java") c-default-style)))
+      ;;; Though it appears to have no effect.
 
   (define-derived-mode java-mode-tamed java-mode
     "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
