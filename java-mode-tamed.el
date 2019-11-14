@@ -479,6 +479,7 @@ or FACE itself if untamed." ; [UAF]
 
   (unless jtam--early-initialization-was-begun
     (set 'jtam--early-initialization-was-begun t)
+    (require 'cc-mode)
     (set 'c-default-style (cons '(java-mode-tamed . "java") c-default-style)))
       ;;; Though it appears to have no effect.
 
