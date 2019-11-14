@@ -18,7 +18,7 @@
 ;; ─────
 
 
-(let (is-initialized)
+(let ()
 
 
   (eval-when-compile
@@ -167,6 +167,10 @@ e.g. as opposed to annotation form."
         (string= s "abstract")
         (string= s "protected")
         (string= s "srictfp")))
+
+
+
+  (defvar jtam--late-initialization-was-begun nil)
 
 
 
@@ -481,8 +485,8 @@ or FACE itself if untamed." ; [UAF]
          '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3)))
            ;;;       nil or 0,                1,                2,           t or 3
     (cl-assert (local-variable-p 'font-lock-defaults))
-    (unless is-initialized
-      (setq is-initialized t)
+    (unless jtam--late-initialization-was-begun
+      (set 'jtam--late-initialization-was-begun t)
 
       ;; Monkey patch the underlying (Java mode) functions
       ;; ─────────────────────────────────────────────────
