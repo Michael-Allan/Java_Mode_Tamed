@@ -69,7 +69,7 @@ Java mode (CC mode) source code."
     "Called from a monkey patch over the Java-mode code, this function
 overrides Java mode’s application of ‘font-lock-type-face’ in order
 to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP, TA]
-    ;; Without this patched override the corresponding refontifications of `jtam-specific-fontifiers`
+    ;; Without this patched override the corresponding refontifications of `jtam-specific-fontifiers-3`
     ;; alternately appear and disappear.  This occurs because Java mode applies `font-lock-type-face`
     ;; using a mechanism of its own, outside of Font Lock, which puts the two in an endless tug of war.
     (let ((beg (car range))
@@ -97,7 +97,7 @@ to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP, 
                 (and (eq (get-text-property beg 'face) 'jtam-type-parameter-declaration)
                      (>= (next-single-property-change beg 'face (current-buffer) end) end))
               (c-put-font-lock-face beg end 'jtam--type-reference-in-parameter-list))); [RP]
-                ;;; Later this facing may be overridden and corrected by `jtam-specific-fontifiers`,
+                ;;; Later this facing may be overridden and corrected by `jtam-specific-fontifiers-3`,
                 ;;; refacing it as `jtam-type-parameter-declaration`.
         (c-put-font-lock-face beg end 'font-lock-type-face))))
 
@@ -111,27 +111,6 @@ to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP, 
     "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
     (eq (jtam-untamed-face f1) (jtam-untamed-face f2)))
-
-
-
-  (defun jtam-fontifiers-1 ()
-    "Returns the value of ‘font-lock-keywords’ to use for minimal highlighting."
-    'java-font-lock-keywords-1)
-
-
-
-  (defun jtam-fontifiers-2 ()
-    "Returns the value of ‘font-lock-keywords’ to use for fast, normal highlighting."
-    'java-font-lock-keywords-2)
-
-
-
-  (defun jtam-fontifiers-3 ()
-    "Returns the value of ‘font-lock-keywords’ to use
-for accurate, normal highlighting."
-    (append
-     java-font-lock-keywords-3
-     jtam-specific-fontifiers))
 
 
 
@@ -201,6 +180,26 @@ less prominence than other, more important keywords."
 
 
 
+  (defun jtam-new-fontifiers-1 ()
+    "Builds a ‘font-lock-keywords’ list for minimal highlighting."
+    (java-font-lock-keywords-1))
+
+
+
+  (defun jtam-new-fontifiers-2 ()
+    "Builds a ‘font-lock-keywords’ list for fast, normal highlighting."
+    (java-font-lock-keywords-2))
+
+
+
+  (defun jtam-new-fontifiers-3 ()
+    "Builds a ‘font-lock-keywords’ list for accurate, normal highlighting."
+    (nconc
+     (java-font-lock-keywords-3)
+     jtam-specific-fontifiers-3))
+
+
+
   (defun jtam--patch (source-file source-base-name function-symbol patch-function)
     "Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
 which has the given BASE-NAME) using the named PATCH-FUNCTION.  The patch
@@ -243,7 +242,7 @@ function must return t on success, nil on failure."
 
 
 
-  (defconst jtam-specific-fontifiers
+  (defconst jtam-specific-fontifiers-3
     (list
 
      ;; ════════════════
@@ -422,7 +421,7 @@ function must return t on success, nil on failure."
           (throw 'to-refontify nil)))
       '(0 'jtam-type-parameter-declaration t)))
 
-    "Elements of ‘jtam-fontifiers-3’ that are specific to ‘java-mode-tamed’.")
+    "Elements for ‘jtam-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
 
 
@@ -497,8 +496,8 @@ or FACE itself if untamed." ; [UAF]
     (jtam-set-for-buffer 'font-lock-defaults
          ;; Following are the alternative values of `font-lock-keywords`, each ordered
          ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
-         '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3)))
-           ;;;       nil or 0,                1,                2,           t or 3
+         '((jtam-new-fontifiers-1 jtam-new-fontifiers-1 jtam-new-fontifiers-2 jtam-new-fontifiers-3)))
+           ;;;           nil or 0,                    1,                    2,               t or 3
     (unless jtam--late-initialization-was-begun
       (set 'jtam--late-initialization-was-begun t)
 
@@ -553,8 +552,8 @@ or FACE itself if untamed." ; [UAF]
 
 ;; NOTES
 ;; ─────
-;;   ↑T · This marks section *Type name* of `jtam-specific-fontifiers` and all code that depends on its
-;;        prior execution.
+;;   ↑T · This marks code section *Type name* of `jtam-specific-fontifiers-3` and all other code
+;;        that depends on its prior execution.
 ;;
 ;;   FC · `forward-comment` would be more robust here.
 ;;
