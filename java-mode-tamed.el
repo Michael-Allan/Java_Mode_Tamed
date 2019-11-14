@@ -236,6 +236,13 @@ function must return t on success, nil on failure."
 
 
 
+  (defun jtam-set-for-buffer (variable value)
+    "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting is not buffer local."
+    (set variable value)
+    (cl-assert (local-variable-p variable)))
+
+
+
   (defconst jtam-specific-fontifiers
     (list
 
@@ -477,22 +484,20 @@ or FACE itself if untamed." ; [UAF]
 
   (define-derived-mode java-mode-tamed java-mode
     "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
-    (set 'c-maybe-decl-faces
+    (jtam-set-for-buffer 'c-maybe-decl-faces
          (append c-maybe-decl-faces
                  '('jtam-modifier-keyword
                    'jtam-type-declaration
                    'jtam-type-parameter-declaration
                    'jtam-type-reference
                    'jtam--type-reference-in-parameter-list)))
-    (cl-assert (local-variable-p 'c-maybe-decl-faces))
     (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
       (set 'jtam--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
-    (set 'font-lock-defaults
+    (jtam-set-for-buffer 'font-lock-defaults
          ;; Following are the alternative values of `font-lock-keywords`, each ordered
          ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
          '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3)))
            ;;;       nil or 0,                1,                2,           t or 3
-    (cl-assert (local-variable-p 'font-lock-defaults))
     (unless jtam--late-initialization-was-begun
       (set 'jtam--late-initialization-was-begun t)
 
