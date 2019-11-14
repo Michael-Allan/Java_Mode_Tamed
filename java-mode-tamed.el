@@ -118,9 +118,7 @@ by the underlying (Java mode) code."
 
   (defun jtam-fontifiers-2 ()
     "Returns the value of ‘font-lock-keywords’ to use for fast, normal highlighting."
-    (append
-     java-font-lock-keywords-2
-     jtam-specific-fontifiers))
+    'java-font-lock-keywords-2)
 
 
 
