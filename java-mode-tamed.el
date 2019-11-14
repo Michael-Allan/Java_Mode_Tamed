@@ -475,25 +475,14 @@ leave it to inherit from ‘jtam-type-reference’."
 
   (define-derived-mode java-mode-tamed java-mode
     "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
-    (jtam-set-for-buffer 'c-maybe-decl-faces
-         (append c-maybe-decl-faces
-                 '('jtam-modifier-keyword
-                   'jtam-type-declaration
-                   'jtam-type-parameter-declaration
-                   'jtam-type-reference
-                   'jtam--type-reference-in-parameter-list)))
-    (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
-      (set 'jtam--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
-    (jtam-set-for-buffer 'font-lock-defaults
-         '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
-            java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
-            jtam-new-fontifiers-2    ; 2           -maximum-decoration` that selects it.  [MD]
-            jtam-new-fontifiers-3))) ; 3 or t
+
+    ;; Finish initializing the mode
+    ;; ────────────────────────────
     (unless jtam--late-initialization-was-begun
       (set 'jtam--late-initialization-was-begun t)
 
-      ;; Monkey patch the underlying (Java mode) functions
-      ;; ─────────────────────────────────────────────────
+      ;; Monkey patch the underlying (Java mode) functions. Only now the first Java file is loaded,
+      ;; else patching might needlessly delay the start of Emacs.
       (define-error 'jtam-x "Broken monkey patch")
       (condition-case x
           (let ((source-file (locate-library "cc-fonts.el" t))
@@ -532,7 +521,24 @@ leave it to inherit from ‘jtam-type-reference’."
                    (replace-match "(jtam--c/put-type-face \\1)" t)
                    t)))))
 
-        (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error)))))
+        (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
+
+    ;; Initialize the buffer
+    ;; ─────────────────────
+    (jtam-set-for-buffer 'c-maybe-decl-faces
+         (append c-maybe-decl-faces
+                 '('jtam-modifier-keyword
+                   'jtam-type-declaration
+                   'jtam-type-parameter-declaration
+                   'jtam-type-reference
+                   'jtam--type-reference-in-parameter-list)))
+    (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
+      (set 'jtam--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
+    (jtam-set-for-buffer 'font-lock-defaults
+         '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
+            java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
+            jtam-new-fontifiers-2    ; 2           -maximum-decoration` that selects it.  [MD]
+            jtam-new-fontifiers-3)))); 3 or t
 
 
 
