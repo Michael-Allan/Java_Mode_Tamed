@@ -1,5 +1,4 @@
-;; The definition of `java-mode-tamed` - a tamer, more controllable                 -*- lexical-binding: t; -*-
-;; Java mode.
+;; The definition of `java-mode-tamed` - a tamer, more controllable Java mode.      -*- lexical-binding: t; -*-
 ;;
 ;; USAGE
 ;; ─────
@@ -26,8 +25,6 @@
     (require 'cl-lib))
 
   (defvar c-maybe-decl-faces)
-  (defvar java-font-lock-keywords-2)
-  (defvar java-font-lock-keywords-3)
     ;;; Suppressing sporadic compiler warnings ‘reference to free variable’
     ;;; or ‘assignment to free variable’.
 
@@ -180,20 +177,15 @@ less prominence than other, more important keywords."
 
 
 
-  (defun jtam-new-fontifiers-1 ()
-    "Builds a ‘font-lock-keywords’ list for minimal highlighting."
-    (java-font-lock-keywords-1))
-
-
-
   (defun jtam-new-fontifiers-2 ()
-    "Builds a ‘font-lock-keywords’ list for fast, normal highlighting."
+    "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
+See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
     (java-font-lock-keywords-2))
 
 
 
   (defun jtam-new-fontifiers-3 ()
-    "Builds a ‘font-lock-keywords’ list for accurate, normal highlighting."
+    "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
     (nconc
      (java-font-lock-keywords-3)
      jtam-specific-fontifiers-3))
@@ -464,9 +456,8 @@ leave it to inherit from ‘jtam-type-reference’."
 
 
 
-  (defun jtam-untamed-face (face)
-    "Returns the untamed ancestral face of FACE from which ultimately it inherits,
-or FACE itself if untamed." ; [UAF]
+  (defun jtam-untamed-face (face); [UAF]
+    "Returns FACE itself if untamed, else the untamed ancestral face from which ultimately it inherits."
     (while (string-prefix-p "jtam-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil)))
     face)
@@ -494,10 +485,10 @@ or FACE itself if untamed." ; [UAF]
     (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
       (set 'jtam--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
     (jtam-set-for-buffer 'font-lock-defaults
-         ;; Following are the alternative values of `font-lock-keywords`, each ordered
-         ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
-         '((jtam-new-fontifiers-1 jtam-new-fontifiers-1 jtam-new-fontifiers-2 jtam-new-fontifiers-3)))
-           ;;;           nil or 0,                    1,                    2,               t or 3
+         '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
+            java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
+            jtam-new-fontifiers-2    ; 2           -maximum-decoration` that selects it.  [MD]
+            jtam-new-fontifiers-3))) ; 3 or t
     (unless jtam--late-initialization-was-begun
       (set 'jtam--late-initialization-was-begun t)
 
