@@ -415,8 +415,7 @@ function must return t on success, nil on failure."
           (throw 'to-refontify nil)))
       '(0 'jtam-type-parameter-declaration t)))
 
-    "Elements of ‘jtam-fontifiers-2’ and ‘jtam-fontifiers-3’ that are specific
-to ‘java-mode-tamed’.")
+    "Elements of ‘jtam-fontifiers-3’ that are specific to ‘java-mode-tamed’.")
 
 
 
