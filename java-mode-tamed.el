@@ -482,8 +482,6 @@ or FACE itself if untamed." ; [UAF]
          ;; according to the value of `font-lock-maximum-decoration` that selects it.  [MD]
          '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2 jtam-fontifiers-3)))
            ;;;       nil or 0,                1,                2,           t or 3
-     ;;; '((jtam-fontifiers-1 jtam-fontifiers-1 jtam-fontifiers-2))); TEST
-     ;;;   ;;;       nil or 0,                1,           t or 2
     (cl-assert (local-variable-p 'font-lock-defaults))
     (unless is-initialized
       (setq is-initialized t)
