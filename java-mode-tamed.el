@@ -63,39 +63,53 @@ Java mode (CC mode) source code."
 
 
   (defun jtam--c/put-type-face (range)
-    "Called from a monkey patch over the Java-mode code, this function
-overrides Java mode’s application of ‘font-lock-type-face’ in order
-to stabilize the facing of type parameter lists.  RANGE is a cons cell." ; [TP, TA]
+    "Called from a monkey patch over the underlying Java-mode code, this function
+overrides Java mode’s application of ‘font-lock-type-face’ in order to stabilize
+the facing of type and type parameter identifiers.  RANGE is a cons cell."
     ;; Without this patched override the corresponding refontifications of `jtam-specific-fontifiers-3`
     ;; alternately appear and disappear.  This occurs because Java mode applies `font-lock-type-face`
     ;; using a mechanism of its own, outside of Font Lock, which puts the two in an endless tug of war.
     (let ((beg (car range))
           (end (cdr range)))
-      (if (and jtam--is-level-3
-               (eq major-mode 'java-mode-tamed)
-               (or (let ((p beg) c)
-                     (while; Set `c` to the first non-whitespace character before `range`.
-                         (progn (setq c (char-before p))
-                                (char-equal (char-syntax c) ?\s))
-                       (setq p (1- p)))
-                     (or (char-equal c ?<)    ; A leading delimiter ‘<’,
-                         (char-equal c ?&)    ; additional bound operator,
-                         (char-equal c ?,)))  ; or separator ‘,’ in a type parameter list.
-                   (let ((p end) c)
-                     (while; Set `c` to the first non-whitespace character after `range`.
-                         (progn (setq c (char-after p))
-                                (char-equal (char-syntax c) ?\s))
-                       (setq p (1+ p)))
-                     (or (char-equal c ?>)    ; A trailing delimiter ‘>’,
-                         (char-equal c ?&)    ; additional bound operator,
-                         (char-equal c ?,))))); or separator ‘,’.
-          (progn
-            (unless; Unless already region `beg`…`end` is faced `jtam-type-parameter-declaration`. [SF]
-                (and (eq (get-text-property beg 'face) 'jtam-type-parameter-declaration)
-                     (>= (next-single-property-change beg 'face (current-buffer) end) end))
-              (c-put-font-lock-face beg end 'jtam--type-reference-in-parameter-list))); [RP]
-                ;;; Later this facing may be overridden and corrected by `jtam-specific-fontifiers-3`,
-                ;;; refacing it as `jtam-type-parameter-declaration`.
+      (if
+          (and jtam--is-level-3
+               (eq major-mode 'java-mode-tamed))
+          (if (or (let ((p beg) c)
+                    (while; Set `c` to the first non-whitespace character before `range`.
+                        (progn (setq c (char-before p))
+                               (char-equal (char-syntax c) ?\s))
+                      (setq p (1- p)))
+                    (or (char-equal c ?<)   ; A leading delimiter ‘<’,
+                        (char-equal c ?&)   ; additional bound operator,
+                        (char-equal c ?,))) ; or separator ‘,’ in a type parameter list.
+                  (let ((p end) c)
+                    (while; Set `c` to the first non-whitespace character after `range`.
+                        (progn (setq c (char-after p))
+                               (char-equal (char-syntax c) ?\s))
+                      (setq p (1+ p)))
+                    (or (char-equal c ?>)   ; A trailing delimiter ‘>’,
+                        (char-equal c ?&)   ; additional bound operator,
+                        (char-equal c ?,)))); or separator ‘,’.
+              (progn
+
+                ;; Taming an identifier in a type parameter list  [TP, TA]
+                ;; ─────────────────────────────────────────────
+                (unless; Unless already `beg`…`end` is faced `jtam-type-parameter-declaration`. [SF]
+                    (and (eq (get-text-property beg 'face) 'jtam-type-parameter-declaration)
+                         (>= (next-single-property-change beg 'face (current-buffer) end) end))
+                  (c-put-font-lock-face beg end 'jtam--type-reference-in-parameter-list))); [RP]
+                    ;;; Immediately `jtam-specific-fontifiers-3` may override and correct this facing,
+                    ;;; replacing it with `jtam-type-parameter-declaration`.
+
+            ;; Taming an identifier elsewhere
+            ;; ──────────────────────────────
+            (c-put-font-lock-face beg end 'jtam--type))
+              ;;; Normally `jtam-specific-fontifiers-3` will immediately override this facing,
+              ;;; replacing it with `jtam-type-declaration` or `jtam-type-reference`.  Occaisionally
+              ;;; this replacement may fail to occur, occur late, or prove to be unstable. [UF]
+
+        ;; Leaving the identifier untamed
+        ;; ──────────────────────────────
         (c-put-font-lock-face beg end 'font-lock-type-face))))
 
 
@@ -162,7 +176,7 @@ and \\=`\\='\\=` quotes."
 
 
   (defface jtam-modifier-keyword; [MDF]
-    `((t . (:inherit font-lock-keyword-face))); [UAF, RP]
+    `((t . (:inherit font-lock-keyword-face))); [TF, RP]
     "The face for a keyword-form modifier in a class, interface, method,
 constructor or field declaration; any modifier, that is, except an annotation
 modifier.  Use it customize the appearance of these keywords, e.g. to give them
@@ -265,7 +279,8 @@ function must return t on success, nil on failure."
             (let* ((match-beg (point))
                    (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (eq face 'font-lock-type-face)
+              (when (or (eq face 'jtam--type); Set by Java mode via `jtam--c/put-type-face`.
+                        (eq face 'font-lock-type-face)); Or via (if possible) other means.
 
                 ;; Either declaring a type
                 ;; ────────────────
@@ -417,8 +432,16 @@ function must return t on success, nil on failure."
 
 
 
+  (defface jtam--type; [MDF, UF]
+    `((t . (:inherit jtam-type-reference))); [TF, RP]
+    "A signalling face set via ‘jtam--c/put-type-face’.  Do not customize it —
+it is for internal use only — leave it to inherit from ‘jtam-type-reference’."
+    :group 'java-mode-tamed)
+
+
+
   (defface jtam-type-declaration; [MDF]
-    `((t . (:inherit font-lock-type-face))); [UAF, RP]
+    `((t . (:inherit font-lock-type-face))); [TF, RP]
     "The face for the identifier of a class or interface in a type declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
 referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
@@ -428,7 +451,7 @@ See also face ‘jtam-type-reference’."
 
 
   (defface jtam-type-parameter-declaration; [TP, MDF, SF]
-    `((t . (:inherit jtam-type-declaration))); [UAF, RP]
+    `((t . (:inherit jtam-type-declaration))); [TF, RP]
     "The face for the identifier of a type parameter in a type parameter declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
 referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
@@ -437,8 +460,8 @@ See also face ‘jtam-type-reference’."
 
 
 
-  (defface jtam-type-reference; [MDF]
-    `((t . (:inherit font-lock-type-face))); [UAF, RP]
+  (defface jtam-type-reference; [MDF, UF]
+    `((t . (:inherit font-lock-type-face))); [TF, RP]
     "The face for the identifier of a class, interface or type parameter
 where it appears as a type reference.  See also faces ‘jtam-type-declaration’
 and ‘jtam-type-parameter-declaration’."
@@ -447,7 +470,7 @@ and ‘jtam-type-parameter-declaration’."
 
 
   (defface jtam--type-reference-in-parameter-list; [TP, TA, MDF]
-    `((t . (:inherit jtam-type-reference))); [UAF, RP]
+    `((t . (:inherit jtam-type-reference))); [TF, RP]
     "The face for the identifier of a class, interface or type parameter where it
 appears as a type reference in a type parameter list, one delimited by the sym-
 bols ‘<’ and ‘>’.  Do not customize this face — it is for internal use only —
@@ -456,7 +479,7 @@ leave it to inherit from ‘jtam-type-reference’."
 
 
 
-  (defun jtam-untamed-face (face); [UAF]
+  (defun jtam-untamed-face (face); [TF]
     "Returns FACE itself if untamed, else the untamed ancestral face from which ultimately it inherits."
     (while (string-prefix-p "jtam-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil)))
@@ -528,6 +551,7 @@ leave it to inherit from ‘jtam-type-reference’."
     (jtam-set-for-buffer 'c-maybe-decl-faces
          (append c-maybe-decl-faces
                  '('jtam-modifier-keyword
+                   'jtam--type
                    'jtam-type-declaration
                    'jtam-type-parameter-declaration
                    'jtam-type-reference
@@ -574,16 +598,20 @@ leave it to inherit from ‘jtam-type-reference’."
 ;;        Function `jtam-faces-are-equivalent` depends on this.
 ;;
 ;;   SF · Stuck face `jtam-type-parameter-declaration`.  Note that the facing guard
-;;        in `jtam/c-put-type-face` may cause this face to stick on occaision.
+;;        in `jtam--c/put-type-face` may cause this face to stick on occaision.
 ;;        A viable workaround is to delete and re-type the affected text, which tends to be short.
 ;;
 ;;   TA · See `TypeArgument`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.5.1
 ;;
+;;   TF · Tamed face.  Ultimately every face defined by `java-mode-tamed` (tamed face) inherits from a
+;;        face defined elsewhere (untamed ancestral face).  Function `jtam-untamed-face` depends on this.
+;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
 ;;
-;;   UAF  Untamed ancestral face.  Ultimately every face defined by `java-mode-tamed` (tamed face)
-;;        inherits from a face defined elsewhere (untamed ancestral face).  Function `jtam-untamed-face`
-;;        depends on this.
+;;   UF · Unstable faces `jtam--type` and `jtam-type-reference`.  Certain applications of these faces
+;;        may be mutually unstable, alternating at times between one and the other.  This was seen,
+;;        for instance, in the facing of the identifier in sequence `new Precounter` here:
+;;        https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/top/android/ForestCache.java#L493
 
 
 ;; - - - - - - - - - -
