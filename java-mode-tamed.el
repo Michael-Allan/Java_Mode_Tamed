@@ -1,4 +1,4 @@
-;; The definition of `java-mode-tamed` - a tamer, more controllable Java mode.      -*- lexical-binding: t; -*-
+;; The definition of `java-mode-tamed` - a tamer, more controllable Java mode.  -*- lexical-binding: t; -*-
 ;;
 ;; USAGE
 ;; ─────
@@ -269,6 +269,7 @@ function must return t on success, nil on failure."
           (throw 'to-refontify nil)))
       '(0 'jtam-modifier-keyword t))
 
+
      ;; ═════════
      ;; Type name  [↑T]
      ;; ═════════
@@ -364,6 +365,7 @@ function must return t on success, nil on failure."
               (goto-char match-end)))
           (throw 'to-fontify nil)))
       '(0 'jtam-type-declaration t))
+
 
      ;; ═══════════════════
      ;; Type parameter name in a type parameter declaration  [↑T]
