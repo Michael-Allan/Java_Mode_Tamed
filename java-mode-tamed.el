@@ -171,7 +171,7 @@ e.g. as opposed to annotation form."
   (defun jtam-message (format-string &rest arguments)
     "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
 and \\=`\\='\\=` quotes."
-    (message "%s" (format format-string arguments)))
+    (message "%s" (apply 'format format-string arguments)))
 
 
 
