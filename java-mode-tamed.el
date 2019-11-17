@@ -10,7 +10,7 @@
 ;;   Working example:
 ;;
 ;;       http://reluk.ca/sys/computer/Havoc/etc/emacs/user-initialization.el
-;;       http://reluk.ca/.Xresources (pending)
+;;       http://reluk.ca/.Xresources
 ;;
 ;;
 ;; NOTES  (see at bottom)
@@ -35,7 +35,7 @@
   ;; ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-  (defvar-local jtam--is-level-3 nil); An in-buffer cache of this boolean flag.  It works only because any
+  (defvar-local jmt--is-level-3 nil); An in-buffer cache of this boolean flag.  It works only because any
     ;;; ‘customization of `font-lock-maximum-decoration` should be done *before* the file is visited’.
     ;;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Font-Lock.html
 
@@ -49,12 +49,12 @@
   (defgroup java-mode-tamed nil
     "A tamer, more controllable Java mode"
     :group 'languages :group 'faces
-    :prefix "jtam-"
+    :prefix "jmt-"
     :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
 
 
 
-  (defface jtam-annotation-mark
+  (defface jmt-annotation-mark
     `((t . (:inherit c-annotation-face))); [TF, RP]
     "The face for the ‘@’ symbol denoting an annotation.  Use it customize
 the appearance of the symbol, e.g. to give it less prominence than
@@ -63,7 +63,7 @@ the ‘c-annotation-face’ of the type name that follows it."
 
 
 
-  (defface jtam-annotation-qualifier
+  (defface jmt-annotation-qualifier
     `((t . (:inherit c-annotation-face))); [TF, RP]
     "The face for the element assignments of an annotation.  Use it customize
 the appearance of the assignments, e.g. to give them less prominence than
@@ -72,14 +72,14 @@ the ‘c-annotation-face’ of the preceding type name."
 
 
 
-  (defface jtam-annotation-qualifier-delimiter
-    `((t . (:inherit jtam-annotation-qualifier))); [TF]
+  (defface jmt-annotation-qualifier-delimiter
+    `((t . (:inherit jmt-annotation-qualifier))); [TF]
     "The face for the ‘(’ and ‘)’ delimiters of an annotation qualifier."
     :group 'java-mode-tamed)
 
 
 
-  (defun jtam-c-lisp-top-declaration-end ()
+  (defun jmt-c-lisp-top-declaration-end ()
     "Returns the position just before the next top-level ELisp declaration, if any,
 else `point-max`.  Leaves point indeterminate.  For use on buffers that contain
 Java mode (CC mode) source code."
@@ -87,17 +87,17 @@ Java mode (CC mode) source code."
 
 
 
-  (defun jtam--c/put-type-face (range)
+  (defun jmt--c/put-type-face (range)
     "Called from a monkey patch over the underlying Java-mode code, this function
 overrides Java mode’s application of ‘font-lock-type-face’ in order to stabilize
 the facing of type and type parameter identifiers.  RANGE is a cons cell."
-    ;; Without this patched override the corresponding refontifications of `jtam-specific-fontifiers-3`
+    ;; Without this patched override the corresponding refontifications of `jmt-specific-fontifiers-3`
     ;; alternately appear and disappear.  This occurs because Java mode applies `font-lock-type-face`
     ;; using a mechanism of its own, outside of Font Lock, which puts the two in an endless tug of war.
     (let ((beg (car range))
           (end (cdr range)))
       (if
-          (and jtam--is-level-3
+          (and jmt--is-level-3
                (eq major-mode 'java-mode-tamed))
           (if (or (let ((p beg) c)
                     (while; Set `c` to the first non-whitespace character before `range`.
@@ -119,18 +119,18 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
 
                 ;; Taming an identifier in a type parameter list  [TP, TA]
                 ;; ─────────────────────────────────────────────
-                (unless; Unless already `beg`…`end` is faced `jtam-type-parameter-declaration`. [SF]
-                    (and (eq (get-text-property beg 'face) 'jtam-type-parameter-declaration)
+                (unless; Unless already `beg`…`end` is faced `jmt-type-parameter-declaration`. [SF]
+                    (and (eq (get-text-property beg 'face) 'jmt-type-parameter-declaration)
                          (>= (next-single-property-change beg 'face (current-buffer) end) end))
-                  (c-put-font-lock-face beg end 'jtam--type-reference-in-parameter-list))); [RP]
-                    ;;; Immediately `jtam-specific-fontifiers-3` may override and correct this facing,
-                    ;;; replacing it with `jtam-type-parameter-declaration`.
+                  (c-put-font-lock-face beg end 'jmt--type-reference-in-parameter-list))); [RP]
+                    ;;; Immediately `jmt-specific-fontifiers-3` may override and correct this facing,
+                    ;;; replacing it with `jmt-type-parameter-declaration`.
 
             ;; Taming an identifier elsewhere
             ;; ──────────────────────────────
-            (c-put-font-lock-face beg end 'jtam--type))
-              ;;; Normally `jtam-specific-fontifiers-3` will immediately override this facing,
-              ;;; replacing it with `jtam-type-declaration` or `jtam-type-reference`.  Occaisionally
+            (c-put-font-lock-face beg end 'jmt--type))
+              ;;; Normally `jmt-specific-fontifiers-3` will immediately override this facing,
+              ;;; replacing it with `jmt-type-declaration` or `jmt-type-reference`.  Occaisionally
               ;;; this replacement may fail to occur, occur late, or prove to be unstable. [UF]
 
         ;; Leaving the identifier untamed
@@ -139,26 +139,26 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
 
 
 
-  (defvar jtam--early-initialization-was-begun nil)
+  (defvar jmt--early-initialization-was-begun nil)
 
 
 
-  (defun jtam-faces-are-equivalent (f1 f2); [RP]
+  (defun jmt-faces-are-equivalent (f1 f2); [RP]
     "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
-    (eq (jtam-untamed-face f1) (jtam-untamed-face f2)))
+    (eq (jmt-untamed-face f1) (jmt-untamed-face f2)))
 
 
 
-  (defun jtam-is-modifier-keyword (s)
+  (defun jmt-is-modifier-keyword (s)
     "Answers whether string S is a Java modifier in keyword form.
-See face ‘jtam-modifier-keyword’."
+See face ‘jmt-modifier-keyword’."
     ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
     ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
     ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
     ;; `ConstructorModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.8.3
     ;;       `FieldModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.3.1
-    (or (jtam-is-type-modifier-keyword s)
+    (or (jmt-is-type-modifier-keyword s)
         (string= s "synchronized")
         (string= s "volatile")
         (string= s "transient")
@@ -166,7 +166,7 @@ See face ‘jtam-modifier-keyword’."
 
 
 
-  (defun jtam-is-type-declarant (s)
+  (defun jmt-is-type-declarant (s)
     "Answers whether string S is the principle keyword of a type declaration."
     (or (string= s "class")
         (string= s "interface")
@@ -174,15 +174,15 @@ See face ‘jtam-modifier-keyword’."
 
 
 
-  (defun jtam-is-Java-mode-type-face (f)
+  (defun jmt-is-Java-mode-type-face (f)
     "Answers whether F (face symbol) is a type face which might be set
 by the underlying (Java mode) code."
-    (or (eq f 'jtam--type); Set by Java mode via `jtam--c/put-type-face`.
+    (or (eq f 'jmt--type); Set by Java mode via `jmt--c/put-type-face`.
         (eq f 'font-lock-type-face))); Or via (if it occurs) other means.
 
 
 
-  (defun jtam-is-type-modifier-keyword (s)
+  (defun jmt-is-type-modifier-keyword (s)
     "Answers whether string S is a type declaration modifier in keyword form,
 e.g. as opposed to annotation form."
     ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
@@ -197,18 +197,18 @@ e.g. as opposed to annotation form."
 
 
 
-  (defvar jtam--late-initialization-was-begun nil)
+  (defvar jmt--late-initialization-was-begun nil)
 
 
 
-  (defun jtam-message (format-string &rest arguments)
+  (defun jmt-message (format-string &rest arguments)
     "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
 and \\=`\\='\\=` quotes."
     (message "%s" (apply 'format format-string arguments)))
 
 
 
-  (defface jtam-modifier-keyword; [MDF]
+  (defface jmt-modifier-keyword; [MDF]
     `((t . (:inherit font-lock-keyword-face))); [TF, RP]
     "The face for a keyword-form modifier in a class, interface, method,
 constructor or field declaration; any modifier, that is, except an annotation
@@ -218,20 +218,20 @@ less prominence than other, more important keywords."
 
 
 
-  (defconst jtam-name-character-set "[:alnum:]_$"
+  (defconst jmt-name-character-set "[:alnum:]_$"
     "The set of characters from which a Java identifier may be formed.")
     ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-3.html#jls-3.8
 
 
 
-  (defun jtam-new-fontifiers-2 ()
+  (defun jmt-new-fontifiers-2 ()
     "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
 See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
     (java-font-lock-keywords-2))
 
 
 
-  (defun jtam-new-fontifiers-3 ()
+  (defun jmt-new-fontifiers-3 ()
     "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
     (nconc
 
@@ -252,36 +252,36 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
                      k (cdr k)))
              (and (not was-found-annotation) k)))
        (unless was-found-annotation
-         (jtam-message "(java-mode-tamed): Failed to remove underlying Java-mode fontifier: `%s` is nil"
+         (jmt-message "(java-mode-tamed): Failed to remove underlying Java-mode fontifier: `%s` is nil"
                        (symbol-name 'was-found-annotation)))
        kk)
 
     ;; Overlying fontifiers to tame them
     ;; ────────────────────
-     jtam-specific-fontifiers-3))
+     jmt-specific-fontifiers-3))
 
 
 
-  (defun jtam--patch (source-file source-base-name function-symbol patch-function)
+  (defun jmt--patch (source-file source-base-name function-symbol patch-function)
     "Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
 which has the given BASE-NAME) using the named PATCH-FUNCTION.  The patch
 function must return t on success, nil on failure."
     (unless (functionp function-symbol)
-      (signal 'jtam-x `("No such function loaded" ,function-symbol)))
+      (signal 'jmt-x `("No such function loaded" ,function-symbol)))
     (let ((load-file (symbol-file function-symbol)))
       (unless (string= (file-name-base load-file) source-base-name)
-        (signal 'jtam-x `("Function loaded from file of base name contradictory to source file"
+        (signal 'jmt-x `("Function loaded from file of base name contradictory to source file"
                           ,function-symbol ,load-file ,source-file))))
     (goto-char (point-min))
     (unless (re-search-forward
              (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t)
-      (signal 'jtam-x `("Function declaration not found in source file"
+      (signal 'jmt-x `("Function declaration not found in source file"
                         ,function-symbol ,source-file)))
-    (narrow-to-region (match-beginning 0) (jtam-c-lisp-top-declaration-end))
+    (narrow-to-region (match-beginning 0) (jmt-c-lisp-top-declaration-end))
       ;;; Narrowing the temporary patch buffer to the function declaration alone.
     (goto-char (point-min))
     (unless (funcall patch-function); Patching the declaration.
-      (signal 'jtam-x `("Patch failed to apply" ,function-symbol)))
+      (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
     (let ((original-was-compiled (byte-code-function-p (symbol-function function-symbol))))
       (eval-buffer); Redefining the function to the patched version.
   ;;; (delete-region point-min point-max); Removing the declaration, in case it speeds later patching.
@@ -292,19 +292,19 @@ function must return t on success, nil on failure."
          1.3 nil            ; though early timing tests (with a single patch) showed no such effect.
          (lambda ()
            (unless (byte-compile function-symbol)
-             (jtam-message "(java-mode-tamed): Failed to recompile monkey-patched function `%s`"
+             (jmt-message "(java-mode-tamed): Failed to recompile monkey-patched function `%s`"
                            (symbol-name function-symbol))))))))
 
 
 
-  (defun jtam-set-for-buffer (variable value)
+  (defun jmt-set-for-buffer (variable value)
     "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting is not buffer local."
     (set variable value)
     (cl-assert (local-variable-p variable)))
 
 
 
-  (defconst jtam-specific-fontifiers-3
+  (defconst jmt-specific-fontifiers-3
     (list
 
      ;; ══════════
@@ -325,13 +325,13 @@ function must return t on success, nil on failure."
                   (when (eolp) (throw 'is-annotation nil)); [SL]
                   (skip-chars-forward "[:blank:]" limit); [SL]
                   (setq m2-beg (point))
-                  (skip-chars-forward jtam-name-character-set limit)
+                  (skip-chars-forward jmt-name-character-set limit)
                   (setq m2-end (point))
                   (unless (< m2-beg m2-end) (throw 'is-annotation nil))
                   (setq face (get-text-property m2-beg 'face))
                   (unless (or (eq face nil); The most common case.  Less commonly, a misfontification:
                               (eq face 'font-lock-function-name-face); ← This one occurs in the case
-                              (jtam-is-Java-mode-type-face face))    ;  e.g. of an empty `()` qualifier.
+                              (jmt-is-Java-mode-type-face face))    ;  e.g. of an empty `()` qualifier.
                     (throw 'is-annotation nil))
                   (skip-chars-forward "[:blank:]" limit); [SL]
                   (when (eq ?\( (char-after)); (and not nil)
@@ -357,15 +357,15 @@ function must return t on success, nil on failure."
                   (throw 'to-fontify t))
                 (setq m1-beg (point)))))
           (throw 'to-fontify nil)))
-      '(1 'jtam-annotation-mark t) '(2 'c-annotation-face t)
-      '(3 'jtam-annotation-qualifier-delimiter t t) '(4 'jtam-annotation-qualifier t t)
-      '(5 'jtam-annotation-qualifier-delimiter t t))
+      '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t)
+      '(3 'jmt-annotation-qualifier-delimiter t t) '(4 'jmt-annotation-qualifier t t)
+      '(5 'jmt-annotation-qualifier-delimiter t t))
 
 
      ;; ════════════════
      ;; Modifier keyword
      ;; ════════════════
-     (cons; Refontify each using face `jtam-modifier-keyword`. [RP]
+     (cons; Refontify each using face `jmt-modifier-keyword`. [RP]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
@@ -374,32 +374,32 @@ function must return t on success, nil on failure."
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
               (goto-char match-end)
               (when (and (eq face 'font-lock-keyword-face)
-                         (jtam-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
+                         (jmt-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
                 (set-match-data (list match-beg match-end (current-buffer)))
                 (throw 'to-refontify t))))
           (throw 'to-refontify nil)))
-      '(0 'jtam-modifier-keyword t))
+      '(0 'jmt-modifier-keyword t))
 
 
      ;; ═════════
      ;; Type name  [↑T]
      ;; ═════════
-     (list; Refontify each using either `jtam-type-declaration` or  `jtam-type-reference` face. [RP]
+     (list; Refontify each using either `jmt-type-declaration` or  `jmt-type-reference` face. [RP]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
             (let* ((match-beg (point))
                    (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (jtam-is-Java-mode-type-face face)
+              (when (jmt-is-Java-mode-type-face face)
 
                 ;; Either declaring a type
                 ;; ────────────────
                 (when; Keyword `class`, `enum` or `interface` directly precedes the type name.
                     (and (< (skip-syntax-backward "-") 0); [QSB, FC]
                          (let ((p (point)))
-                           (and (< (skip-chars-backward jtam-name-character-set) 0)
-                                (jtam-is-type-declarant (buffer-substring-no-properties (point) p)))))
+                           (and (< (skip-chars-backward jmt-name-character-set) 0)
+                                (jmt-is-type-declarant (buffer-substring-no-properties (point) p)))))
                   (set-match-data; Capturing the already fontified name as group 1.
                    (list match-beg match-end match-beg match-end (current-buffer)))
                   (goto-char match-end)
@@ -414,7 +414,7 @@ function must return t on success, nil on failure."
 
               (goto-char match-end)))
           (throw 'to-refontify nil)))
-      '(1 'jtam-type-declaration t t) '(2 'jtam-type-reference t t))
+      '(1 'jmt-type-declaration t t) '(2 'jmt-type-reference t t))
 
      (cons; Fontify type declaration names missed by Java mode.
       (lambda (limit)
@@ -425,12 +425,12 @@ function must return t on success, nil on failure."
                    (match-end (next-single-property-change p 'face (current-buffer) limit)))
               (when; A type declarant keyword is found, `class`, `enum` or `interface`.
                   (and (eq face 'font-lock-keyword-face)
-                       (jtam-is-type-declarant (buffer-substring-no-properties (point) match-end)))
+                       (jmt-is-type-declarant (buffer-substring-no-properties (point) match-end)))
                 (goto-char match-end)
                 (skip-syntax-forward "-" limit); [FC]
                 (let ((match-beg (point))
                       (annotation-count 0))
-                  (when (and (> (skip-chars-forward jtam-name-character-set limit) 0); A name follows.
+                  (when (and (> (skip-chars-forward jmt-name-character-set limit) 0); A name follows.
                              (not (get-text-property match-beg 'face))); The name is unfontified.
                     (setq match-end (point))
                     (goto-char p); Back to the type declarant keyword.
@@ -446,10 +446,10 @@ function must return t on success, nil on failure."
                             (scan-error (throw 'is-modifier nil)))
                           (skip-syntax-backward "-")); Holding still the (would be) invariant. [FC]
                         (setq p (point))
-                        (when (= (skip-chars-backward jtam-name-character-set) 0)
+                        (when (= (skip-chars-backward jmt-name-character-set) 0)
                           (throw 'is-modifier nil))
                         ;; The modifier should be either a keyword or an annotation.
-                        (if (jtam-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
+                        (if (jmt-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
 
                             ;; Keyword, the modifier is a keyword
                             ;; ───────
@@ -473,20 +473,20 @@ function must return t on success, nil on failure."
                           (skip-syntax-backward "-"))))))); [FC]
               (goto-char match-end)))
           (throw 'to-fontify nil)))
-      '(0 'jtam-type-declaration t))
+      '(0 'jmt-type-declaration t))
 
 
      ;; ═══════════════════
      ;; Type parameter name in a type parameter declaration  [↑T]
      ;; ═══════════════════
-     (cons; Refontify each using face `jtam-type-parameter-declaration`. [RP]
+     (cons; Refontify each using face `jmt-type-parameter-declaration`. [RP]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
             (let* ((match-beg (point))
                    (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (and (eq face 'jtam--type-reference-in-parameter-list)
+              (when (and (eq face 'jmt--type-reference-in-parameter-list)
 
                          ;; And directly preceding that already fontified parameter name
                          ;; is no additional bound operator (`&`) nor `extends` keyword. [TP]
@@ -494,7 +494,7 @@ function must return t on success, nil on failure."
                                 (p (point)))
                            (not (or (char-equal (char-before p) ?&)
                                     (and (> gap 0)
-                                         (< (skip-chars-backward jtam-name-character-set) 0)
+                                         (< (skip-chars-backward jmt-name-character-set) 0)
                                          (string= (buffer-substring-no-properties (point) p)
                                                   "extends")))))
 
@@ -524,9 +524,9 @@ function must return t on success, nil on failure."
                                           (throw 'is-proven nil))
                                         (setq c (get-text-property p 'face))
                                         (throw 'is-proven; As the type parameter declaration of:
-                                               (or (eq c 'jtam-type-declaration); [↑T]
+                                               (or (eq c 'jmt-type-declaration); [↑T]
                                                      ;;; (a) a generic class or interface declaration;
-                                                   (not (jtam-faces-are-equivalent
+                                                   (not (jmt-faces-are-equivalent
                                                          c 'font-lock-type-face))))))
                                                      ;;; (b) a generic method or contructor declaration.
                                      ((char-equal c ?>); Descending into another brace pair.
@@ -537,62 +537,62 @@ function must return t on success, nil on failure."
                 (throw 'to-refontify t))
               (goto-char match-end)))
           (throw 'to-refontify nil)))
-      '(0 'jtam-type-parameter-declaration t)))
+      '(0 'jmt-type-parameter-declaration t)))
 
-    "Elements for ‘jtam-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
+    "Elements for ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
 
 
-  (defface jtam--type; [MDF, UF]
-    `((t . (:inherit jtam-type-reference))); [TF]
-    "A signalling face set via ‘jtam--c/put-type-face’.  Do not customize it —
-it is for internal use only — leave it to inherit from ‘jtam-type-reference’."
+  (defface jmt--type; [MDF, UF]
+    `((t . (:inherit jmt-type-reference))); [TF]
+    "A signalling face set via ‘jmt--c/put-type-face’.  Do not customize it —
+it is for internal use only — leave it to inherit from ‘jmt-type-reference’."
     :group 'java-mode-tamed)
 
 
 
-  (defface jtam-type-declaration; [MDF]
+  (defface jmt-type-declaration; [MDF]
     `((t . (:inherit font-lock-type-face))); [TF, RP]
     "The face for the identifier of a class or interface in a type declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
 referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
-See also face ‘jtam-type-reference’."
+See also face ‘jmt-type-reference’."
     :group 'java-mode-tamed)
 
 
 
-  (defface jtam-type-parameter-declaration; [TP, MDF, SF]
-    `((t . (:inherit jtam-type-declaration))); [TF]
+  (defface jmt-type-parameter-declaration; [TP, MDF, SF]
+    `((t . (:inherit jmt-type-declaration))); [TF]
     "The face for the identifier of a type parameter in a type parameter declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
 referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
-See also face ‘jtam-type-reference’."
+See also face ‘jmt-type-reference’."
     :group 'java-mode-tamed)
 
 
 
-  (defface jtam-type-reference; [MDF, UF]
+  (defface jmt-type-reference; [MDF, UF]
     `((t . (:inherit font-lock-type-face))); [TF, RP]
     "The face for the identifier of a class, interface or type parameter
-where it appears as a type reference.  See also faces ‘jtam-type-declaration’
-and ‘jtam-type-parameter-declaration’."
+where it appears as a type reference.  See also faces ‘jmt-type-declaration’
+and ‘jmt-type-parameter-declaration’."
     :group 'java-mode-tamed)
 
 
 
-  (defface jtam--type-reference-in-parameter-list; [TP, TA, MDF]
-    `((t . (:inherit jtam-type-reference))); [TF]
+  (defface jmt--type-reference-in-parameter-list; [TP, TA, MDF]
+    `((t . (:inherit jmt-type-reference))); [TF]
     "The face for the identifier of a class, interface or type parameter where it
 appears as a type reference in a type parameter list, one delimited by the sym-
 bols ‘<’ and ‘>’.  Do not customize this face — it is for internal use only —
-leave it to inherit from ‘jtam-type-reference’."
+leave it to inherit from ‘jmt-type-reference’."
     :group 'java-mode-tamed)
 
 
 
-  (defun jtam-untamed-face (face); [TF]
+  (defun jmt-untamed-face (face); [TF]
     "Returns FACE itself if untamed, else the untamed ancestral face from which ultimately it inherits."
-    (while (string-prefix-p "jtam-" (symbol-name face))
+    (while (string-prefix-p "jmt-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil)))
     face)
 
@@ -601,8 +601,8 @@ leave it to inherit from ‘jtam-type-reference’."
   ;; ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-  (unless jtam--early-initialization-was-begun
-    (set 'jtam--early-initialization-was-begun t)
+  (unless jmt--early-initialization-was-begun
+    (set 'jmt--early-initialization-was-begun t)
     (require 'cc-mode)
     (set 'c-default-style (cons '(java-mode-tamed . "java") c-default-style)))
       ;;; Though it appears to have no effect.
@@ -612,79 +612,78 @@ leave it to inherit from ‘jtam-type-reference’."
 
     ;; Finish initializing the mode
     ;; ────────────────────────────
-    (unless jtam--late-initialization-was-begun
-      (set 'jtam--late-initialization-was-begun t)
+    (unless jmt--late-initialization-was-begun
+      (set 'jmt--late-initialization-was-begun t)
 
       ;; Monkey patch the underlying (Java mode) functions. Only now the first Java file is loaded,
       ;; else patching might needlessly delay the start of Emacs.
-      (define-error 'jtam-x "Broken monkey patch")
+      (define-error 'jmt-x "Broken monkey patch")
       (condition-case x
           (let ((source-file (locate-library "cc-fonts.el" t))
                 (source-base-name "cc-fonts"))
             (unless source-file
-              (signal 'jtam-x `("No such source file on load path: `cc-fonts.el`")))
+              (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
             (with-temp-buffer
               (insert-file-contents source-file)
 
-              (jtam--patch
+              (jmt--patch
                source-file source-base-name 'c-font-lock-<>-arglists
                (lambda ()
                  (let (is-patched)
                    (while (re-search-forward "(\\s-*\\(eq\\)\\s-+[^)]+?-face" nil t)
-                     (replace-match "jtam-faces-are-equivalent" t t nil 1)
+                     (replace-match "jmt-faces-are-equivalent" t t nil 1)
                      (setq is-patched t))
                    is-patched)))
 
-              (jtam--patch
+              (jmt--patch
                source-file source-base-name 'c-font-lock-declarations
                (lambda ()
                  (when (re-search-forward
                         (concat "(\\s-*\\(eq\\)\\s-*(get-text-property\\s-*(point)\\s-*'face)\\s-*"
                                 "'font-lock-keyword-face)")
                         nil t)
-                   (replace-match "jtam-faces-are-equivalent" t t nil 1)
+                   (replace-match "jmt-faces-are-equivalent" t t nil 1)
                    t)))
 
-              (jtam--patch
+              (jmt--patch
                source-file source-base-name 'c-fontify-recorded-types-and-refs
                (lambda ()
                  (when (re-search-forward
                         (concat "(c-put-font-lock-face\\s-*(car\\s-*\\(\\w+\\))\\s-*(cdr\\s-*\\1)\\s-*"
                                 "'font-lock-type-face)")
                         nil t)
-                   (replace-match "(jtam--c/put-type-face \\1)" t)
+                   (replace-match "(jmt--c/put-type-face \\1)" t)
                    t)))))
 
-        (jtam-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
+        (jmt-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
 
     ;; Initialize the buffer
     ;; ─────────────────────
-    (jtam-set-for-buffer 'c-maybe-decl-faces
+    (jmt-set-for-buffer 'c-maybe-decl-faces
          (append c-maybe-decl-faces
-                 '('jtam-modifier-keyword
-                   'jtam--type
-                   'jtam-type-declaration
-                   'jtam-type-parameter-declaration
-                   'jtam-type-reference
-                   'jtam--type-reference-in-parameter-list)))
+                 '('jmt-modifier-keyword
+                   'jmt--type
+                   'jmt-type-declaration
+                   'jmt-type-parameter-declaration
+                   'jmt-type-reference
+                   'jmt--type-reference-in-parameter-list)))
     (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
-      (set 'jtam--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
-    (jtam-set-for-buffer 'font-lock-defaults
+      (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
+    (jmt-set-for-buffer 'font-lock-defaults
          '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
             java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
-            jtam-new-fontifiers-2    ; 2           -maximum-decoration` that selects it.  [MD]
-            jtam-new-fontifiers-3)))); 3 or t
+            jmt-new-fontifiers-2    ; 2           -maximum-decoration` that selects it.  [MD]
+            jmt-new-fontifiers-3)))); 3 or t
 
 
 
-  (provide 'java-mode-tamed)); Providing these features
-    ;;; of `java-mode-tamed.el` for any who `require` them.
+  (provide 'java-mode-tamed))
 
 
 
 ;; NOTES
 ;; ─────
-;;   ↑T · This marks code section *Type name* of `jtam-specific-fontifiers-3` and all other code
+;;   ↑T · This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
 ;;        that depends on its prior execution.
 ;;
 ;;   FC · `forward-comment` might be more robust here.
@@ -706,10 +705,10 @@ leave it to inherit from ‘jtam-type-reference’."
 ;;
 ;;   RP · Replacement face.  Every tamed face used by `java-mode-tamed` to override and replace a face
 ;;        earlier applied by Java mode (replacement face) ultimately inherits from the face it replaces.
-;;        Function `jtam-faces-are-equivalent` depends on this.
+;;        Function `jmt-faces-are-equivalent` depends on this.
 ;;
-;;   SF · Stuck face `jtam-type-parameter-declaration`.  Note that the facing guard
-;;        in `jtam--c/put-type-face` may cause this face to stick on occaision.
+;;   SF · Stuck face `jmt-type-parameter-declaration`.  Note that the facing guard
+;;        in `jmt--c/put-type-face` may cause this face to stick on occaision.
 ;;        A viable workaround is to delete and re-type the affected text, which tends to be short.
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy.
@@ -718,11 +717,11 @@ leave it to inherit from ‘jtam-type-reference’."
 ;;   TA · See `TypeArgument`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.5.1
 ;;
 ;;   TF · Tamed face.  Ultimately every face defined by `java-mode-tamed` (tamed face) inherits from a
-;;        face defined elsewhere (untamed ancestral face).  Function `jtam-untamed-face` depends on this.
+;;        face defined elsewhere (untamed ancestral face).  Function `jmt-untamed-face` depends on this.
 ;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
 ;;
-;;   UF · Unstable faces `jtam--type` and `jtam-type-reference`.  Certain applications of these faces
+;;   UF · Unstable faces `jmt--type` and `jmt-type-reference`.  Certain applications of these faces
 ;;        may be mutually unstable, alternating at times between one and the other.  This was seen,
 ;;        for instance, in the facing of the identifier in sequence `new Precounter` here:
 ;;        https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/top/android/ForestCache.java#L493
