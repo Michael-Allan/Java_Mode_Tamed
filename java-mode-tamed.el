@@ -54,6 +54,31 @@
 
 
 
+  (defface jtam-annotation-mark
+    `((t . (:inherit c-annotation-face))); [TF, RP]
+    "The face for the ‘@’ symbol denoting an annotation.  Use it customize
+the appearance of the symbol, e.g. to give it less prominence than
+the ‘c-annotation-face’ of the type name that follows it."
+    :group 'java-mode-tamed)
+
+
+
+  (defface jtam-annotation-qualifier
+    `((t . (:inherit c-annotation-face))); [TF, RP]
+    "The face for the element assignments of an annotation.  Use it customize
+the appearance of the assignments, e.g. to give them less prominence than
+the ‘c-annotation-face’ of the preceding type name."
+    :group 'java-mode-tamed)
+
+
+
+  (defface jtam-annotation-qualifier-delimiter
+    `((t . (:inherit jtam-annotation-qualifier))); [TF]
+    "The face for the ‘(’ and ‘)’ delimiters of an annotation qualifier."
+    :group 'java-mode-tamed)
+
+
+
   (defun jtam-c-lisp-top-declaration-end ()
     "Returns the position just before the next top-level ELisp declaration, if any,
 else `point-max`.  Leaves point indeterminate.  For use on buffers that contain
@@ -149,6 +174,14 @@ See face ‘jtam-modifier-keyword’."
 
 
 
+  (defun jtam-is-Java-mode-type-face (f)
+    "Answers whether F (face symbol) is a type face which might be set
+by the underlying (Java mode) code."
+    (or (eq f 'jtam--type); Set by Java mode via `jtam--c/put-type-face`.
+        (eq f 'font-lock-type-face))); Or via (if it occurs) other means.
+
+
+
   (defun jtam-is-type-modifier-keyword (s)
     "Answers whether string S is a type declaration modifier in keyword form,
 e.g. as opposed to annotation form."
@@ -201,7 +234,30 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
   (defun jtam-new-fontifiers-3 ()
     "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
     (nconc
-     (java-font-lock-keywords-3)
+
+    ;; Underlying Java-mode fontifiers, lightly modified by removing known duds
+    ;; ───────────────────────────────
+     (let* ((kk (java-font-lock-keywords-3)); List of Java mode’s fontifiers.
+            was-found-annotation; Whether the fontifier of annotations was found in `kk`.
+            (k kk); Current fontifier element of `kk`.
+            k-last); Previous fontifier element.
+       (while
+           (progn
+             (if (equal (car k) '(eval list "\\<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face))
+                 (progn
+                   (setq was-found-annotation t)
+                   (setcdr k-last (cdr k))); Deleting the underlying fontifier for sake of reliability,
+                     ;;; in case somehow it starts working and interferes with its overlying replacement.
+               (setq k-last k
+                     k (cdr k)))
+             (and (not was-found-annotation) k)))
+       (unless was-found-annotation
+         (jtam-message "(java-mode-tamed): Failed to remove underlying Java-mode fontifier: `%s` is nil"
+                       (symbol-name 'was-found-annotation)))
+       kk)
+
+    ;; Overlying fontifiers to tame them
+    ;; ────────────────────
      jtam-specific-fontifiers-3))
 
 
@@ -236,7 +292,7 @@ function must return t on success, nil on failure."
          1.3 nil            ; though early timing tests (with a single patch) showed no such effect.
          (lambda ()
            (unless (byte-compile function-symbol)
-             (jtam-message "(java-mode-tamed): Unable to recompile monkey-patched function `%s`"
+             (jtam-message "(java-mode-tamed): Failed to recompile monkey-patched function `%s`"
                            (symbol-name function-symbol))))))))
 
 
@@ -250,6 +306,61 @@ function must return t on success, nil on failure."
 
   (defconst jtam-specific-fontifiers-3
     (list
+
+     ;; ══════════
+     ;; Annotation
+     ;; ══════════
+     (list; Fontify each, overriding any misfontification of Java mode.
+      (lambda (limit)
+        (catch 'to-fontify
+          (let ((m1-beg (point)); Start of leading annotation mark ‘@’, till proven otherwise.
+                (m1-beg-limit (1- limit)); Room for two characters, the minimal length.
+                eol face m1-end m2-beg m2-end m3-beg m3-end m4-beg m4-end m5-beg m5-end)
+            (while (< m1-beg m1-beg-limit)
+              (setq m1-end (1+ m1-beg))
+              (if (not (char-equal ?@ (char-after m1-beg)))
+                  (setq m1-beg m1-end)
+                (goto-char m1-end)
+                (catch 'is-annotation
+                  (when (eolp) (throw 'is-annotation nil)); [SL]
+                  (skip-chars-forward "[:blank:]" limit); [SL]
+                  (setq m2-beg (point))
+                  (skip-chars-forward jtam-name-character-set limit)
+                  (setq m2-end (point))
+                  (unless (< m2-beg m2-end) (throw 'is-annotation nil))
+                  (setq face (get-text-property m2-beg 'face))
+                  (unless (or (eq face nil); The most common case.  Less commonly, a misfontification:
+                              (eq face 'font-lock-function-name-face); ← This one occurs in the case
+                              (jtam-is-Java-mode-type-face face))    ;  e.g. of an empty `()` qualifier.
+                    (throw 'is-annotation nil))
+                  (skip-chars-forward "[:blank:]" limit); [SL]
+                  (when (eq ?\( (char-after)); (and not nil)
+                    (setq m3-beg (point); Start of trailing qualifier, it would be.
+                          eol (line-end-position))
+                    (condition-case _x
+                        (progn
+                          (forward-list 1)
+                          (setq m5-end (point))); End of qualifier.  Point now stays here.
+                      (scan-error
+                       (setq m5-end (point-max)))); Forcing the qualifier to be ignored below.
+                    (if (> m5-end eol); The qualifier crosses lines, or a `scan-error` occured above.
+                        (goto-char m2-end); Ignoring it. [SL]
+                      (setq m3-end (1+ m3-beg); ‘(’
+                            m4-beg m3-end
+                            m5-beg (1- m5-end); ‘)’
+                            m4-end m5-beg)
+                      (set-match-data (list m1-beg m5-end m1-beg m1-end m2-beg m2-end m3-beg m3-end
+                                            m4-beg m4-end m5-beg m5-end (current-buffer)))
+                      (throw 'to-fontify t))); With point (still) at `m5-end` as Font Lock stipulates.
+                  (set-match-data (list m1-beg m2-end m1-beg m1-end m2-beg m2-end (current-buffer)))
+                  (goto-char m2-end)
+                  (throw 'to-fontify t))
+                (setq m1-beg (point)))))
+          (throw 'to-fontify nil)))
+      '(1 'jtam-annotation-mark t) '(2 'c-annotation-face t)
+      '(3 'jtam-annotation-qualifier-delimiter t t) '(4 'jtam-annotation-qualifier t t)
+      '(5 'jtam-annotation-qualifier-delimiter t t))
+
 
      ;; ════════════════
      ;; Modifier keyword
@@ -280,8 +391,7 @@ function must return t on success, nil on failure."
             (let* ((match-beg (point))
                    (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (or (eq face 'jtam--type); Set by Java mode via `jtam--c/put-type-face`.
-                        (eq face 'font-lock-type-face)); Or via (if possible) other means.
+              (when (jtam-is-Java-mode-type-face face)
 
                 ;; Either declaring a type
                 ;; ────────────────
@@ -306,7 +416,7 @@ function must return t on success, nil on failure."
           (throw 'to-refontify nil)))
       '(1 'jtam-type-declaration t t) '(2 'jtam-type-reference t t))
 
-     (cons; Fontify type declaration names missed by Java mode
+     (cons; Fontify type declaration names missed by Java mode.
       (lambda (limit)
         (catch 'to-fontify
           (while (< (point) limit)
@@ -317,23 +427,22 @@ function must return t on success, nil on failure."
                   (and (eq face 'font-lock-keyword-face)
                        (jtam-is-type-declarant (buffer-substring-no-properties (point) match-end)))
                 (goto-char match-end)
-                (skip-syntax-forward "-"); [FC]
+                (skip-syntax-forward "-" limit); [FC]
                 (let ((match-beg (point))
                       (annotation-count 0))
-                  (when (and (> (skip-chars-forward jtam-name-character-set) 0); A name follows.
-                             (<= (point) limit)
+                  (when (and (> (skip-chars-forward jtam-name-character-set limit) 0); A name follows.
                              (not (get-text-property match-beg 'face))); The name is unfontified.
                     (setq match-end (point))
                     (goto-char p); Back to the type declarant keyword.
                     (skip-syntax-backward "-"); [FC]
-                    (when (eq (char-before (point)) ?@); A ‘@’ marks this declaration as
-                      (backward-char); that of an annotation type.  Move back past the ‘@’.
+                    (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
+                      (backward-char); as that of an annotation type.  Move back past the ‘@’.
                       (skip-syntax-backward "-")); [FC]
                     (catch 'is-modifier; Thrown as nil on encountering *not* a type declaration modifier.
                       (while t; Now point should (invariant) be directly after such a modifier.  So test:
-                        (when (eq (char-before (point)) ?\)); Annotation parameters.
-                          (condition-case _x
-                              (forward-sexp -1); Skip past them.
+                        (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
+                          (condition-case _x                ; tation parameters, presumeably.
+                              (forward-sexp -1); Skip past it.
                             (scan-error (throw 'is-modifier nil)))
                           (skip-syntax-backward "-")); Holding still the (would be) invariant. [FC]
                         (setq p (point))
@@ -357,7 +466,7 @@ function must return t on success, nil on failure."
                           ;; Annotation, the modifier is an annotation, or should be
                           ;; ──────────
                           (skip-syntax-backward "-"); A form unconventional, but allowed. [FC]
-                          (unless (eq (char-before (point)) ?@)
+                          (unless (eq (char-before (point)) ?@); (and not nil)
                             (throw 'is-modifier nil))
                           (setq annotation-count (1+ annotation-count))
                           (backward-char)
@@ -435,7 +544,7 @@ function must return t on success, nil on failure."
 
 
   (defface jtam--type; [MDF, UF]
-    `((t . (:inherit jtam-type-reference))); [TF, RP]
+    `((t . (:inherit jtam-type-reference))); [TF]
     "A signalling face set via ‘jtam--c/put-type-face’.  Do not customize it —
 it is for internal use only — leave it to inherit from ‘jtam-type-reference’."
     :group 'java-mode-tamed)
@@ -453,7 +562,7 @@ See also face ‘jtam-type-reference’."
 
 
   (defface jtam-type-parameter-declaration; [TP, MDF, SF]
-    `((t . (:inherit jtam-type-declaration))); [TF, RP]
+    `((t . (:inherit jtam-type-declaration))); [TF]
     "The face for the identifier of a type parameter in a type parameter declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
 referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
@@ -472,7 +581,7 @@ and ‘jtam-type-parameter-declaration’."
 
 
   (defface jtam--type-reference-in-parameter-list; [TP, TA, MDF]
-    `((t . (:inherit jtam-type-reference))); [TF, RP]
+    `((t . (:inherit jtam-type-reference))); [TF]
     "The face for the identifier of a class, interface or type parameter where it
 appears as a type reference in a type parameter list, one delimited by the sym-
 bols ‘<’ and ‘>’.  Do not customize this face — it is for internal use only —
@@ -578,7 +687,7 @@ leave it to inherit from ‘jtam-type-reference’."
 ;;   ↑T · This marks code section *Type name* of `jtam-specific-fontifiers-3` and all other code
 ;;        that depends on its prior execution.
 ;;
-;;   FC · `forward-comment` would be more robust here.
+;;   FC · `forward-comment` might be more robust here.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
@@ -595,13 +704,16 @@ leave it to inherit from ‘jtam-type-reference’."
 ;;        one needs the anchor for sake of speed, but `looking-back` ‘can be quite slow’ regardless.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Regexp-Search.html
 ;;
-;;   RP · Replacement face.  Ultimately every face used by `java-mode-tamed` to override and replace
-;;        a face earlier applied by Java mode (replacement face) inherits from the face it replaces.
+;;   RP · Replacement face.  Every tamed face used by `java-mode-tamed` to override and replace a face
+;;        earlier applied by Java mode (replacement face) ultimately inherits from the face it replaces.
 ;;        Function `jtam-faces-are-equivalent` depends on this.
 ;;
 ;;   SF · Stuck face `jtam-type-parameter-declaration`.  Note that the facing guard
 ;;        in `jtam--c/put-type-face` may cause this face to stick on occaision.
 ;;        A viable workaround is to delete and re-type the affected text, which tends to be short.
+;;
+;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy.
+;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
 ;;
 ;;   TA · See `TypeArgument`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.5.1
 ;;
