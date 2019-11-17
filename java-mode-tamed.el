@@ -99,26 +99,30 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
       (if
           (and jmt--is-level-3
                (eq major-mode 'java-mode-tamed))
-          (if (or (let ((p beg) c)
-                    (while; Set `c` to the first non-whitespace character before `range`.
-                        (progn (setq c (char-before p))
-                               (char-equal (char-syntax c) ?\s))
-                      (setq p (1- p)))
-                    (or (char-equal c ?<)   ; A leading delimiter ‘<’,
-                        (char-equal c ?&)   ; additional bound operator,
-                        (char-equal c ?,))) ; or separator ‘,’ in a type parameter list.
-                  (let ((p end) c)
-                    (while; Set `c` to the first non-whitespace character after `range`.
-                        (progn (setq c (char-after p))
-                               (char-equal (char-syntax c) ?\s))
-                      (setq p (1+ p)))
-                    (or (char-equal c ?>)   ; A trailing delimiter ‘>’,
-                        (char-equal c ?&)   ; additional bound operator,
-                        (char-equal c ?,)))); or separator ‘,’.
-              (progn
+          (if (catch 'is-enlisted; In a type parameter list delimited by ‘<’ and ‘>’, that is.
+                (or
+                 (let ((p beg) c)
+                   (while; Set `c` to the first non-whitespace character before `range`.
+                       (progn (setq c (char-before p))
+                              (when (eq c nil) (throw 'is-enlisted nil)); Out of bounds.
+                              (char-equal (char-syntax c) ?\s))
+                     (setq p (1- p)))
+                   (or (char-equal c ?<)    ; A leading delimiter ‘<’,
+                       (char-equal c ?&)    ; additional bound operator,
+                       (char-equal c ?,)))  ; or separator ‘,’ in a type parameter list.
+                 (let ((p end) c)
+                   (while; Set `c` to the first non-whitespace character after `range`.
+                       (progn (setq c (char-after p))
+                              (when (eq c nil) (throw 'is-enlisted nil)); Out of bounds.
+                              (char-equal (char-syntax c) ?\s))
+                     (setq p (1+ p)))
+                   (or (char-equal c ?>)    ; A trailing delimiter ‘>’,
+                       (char-equal c ?&)    ; additional bound operator,
+                       (char-equal c ?,))))); or separator ‘,’.
 
-                ;; Taming an identifier in a type parameter list  [TP, TA]
-                ;; ─────────────────────────────────────────────
+              ;; Taming an identifier in a type parameter list  [TP, TA]
+              ;; ─────────────────────────────────────────────
+              (progn
                 (unless; Unless already `beg`…`end` is faced `jmt-type-parameter-declaration`. [SF]
                     (and (eq (get-text-property beg 'face) 'jmt-type-parameter-declaration)
                          (>= (next-single-property-change beg 'face (current-buffer) end) end))
