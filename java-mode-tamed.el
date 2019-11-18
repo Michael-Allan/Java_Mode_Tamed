@@ -330,7 +330,8 @@ function must return t on success, nil on failure."
                 (goto-char m1-end)
                 (catch 'is-annotation
                   (when (eolp) (throw 'is-annotation nil)); [SL]
-                  (skip-chars-forward "[:blank:]" limit); [SL]
+                  (skip-chars-forward "[:blank:]" limit); While unconventional, whitespace is allowed
+                    ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines. [AST, SL]
                   (setq m2-beg (point))
                   (skip-chars-forward jmt-name-character-set limit)
                   (setq m2-end (point))
@@ -472,7 +473,7 @@ function must return t on success, nil on failure."
 
                           ;; Annotation, the modifier is an annotation, or should be
                           ;; ──────────
-                          (skip-syntax-backward "-"); A form unconventional, but allowed. [FC]
+                          (skip-syntax-backward "-"); A form unconventional, but allowed. [AST, FC]
                           (unless (eq (char-before (point)) ?@); (and not nil)
                             (throw 'is-modifier nil))
                           (setq annotation-count (1+ annotation-count))
@@ -692,6 +693,10 @@ leave it to inherit from ‘jmt-type-reference’."
 ;; ─────
 ;;   ↑T · This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
 ;;        that depends on its prior execution.
+;;
+;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
+;;        but this is discouraged as a matter of style.’
+;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.7
 ;;
 ;;   FC · `forward-comment` might be more robust here.
 ;;
