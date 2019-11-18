@@ -13,6 +13,11 @@
 ;;       http://reluk.ca/.Xresources
 ;;
 ;;
+;; CUSTOMIZATION
+;; ─────────────
+;;   For the customizeable faces, see the `defface` declarations further below.
+;;
+;;
 ;; NOTES  (see at bottom)
 ;; ─────
 
@@ -616,7 +621,11 @@ leave it to inherit from ‘jmt-type-reference’."
       ;;; Though it appears to have no effect.
 
   (define-derived-mode java-mode-tamed java-mode
-    "Java" "A tamer, more controllable Java mode" :group 'java-mode-tamed
+    "Java"
+    "Java mode tamed - A tamer, more controllable Java mode.
+        Home page URL ‘http://reluk.ca/project/Java/Emacs/’
+User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el’"
+    :group 'java-mode-tamed
 
     ;; Finish initializing the mode
     ;; ────────────────────────────
