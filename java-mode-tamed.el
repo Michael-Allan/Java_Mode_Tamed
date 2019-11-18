@@ -239,24 +239,27 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
     "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
     (nconc
 
-    ;; Underlying Java-mode fontifiers, lightly modified by removing known duds
+    ;; Underlying Java-mode fontifiers, lightly modified
     ;; ───────────────────────────────
      (let* ((kk (java-font-lock-keywords-3)); List of Java mode’s fontifiers.
             was-found-annotation; Whether the fontifier of annotations was found in `kk`.
             (k kk); Current fontifier element of `kk`.
             k-last); Previous fontifier element.
-       (while
+       (while; Searching the list, fontifier by fontifier.
            (progn
              (if (equal (car k) '(eval list "\\<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face))
-                 (progn
+                 ;; Dud fontifier: works under Java mode, fails under Java mode tamed unless
+                 ;; changed in two places `"\\_<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face t`.
+                 (progn;                    1 ↑                                           2 ↑
+                   ;; Moreover its pattern does not cover the complete, valid form of an annotation.
+                   ;; Therefore `jmt-new-fontifiers-3` adds a more general, replacement fontifier.
                    (setq was-found-annotation t)
-                   (setcdr k-last (cdr k))); Deleting the underlying fontifier for sake of reliability,
-                     ;;; in case somehow it starts working and interferes with its overlying replacement.
-               (setq k-last k
+                   (setcdr k-last (cdr k))); Deleting this one here in case somehow it starts working
+               (setq k-last k              ; and interferes with the replacement.
                      k (cdr k)))
              (and (not was-found-annotation) k)))
        (unless was-found-annotation
-         (jmt-message "(java-mode-tamed): Failed to remove underlying Java-mode fontifier: `%s` is nil"
+         (jmt-message "(java-mode-tamed): Failed to remove unwanted Java-mode fontifier: `%s` = nil"
                        (symbol-name 'was-found-annotation)))
        kk)
 
