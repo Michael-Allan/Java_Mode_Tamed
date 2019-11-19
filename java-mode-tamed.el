@@ -22,8 +22,8 @@
 ;; ───────────────
 ;;   jmt-stabilized
 ;;       Marks text whose fontification is stabilized by Java mode tamed.  Blocks the underlying code
-;;       of Java mode from overriding the `face` properties of the marked text by mechanisms of its own,
-;;       outside of Font Lock. [SF]
+;;       of Java mode from overriding the `face` properties of the marked text by its own mechanisms,
+;;       outside of Font Lock that is. [SF]
 ;;
 ;;
 ;; NOTES  (see at bottom)
@@ -115,7 +115,7 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
           (if (catch 'is-enlisted; In a type parameter list delimited by ‘<’ and ‘>’, that is.
                 (or
                  (let ((p beg) c)
-                   (while; Set `c` to the first non-whitespace character before `range`.
+                   (while; Set `c` to the first non-whitespace character before `range`. [NAC]
                        (progn (setq c (char-before p))
                               (when (eq c nil) (throw 'is-enlisted nil)); Out of bounds.
                               (char-equal (char-syntax c) ?\s))
@@ -124,7 +124,7 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
                        (char-equal c ?&)    ; additional bound operator,
                        (char-equal c ?,)))  ; or separator ‘,’ in a type parameter list.
                  (let ((p end) c)
-                   (while; Set `c` to the first non-whitespace character after `range`.
+                   (while; Set `c` to the first non-whitespace character after `range`. [NAC]
                        (progn (setq c (char-after p))
                               (when (eq c nil) (throw 'is-enlisted nil)); Out of bounds.
                               (char-equal (char-syntax c) ?\s))
@@ -344,8 +344,9 @@ function must return t on success, nil on failure."
                 (goto-char m1-end)
                 (catch 'is-annotation
                   (when (eolp) (throw 'is-annotation nil)); [SL]
-                  (skip-chars-forward "[:blank:]" limit); While unconventional, whitespace is allowed
+                  (skip-syntax-forward "-" limit); Though unconventional, whitespace is allowed
                     ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines. [AST, SL]
+                    ;;; Also it excludes commentary, which would be perverse here, not worth coding for.
                   (setq m2-beg (point))
                   (skip-chars-forward jmt-name-character-set limit)
                   (setq m2-end (point))
@@ -355,7 +356,7 @@ function must return t on success, nil on failure."
                               (eq face 'font-lock-function-name-face); ← This one occurs in the case
                               (jmt-is-Java-mode-type-face face))    ;  e.g. of an empty `()` qualifier.
                     (throw 'is-annotation nil))
-                  (skip-chars-forward "[:blank:]" limit); [SL]
+                  (skip-syntax-forward "-" limit); [SL]
                   (when (eq ?\( (char-after)); (and not nil)
                     (setq m3-beg (point); Start of trailing qualifier, it would be.
                           eol (line-end-position))
@@ -421,14 +422,14 @@ function must return t on success, nil on failure."
                    (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
               (when (jmt-is-Java-mode-type-face face)
+                (forward-comment most-negative-fixnum); [←CW, QSB]
 
                 ;; Either declaring (1) a type
                 ;; ────────────────
                 (when; Keyword `class`, `enum` or `interface` directly precedes the type name.
-                    (and (< (skip-syntax-backward "-") 0); [QSB, FC]
-                         (let ((p (point)))
-                           (and (< (skip-chars-backward jmt-name-character-set) 0)
-                                (jmt-is-type-declarant (buffer-substring-no-properties (point) p)))))
+                    (let ((p (point)))
+                      (and (< (skip-chars-backward jmt-name-character-set) 0)
+                           (jmt-is-type-declarant (buffer-substring-no-properties (point) p))))
                   (set-match-data; Capturing the already fontified name as group 1.
                    (list match-beg match-end match-beg match-end (current-buffer)))
                   (goto-char match-end)
@@ -457,24 +458,26 @@ function must return t on success, nil on failure."
                   (and (eq face 'font-lock-keyword-face)
                        (jmt-is-type-declarant (buffer-substring-no-properties (point) match-end)))
                 (goto-char match-end)
-                (skip-syntax-forward "-" limit); [FC]
+                (forward-comment most-positive-fixnum); [CW→]
                 (let ((match-beg (point))
                       (annotation-count 0))
-                  (when (and (> (skip-chars-forward jmt-name-character-set limit) 0); A name follows.
+                  (when (and (< match-beg limit)
+                             (> (skip-chars-forward jmt-name-character-set limit) 0); A name follows.
                              (not (get-text-property match-beg 'face))); The name is unfontified.
                     (setq match-end (point))
                     (goto-char p); Back to the type declarant keyword.
-                    (skip-syntax-backward "-"); [FC]
+                    (forward-comment most-negative-fixnum); [←CW]
                     (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
                       (backward-char); as that of an annotation type.  Move back past the ‘@’.
-                      (skip-syntax-backward "-")); [FC]
+                      (forward-comment most-negative-fixnum)); [←CW]
                     (catch 'is-modifier; Thrown as nil on encountering *not* a type declaration modifier.
                       (while t; Now point should (invariant) be directly after such a modifier.  So test:
                         (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
                           (condition-case _x                ; tation parameters, presumeably.
                               (forward-sexp -1); Skip past it.
                             (scan-error (throw 'is-modifier nil)))
-                          (skip-syntax-backward "-")); Holding still the (would be) invariant. [FC]
+                          (forward-comment most-negative-fixnum)); [←CW]
+                            ;;; Holding still the (would be) invariant.
                         (setq p (point))
                         (when (= (skip-chars-backward jmt-name-character-set) 0)
                           (throw 'is-modifier nil))
@@ -484,7 +487,7 @@ function must return t on success, nil on failure."
                             ;; Keyword, the modifier is a keyword
                             ;; ───────
                             (if (= annotation-count 0)
-                                (skip-syntax-backward "-"); [FC]
+                                (forward-comment most-negative-fixnum); [←CW]
                               (set-match-data (list match-beg match-end (current-buffer)))
                               (goto-char match-end)
                               (throw 'to-fontify t)); The keyword precedes annotation.  With this.
@@ -498,12 +501,13 @@ function must return t on success, nil on failure."
 
                           ;; Annotation, the modifier is an annotation modifier, or should be
                           ;; ──────────
-                          (skip-syntax-backward "-"); A form unconventional, but allowed. [AST, FC]
+                          (forward-comment most-negative-fixnum); [←CW]
+                            ;;; A form unconventional, but allowed. [AST]
                           (unless (eq (char-before (point)) ?@); (and not nil)
                             (throw 'is-modifier nil))
                           (setq annotation-count (1+ annotation-count))
                           (backward-char)
-                          (skip-syntax-backward "-"))))))); [FC]
+                          (forward-comment most-negative-fixnum))))))); [←CW]
               (goto-char match-end)))
           (throw 'to-fontify nil)))
       '(0 'jmt-type-declaration t))
@@ -519,55 +523,53 @@ function must return t on success, nil on failure."
             (let* ((match-beg (point))
                    (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (and (eq face 'jmt--type-reference-in-parameter-list)
-
-                         ;; And directly preceding that already fontified parameter name
-                         ;; is no additional bound operator (`&`) nor `extends` keyword. [TP]
-                         (let* ((gap (- (skip-syntax-backward "-"))); [QSB, FC]
-                                (p (point)))
-                           (not (or (char-equal (char-before p) ?&)
-                                    (and (> gap 0)
-                                         (< (skip-chars-backward jmt-name-character-set) 0)
-                                         (string= (buffer-substring-no-properties (point) p)
-                                                  "extends")))))
-
-                         ;; And that parameter name occurs at the top level of the parameter list (depth
-                         ;; of angle bracing 1).  And the list directly follows one of (a) the name of
-                         ;; a type declaration, indicating a generic class or interface declaration,
-                         ;; or (b) neither a type name, type parameter nor `.` delimiter (of a method
-                         ;; call), indicating a generic method or contructor declaration.  [TP, MI]
-                         (catch 'is-proven
-                           (let ((depth 1); Depth of name in bracing, presumed to be 1 as required.
-                                 (p (point)) c)
-                             (while (> (setq p (1- p)) 0); Move `p` leftward to emerge from all braces.
-                               (setq c (char-after p))
-                               (cond ((char-equal c ?<); Ascending from the present brace pair.
-                                      (setq depth (1- depth))
-                                      (when (= 0 depth); Then presumeably `p` has emerged left of list.
-                                        (goto-char p)
-                                        (skip-syntax-backward "-"); [FC]
-                                        (when (bobp) (throw 'is-proven t))
+              (when (eq face 'jmt--type-reference-in-parameter-list)
+                (forward-comment most-negative-fixnum); [←CW, QSB]
+                (when
+                    (and; And directly preceding that already fontified parameter name
+                      ;;; is no additional bound operator (`&`) nor `extends` keyword. [TP]
+                     (let ((p (point)))
+                       (not (or (char-equal (char-before p) ?&)
+                                (and (< (skip-chars-backward jmt-name-character-set) 0)
+                                     (string= (buffer-substring-no-properties (point) p)
+                                              "extends")))))
+                     ;; And that parameter name occurs at the top level of the parameter list (depth
+                     ;; of angle bracing 1).  And the list directly follows one of (a) the name of
+                     ;; a type declaration, indicating a generic class or interface declaration,
+                     ;; or (b) neither a type name, type parameter nor `.` delimiter (of a method
+                     ;; call), indicating a generic method or contructor declaration.  [TP, MI]
+                     (catch 'is-proven
+                       (let ((depth 1); Depth of name in bracing, presumed to be 1 as required.
+                             (p (point)) c)
+                         (while (> (setq p (1- p)) 0); Move `p` leftward to emerge from all braces.
+                           (setq c (char-after p))
+                           (cond ((char-equal c ?<); Ascending from the present brace pair.
+                                  (setq depth (1- depth))
+                                  (when (= 0 depth); Then presumeably `p` has emerged left of list.
+                                    (goto-char p)
+                                    (forward-comment most-negative-fixnum); [←CW]
+                                    (when (bobp) (throw 'is-proven t))
                                            ;;; Apparently a generic method or contructor declaration,
                                            ;;; though outside of any class body and so misplaced.
-                                        (setq p (1- p); Into direct predecessor of parameter list.
-                                              c (char-after p))
-                                        (when (or (char-equal c ?.); `.` delimiter of a method call.
-                                                  (char-equal c ?<)); `p` had *not* emerged, and so the
+                                    (setq p (1- (point)); Into direct predecessor of parameter list.
+                                          c (char-after p))
+                                    (when (or (char-equal c ?.); `.` delimiter of a method call.
+                                              (char-equal c ?<)); `p` had *not* emerged, and so the
                                                     ;;; parameter name is *not* at top level, after all.
-                                          (throw 'is-proven nil))
-                                        (setq c (get-text-property p 'face))
-                                        (throw 'is-proven; As the type parameter declaration of:
-                                               (or (eq c 'jmt-type-declaration); [↑T]
+                                      (throw 'is-proven nil))
+                                    (setq c (get-text-property p 'face))
+                                    (throw 'is-proven; As the type parameter declaration of:
+                                           (or (eq c 'jmt-type-declaration); [↑T]
                                                      ;;; (a) a generic class or interface declaration;
-                                                   (not (jmt-faces-are-equivalent
-                                                         c 'font-lock-type-face))))))
+                                               (not (jmt-faces-are-equivalent
+                                                     c 'font-lock-type-face))))))
                                                      ;;; (b) a generic method or contructor declaration.
-                                     ((char-equal c ?>); Descending into another brace pair.
-                                      (setq depth (1+ depth)))))
-                             nil)))
-                (set-match-data (list match-beg match-end (current-buffer)))
-                (goto-char match-end)
-                (throw 'to-refontify t))
+                                 ((char-equal c ?>); Descending into another brace pair.
+                                  (setq depth (1+ depth)))))
+                         nil)))
+                  (set-match-data (list match-beg match-end (current-buffer)))
+                  (goto-char match-end)
+                  (throw 'to-refontify t)))
               (goto-char match-end)))
           (throw 'to-refontify nil)))
       '(0 'jmt-type-parameter-declaration t)))
@@ -727,11 +729,19 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   ↑T · This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
 ;;        that depends on its prior execution.
 ;;
+;;   ←CW  Backward across commentary and whitespace.
+;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
 ;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.7
 ;;
-;;   FC · `forward-comment` might be more robust here.
+;;   CW→  Forward across commentary and whitespace.
+;;
+;;   NAC  Not allowing for comments.  If that ever proves necessary in practice, then the code here
+;;        (and its facing of type references in type parameter lists) might have to be removed from
+;;        `jmt--c/put-type-face` to a tamed fontifier where the speed constraints are more relaxed.
+;;        Then too the fontification of type parameter lists would need a different stabilization,
+;;        e.g. using text property `jmt-stabilized`.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
