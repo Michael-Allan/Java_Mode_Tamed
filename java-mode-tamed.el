@@ -18,6 +18,14 @@
 ;;   For the customizeable faces, see the `defface` declarations further below.
 ;;
 ;;
+;; TEXT PROPERTIES
+;; ───────────────
+;;   jmt-stabilized
+;;       Marks text whose fontification is stabilized by Java mode tamed.  Blocks the underlying code
+;;       of Java mode from overriding the `face` properties of the marked text by mechanisms of its own,
+;;       outside of Font Lock. [SF]
+;;
+;;
 ;; NOTES  (see at bottom)
 ;; ─────
 
@@ -61,7 +69,7 @@
 
   (defface jmt-annotation-mark
     `((t . (:inherit c-annotation-face))); [TF, RP]
-    "The face for the ‘@’ symbol denoting an annotation.  Use it customize
+    "The face for the ‘@’ symbol denoting annotation.  Use it customize
 the appearance of the symbol, e.g. to give it less prominence than
 the ‘c-annotation-face’ of the type name that follows it."
     :group 'java-mode-tamed)
@@ -70,7 +78,7 @@ the ‘c-annotation-face’ of the type name that follows it."
 
   (defface jmt-annotation-qualifier
     `((t . (:inherit c-annotation-face))); [TF, RP]
-    "The face for the element assignments of an annotation.  Use it customize
+    "The face for the element assignments of annotation.  Use it customize
 the appearance of the assignments, e.g. to give them less prominence than
 the ‘c-annotation-face’ of the preceding type name."
     :group 'java-mode-tamed)
@@ -137,10 +145,11 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
 
             ;; Taming an identifier elsewhere
             ;; ──────────────────────────────
-            (c-put-font-lock-face beg end 'jmt--type))
-              ;;; Normally `jmt-specific-fontifiers-3` will immediately override this facing,
-              ;;; replacing it with `jmt-type-declaration` or `jmt-type-reference`.  Occaisionally
-              ;;; this replacement may fail to occur, occur late, or prove to be unstable. [UF]
+            (unless (get-text-property beg 'jmt-stabilized); [SF]
+              (c-put-font-lock-face beg end 'jmt--type)))
+                ;;; Normally `jmt-specific-fontifiers-3` will immediately override this facing,
+                ;;; replacing it with `jmt-type-declaration` or `jmt-type-reference`.  Occaisionally
+                ;;; this replacement may fail to occur, occur late, or prove to be unstable. [UF]
 
         ;; Leaving the identifier untamed
         ;; ──────────────────────────────
@@ -247,7 +256,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
     ;; Underlying Java-mode fontifiers, lightly modified
     ;; ───────────────────────────────
      (let* ((kk (java-font-lock-keywords-3)); List of Java mode’s fontifiers.
-            was-found-annotation; Whether the fontifier of annotations was found in `kk`.
+            was-found-annotation; Whether the annotation fontifier of was found in `kk`.
             (k kk); Current fontifier element of `kk`.
             k-last); Previous fontifier element.
        (while; Searching the list, fontifier by fontifier.
@@ -256,7 +265,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
                  ;; Dud fontifier: works under Java mode, fails under Java mode tamed unless
                  ;; changed in two places `"\\_<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face t`.
                  (progn;                    1 ↑                                           2 ↑
-                   ;; Moreover its pattern does not cover the complete, valid form of an annotation.
+                   ;; Moreover its pattern does not cover the complete, valid form of annotation.
                    ;; Therefore `jmt-new-fontifiers-3` adds a more general, replacement fontifier.
                    (setq was-found-annotation t)
                    (setcdr k-last (cdr k))); Deleting this one here in case somehow it starts working
@@ -358,6 +367,9 @@ function must return t on success, nil on failure."
                        (setq m5-end (point-max)))); Forcing the qualifier to be ignored below.
                     (if (> m5-end eol); The qualifier crosses lines, or a `scan-error` occured above.
                         (goto-char m2-end); Ignoring it. [SL]
+
+                      ;; Qualified
+                      ;; ─────────
                       (setq m3-end (1+ m3-beg); ‘(’
                             m4-beg m3-end
                             m5-beg (1- m5-end); ‘)’
@@ -365,9 +377,13 @@ function must return t on success, nil on failure."
                       (set-match-data (list m1-beg m5-end m1-beg m1-end m2-beg m2-end m3-beg m3-end
                                             m4-beg m4-end m5-beg m5-end (current-buffer)))
                       (throw 'to-fontify t))); With point (still) at `m5-end` as Font Lock stipulates.
+
+                  ;; Unqualified
+                  ;; ───────────
                   (set-match-data (list m1-beg m2-end m1-beg m1-end m2-beg m2-end (current-buffer)))
                   (goto-char m2-end)
                   (throw 'to-fontify t))
+
                 (setq m1-beg (point)))))
           (throw 'to-fontify nil)))
       '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t)
@@ -406,7 +422,7 @@ function must return t on success, nil on failure."
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
               (when (jmt-is-Java-mode-type-face face)
 
-                ;; Either declaring a type
+                ;; Either declaring (1) a type
                 ;; ────────────────
                 (when; Keyword `class`, `enum` or `interface` directly precedes the type name.
                     (and (< (skip-syntax-backward "-") 0); [QSB, FC]
@@ -418,7 +434,7 @@ function must return t on success, nil on failure."
                   (goto-char match-end)
                   (throw 'to-refontify t))
 
-                ;; Or merely referring to one
+                ;; Or merely referring (2) to one
                 ;; ───────────────────
                 (set-match-data; Capturing the name instead as group 2.
                  (list match-beg match-end nil nil match-beg match-end (current-buffer)))
@@ -427,7 +443,8 @@ function must return t on success, nil on failure."
 
               (goto-char match-end)))
           (throw 'to-refontify nil)))
-      '(1 'jmt-type-declaration t t) '(2 'jmt-type-reference t t))
+      '(1 '(face jmt-type-declaration jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [SF]
+        ;;; The stabilizer is for a minority of cases which have no discerned pattern.
 
      (cons; Fontify type declaration names missed by Java mode.
       (lambda (limit)
@@ -461,7 +478,7 @@ function must return t on success, nil on failure."
                         (setq p (point))
                         (when (= (skip-chars-backward jmt-name-character-set) 0)
                           (throw 'is-modifier nil))
-                        ;; The modifier should be either a keyword or an annotation.
+                        ;; The modifier should be either a keyword or annotation.
                         (if (jmt-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
 
                             ;; Keyword, the modifier is a keyword
@@ -470,13 +487,16 @@ function must return t on success, nil on failure."
                                 (skip-syntax-backward "-"); [FC]
                               (set-match-data (list match-beg match-end (current-buffer)))
                               (goto-char match-end)
-                              (throw 'to-fontify t)); The keyword precedes an annotation.  Java mode
-                                ;;; expects keywords to *succeed* any annotation, which ‘is customary’
-                                ;;; according to the Java specification.  Still it is ‘not required’,
-                                ;;; therefore proceed to apply the missing fontification.
-                                ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
+                              (throw 'to-fontify t)); The keyword precedes annotation.  With this.
+                                ;;; Java mode fails at times to fontify the type name.  This was seen,
+                                ;;; for instance, here in the sequence `public @ThreadSafe class ID`:
+                                ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`.
+                                ;;;     It seems Java mode expects to find keywords *before* annotation,
+                                ;;; which, although it ‘is customary’, is nevertheless ‘not required’,
+                                ;;; `https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1`.
+                                ;;; Here therefore the missing fontification is applied.
 
-                          ;; Annotation, the modifier is an annotation, or should be
+                          ;; Annotation, the modifier is an annotation modifier, or should be
                           ;; ──────────
                           (skip-syntax-backward "-"); A form unconventional, but allowed. [AST, FC]
                           (unless (eq (char-before (point)) ?@); (and not nil)
@@ -564,7 +584,7 @@ it is for internal use only — leave it to inherit from ‘jmt-type-reference�
 
 
 
-  (defface jmt-type-declaration; [MDF]
+  (defface jmt-type-declaration; [MDF, SF]
     `((t . (:inherit font-lock-type-face))); [TF, RP]
     "The face for the identifier of a class or interface in a type declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
@@ -686,11 +706,15 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                    'jmt--type-reference-in-parameter-list)))
     (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
       (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
+
+    (make-local-variable 'font-lock-extra-managed-props); With ‘the same value’ it ‘previously had’.
+    (push 'jmt-stabilized font-lock-extra-managed-props)
+
     (jmt-set-for-buffer 'font-lock-defaults
          '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
             java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
-            jmt-new-fontifiers-2    ; 2           -maximum-decoration` that selects it.  [MD]
-            jmt-new-fontifiers-3)))); 3 or t
+            jmt-new-fontifiers-2     ; 2           -maximum-decoration` that selects it.  [MD]
+            jmt-new-fontifiers-3)))) ; 3 or t
 
 
 
@@ -728,9 +752,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        earlier applied by Java mode (replacement face) ultimately inherits from the face it replaces.
 ;;        Function `jmt-faces-are-equivalent` depends on this.
 ;;
-;;   SF · Stuck face `jmt-type-parameter-declaration`.  Note that the facing guard
-;;        in `jmt--c/put-type-face` may cause this face to stick on occaision.
-;;        A viable workaround is to delete and re-type the affected text, which tends to be short.
+;;   SF · Stuck face.  The use of text property `jmt-stabilized` and other stabilization guards
+;;        may cause certain faces to become stuck on occaision.  A viable workaround in the event
+;;        would be to delete and re-type the affected text, which tends to be short in length.
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
@@ -744,7 +768,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   UF · Unstable faces `jmt--type` and `jmt-type-reference`.  Certain applications of these faces
 ;;        may be mutually unstable, alternating at times between one and the other.  This was seen,
-;;        for instance, in the facing of the identifier in sequence `new Precounter` here:
+;;        for instance, in the facing of the identifier in the sequence `new Precounter` here:
 ;;        https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/top/android/ForestCache.java#L493
 
 
