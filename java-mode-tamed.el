@@ -168,6 +168,10 @@ by the underlying (Java mode) code."
 
 
 
+  (defvar jmt-face nil "A face indirectly referred to by a fontifier.")
+
+
+
   (defun jmt-is-modifier-keyword (s)
     "Answers whether string S is a Java modifier in keyword form.
 See face ‘jmt-modifier-keyword’."
@@ -318,8 +322,22 @@ function must return t on success, nil on failure."
 
 
 
+  (defun preceding->-marks-generic-return-type ()
+    "Answers whether the ‘>’ character before point could be a delimiter within a
+function declaration, namely the trailing delimiter of a list of type parameters
+for the function’s return type, making it a *generic* return type.  May move point."
+    (when
+        (condition-case _x
+            (progn (forward-sexp -1) t); Skip to the front of the leading delimiter.
+          (scan-error nil))
+      (forward-comment most-negative-fixnum); [←CW]
+      (not (eq (char-before) ?.)))); (not `char-equal`, in case nil)
+        ;;; Here a `.` would indicate a method call, as opposed to a declaration.
+
+
   (defun jmt-set-for-buffer (variable value)
-    "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting is not buffer local."
+    "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting
+is not buffer local."
     (set variable value)
     (cl-assert (local-variable-p variable)))
 
@@ -329,7 +347,7 @@ function must return t on success, nil on failure."
     (list
 
      ;; ══════════
-     ;; Annotation
+     ;; Annotation  [↑A]
      ;; ══════════
      (list; Fontify each, overriding any misfontification of Java mode.
       (lambda (limit)
@@ -447,7 +465,7 @@ function must return t on success, nil on failure."
       '(1 '(face jmt-type-declaration jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [SF]
         ;;; The stabilizer is for a minority of cases which have no discerned pattern.
 
-     (cons; Fontify type declaration names missed by Java mode.
+     (cons; Fontify type declaration names unfaced by Java mode.
       (lambda (limit)
         (catch 'to-fontify
           (while (< (point) limit)
@@ -474,7 +492,7 @@ function must return t on success, nil on failure."
                       (while t; Now point should (invariant) be directly after such a modifier.  So test:
                         (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
                           (condition-case _x                ; tation parameters, presumeably.
-                              (forward-sexp -1); Skip past it.
+                              (forward-sexp -1); Skip to the front of it.
                             (scan-error (throw 'is-modifier nil)))
                           (forward-comment most-negative-fixnum)); [←CW]
                             ;;; Holding still the (would be) invariant.
@@ -491,13 +509,13 @@ function must return t on success, nil on failure."
                               (set-match-data (list match-beg match-end (current-buffer)))
                               (goto-char match-end)
                               (throw 'to-fontify t)); The keyword precedes annotation.  With this.
-                                ;;; Java mode fails at times to fontify the type name.  This was seen,
+                                ;;; Java mode fails at times to face the type name.  This was seen,
                                 ;;; for instance, here in the sequence `public @ThreadSafe class ID`:
                                 ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`.
                                 ;;;     It seems Java mode expects to find keywords *before* annotation,
                                 ;;; which, although it ‘is customary’, is nevertheless ‘not required’,
                                 ;;; `https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1`.
-                                ;;; Here therefore the missing fontification is applied.
+                                ;;; Here therefore the missing face is applied.
 
                           ;; Annotation, the modifier is an annotation modifier, or should be
                           ;; ──────────
@@ -572,7 +590,120 @@ function must return t on success, nil on failure."
                   (throw 'to-refontify t)))
               (goto-char match-end)))
           (throw 'to-refontify nil)))
-      '(0 'jmt-type-parameter-declaration t)))
+      '(0 'jmt-type-parameter-declaration t))
+
+
+     ;; ════════════════════════════════
+     ;; Method or constructor identifier  [↑A, ↑T]
+     ;; ════════════════════════════════
+     (cons; Fontify where misfaced by Java mode, or incorrectly unfaced.
+      (let ((identifier-pattern (concat "[" jmt-name-character-set "]+"))
+            face i match-beg)
+        (lambda (limit)
+          (set
+           'jmt-face
+           (catch 'to-fontify
+             (while (re-search-forward identifier-pattern limit t)
+               (setq match-beg (match-beginning 0)
+                     face (get-text-property match-beg 'face))
+               (when (or (eq face nil) (eq face 'font-lock-function-name-face); Unfaced or misfaced.
+                         (eq face 'jmt-type-reference)); [↑T]
+                   ;;; Vanguard, redundant but for sake of speed.  See the other face guards below.
+                 (forward-comment most-positive-fixnum); [CW→]
+                 (when (eq ?\( (char-after)); (and not nil)
+
+                   ;; Constructor declaration  (assumption: point is directly before the ‘(’)
+                   ;; ───────────────────────
+                   (catch 'is-constructor-declaration; One that needs fontifying, that is.  Or some
+                     ;; cases of method declaration in need; this section will fontify those, too,
+                     ;; just because it happens to precede the method declaration section, below.
+                     (when (not (or (eq face nil) (eq face 'jmt-type-reference))); [↑T]
+                       (throw 'is-constructor-declaration nil)); Only identifiers left unfaced
+                       ;;; or misfaced as type references have been seen.  See for instance
+                       ;;; the sequences `public @Warning("non-API") ApplicationX()` at
+                       ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L23`,
+                       ;;; and `ID( final String string, final int cN ) throws MalformedID` at
+                       ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L30`.
+
+                     ;; After the identifier, in any parameter list
+                     ;; ·····················
+                     (forward-char); Past the ‘(’.
+                     (forward-comment most-positive-fixnum); [CW→]
+                     (setq i (point))
+                     (when (> (skip-chars-forward jmt-name-character-set) 0)
+                       (when (string= "final" (buffer-substring-no-properties i (point)))
+                         (throw 'to-fontify 'font-lock-function-name-face))
+                       (catch 'is-past-qualifier; Leaving `i` at either the next token to deal with,
+                         (while t; or the buffer end, scan past any itervening package qualifier.
+                           ;; Now point is (invariant) directly after a name (in form).
+                           (forward-comment most-positive-fixnum); [CW→]
+                           (when (eobp) (throw 'is-past-qualifier t))
+                           (when (not (char-equal ?. (char-after))); Namely the delimiting dot of
+                             (throw 'is-past-qualifier t))         ; a preceding package segment.
+                           (forward-char); Past the ‘.’.
+                           (forward-comment most-positive-fixnum); [CW→] To the next token.
+                           (setq i (point)); What follows the qualifier follows its last dot.
+                           (when (= (skip-chars-forward jmt-name-character-set) 0)
+                             (throw 'is-past-qualifier t)))))
+                     (when (and (/= i (point-max))
+                                (or (char-equal ?@ (char-after i))
+                                    (eq (get-text-property i 'face) 'jmt-type-reference))); [↑T]
+                       (throw 'to-fontify 'font-lock-function-name-face))
+
+                     ;; Before the identifier
+                     ;; ·····················
+                     (goto-char match-beg)
+                     (forward-comment most-negative-fixnum); [←CW]
+                     (when (bobp) (throw 'is-constructor-declaration nil))
+                     (when (char-equal (char-before) ?>)
+                       (if (preceding->-marks-generic-return-type)
+                           (throw 'to-fontify 'font-lock-function-name-face)
+                         (throw 'is-constructor-declaration nil)))
+                     ;; A constructor modifier here before point would also indicate a declaration.
+                     ;; However, the earlier test of ‘final’ (above) has eliminated the only case
+                     ;; in which Java mode is known to fail when a keyword modifier appears here.
+                     ;; That leaves only the case of an *annotation* modifier to remedy.
+                     (when (jmt-faces-are-equivalent
+                            'c-annotation-face (get-text-property (1- (point)) 'face)); [↑A]
+                       (throw 'to-fontify 'font-lock-function-name-face)))
+
+                   ;; Method declaration
+                   ;; ──────────────────
+                   (catch 'is-method-declaration; One that needs fontifying, that is.
+                     (when (not (eq face nil)) (throw 'is-method-declaration nil)); Declarations
+                       ;;; left unfaced have been seen, but misfacing has not.  See for instance
+                       ;;; the sequence `public @Override @Warning("non-API") void onCreate()`:
+                       ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40`.
+                     (goto-char match-beg)
+                     (forward-comment most-negative-fixnum); [←CW]
+                     (when (bobp) (throw 'is-method-declaration nil))
+                     (setq i (char-before))
+                     (when (char-equal i ?\]); Return type declared as an array.
+                       (throw 'to-fontify 'font-lock-function-name-face))
+                     (when (char-equal i ?>)
+                       (if (preceding->-marks-generic-return-type)
+                           (throw 'to-fontify 'font-lock-function-name-face)
+                         (throw 'is-method-declaration nil)))
+                     (when (eq (get-text-property (1- (point)) 'face) 'jmt-type-reference); [↑T]
+                       ;; The return type is declared simply by a type name.
+                       (throw 'to-fontify 'font-lock-function-name-face)))
+
+                   ;; Method call
+                   ;; ───────────
+                   (catch 'is-method-call; One that needs refontifying, that is.
+                     (when (not (eq face 'font-lock-function-name-face)) (throw 'is-method-call nil))
+                       ;;; Only calls misfaced as declarations have been seen.
+                     (goto-char match-beg)
+                     (forward-comment most-negative-fixnum); [←CW]
+                     (when (bobp) (throw 'is-method-call nil))
+                     (when (char-equal (char-before) ?.); Always the misfaced identifier directly
+                       ;; follows a ‘.’, which excludes the possibility of it being a declaration.
+                       ;; See for instance the sequence `assert stators.getClass()`:
+                       ;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
+                       (throw 'to-fontify 'default))))
+                 (goto-char (match-end 0)))); Whence the next leg of the search begins.
+             (throw 'to-fontify nil)))))
+      '(0 jmt-face t)))
 
     "Elements for ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
@@ -626,7 +757,8 @@ leave it to inherit from ‘jmt-type-reference’."
 
 
   (defun jmt-untamed-face (face); [TF]
-    "Returns FACE itself if untamed, else the untamed ancestral face from which ultimately it inherits."
+    "Returns FACE itself if untamed, else the untamed ancestral face
+from which ultimately it inherits."
     (while (string-prefix-p "jmt-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil)))
     face)
@@ -726,6 +858,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
 ;; NOTES
 ;; ─────
+;;   ↑A · This marks code section *Annotation* of `jmt-specific-fontifiers-3` and all other code
+;;        that depends on its prior execution.
+;;
 ;;   ↑T · This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
 ;;        that depends on its prior execution.
 ;;
@@ -737,7 +872,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   CW→  Forward across commentary and whitespace.
 ;;
-;;   NAC  Not allowing for comments.  If that ever proves necessary in practice, then the code here
+;;   NAC  Not allowing for comments.  If ever that proves necessary in practice, then the code here
 ;;        (and its facing of type references in type parameter lists) might have to be removed from
 ;;        `jmt--c/put-type-face` to a tamed fontifier where the speed constraints are more relaxed.
 ;;        Then too the fontification of type parameter lists would need a different stabilization,
