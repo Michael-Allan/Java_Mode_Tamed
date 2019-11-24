@@ -68,7 +68,7 @@
 
 
   (defface jmt-annotation-mark
-    `((t . (:inherit c-annotation-face))); [TF, RP]
+    `((t . (:inherit c-annotation-face))); [TF, RF]
     "The face for the ‘@’ symbol denoting annotation.  Use it customize
 the appearance of the symbol, e.g. to give it less prominence than
 the ‘c-annotation-face’ of the type name that follows it."
@@ -77,7 +77,7 @@ the ‘c-annotation-face’ of the type name that follows it."
 
 
   (defface jmt-annotation-qualifier
-    `((t . (:inherit c-annotation-face))); [TF, RP]
+    `((t . (:inherit c-annotation-face))); [TF, RF]
     "The face for the element assignments of annotation.  Use it customize
 the appearance of the assignments, e.g. to give them less prominence than
 the ‘c-annotation-face’ of the preceding type name."
@@ -139,7 +139,7 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
                 (unless; Unless already `beg`…`end` is faced `jmt-type-parameter-declaration`. [SF]
                     (and (eq (get-text-property beg 'face) 'jmt-type-parameter-declaration)
                          (>= (next-single-property-change beg 'face (current-buffer) end) end))
-                  (c-put-font-lock-face beg end 'jmt--type-reference-in-parameter-list))); [RP]
+                  (c-put-font-lock-face beg end 'jmt--type-reference-in-parameter-list))); [RF]
                     ;;; Immediately `jmt-specific-fontifiers-3` may override and correct this facing,
                     ;;; replacing it with `jmt-type-parameter-declaration`.
 
@@ -161,7 +161,7 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
 
 
 
-  (defun jmt-faces-are-equivalent (f1 f2); [RP]
+  (defun jmt-faces-are-equivalent (f1 f2); [RF]
     "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
     (eq (jmt-untamed-face f1) (jmt-untamed-face f2)))
@@ -231,7 +231,7 @@ and \\=`\\='\\=` quotes."
 
 
   (defface jmt-modifier-keyword; [MDF]
-    `((t . (:inherit font-lock-keyword-face))); [TF, RP]
+    `((t . (:inherit font-lock-keyword-face))); [TF, RF]
     "The face for a keyword-form modifier in a class, interface, method,
 constructor or field declaration; any modifier, that is, except an annotation
 modifier.  Use it customize the appearance of these keywords, e.g. to give them
@@ -346,93 +346,10 @@ is not buffer local."
   (defconst jmt-specific-fontifiers-3
     (list
 
-     ;; ══════════
-     ;; Annotation  [↑A]
-     ;; ══════════
-     (list; Fontify each, overriding any misfontification of Java mode.
-      (lambda (limit)
-        (catch 'to-fontify
-          (let ((m1-beg (point)); Start of leading annotation mark ‘@’, till proven otherwise.
-                (m1-beg-limit (1- limit)); Room for two characters, the minimal length.
-                eol face m1-end m2-beg m2-end m3-beg m3-end m4-beg m4-end m5-beg m5-end)
-            (while (< m1-beg m1-beg-limit)
-              (setq m1-end (1+ m1-beg))
-              (if (not (char-equal ?@ (char-after m1-beg)))
-                  (setq m1-beg m1-end)
-                (goto-char m1-end)
-                (catch 'is-annotation
-                  (when (eolp) (throw 'is-annotation nil)); [SL]
-                  (skip-syntax-forward "-" limit); Though unconventional, whitespace is allowed
-                    ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines. [AST, SL]
-                    ;;; Also it excludes commentary, which would be perverse here, not worth coding for.
-                  (setq m2-beg (point))
-                  (skip-chars-forward jmt-name-character-set limit)
-                  (setq m2-end (point))
-                  (unless (< m2-beg m2-end) (throw 'is-annotation nil))
-                  (setq face (get-text-property m2-beg 'face))
-                  (unless (or (eq face nil); The most common case.  Less commonly, a misfontification:
-                              (eq face 'font-lock-function-name-face); ← This one occurs in the case
-                              (jmt-is-Java-mode-type-face face))    ;  e.g. of an empty `()` qualifier.
-                    (throw 'is-annotation nil))
-                  (skip-syntax-forward "-" limit); [SL]
-                  (when (eq ?\( (char-after)); (and not nil)
-                    (setq m3-beg (point); Start of trailing qualifier, it would be.
-                          eol (line-end-position))
-                    (condition-case _x
-                        (progn
-                          (forward-list 1)
-                          (setq m5-end (point))); End of qualifier.  Point now stays here.
-                      (scan-error
-                       (setq m5-end (point-max)))); Forcing the qualifier to be ignored below.
-                    (if (> m5-end eol); The qualifier crosses lines, or a `scan-error` occured above.
-                        (goto-char m2-end); Ignoring it. [SL]
-
-                      ;; Qualified
-                      ;; ─────────
-                      (setq m3-end (1+ m3-beg); ‘(’
-                            m4-beg m3-end
-                            m5-beg (1- m5-end); ‘)’
-                            m4-end m5-beg)
-                      (set-match-data (list m1-beg m5-end m1-beg m1-end m2-beg m2-end m3-beg m3-end
-                                            m4-beg m4-end m5-beg m5-end (current-buffer)))
-                      (throw 'to-fontify t))); With point (still) at `m5-end` as Font Lock stipulates.
-
-                  ;; Unqualified
-                  ;; ───────────
-                  (set-match-data (list m1-beg m2-end m1-beg m1-end m2-beg m2-end (current-buffer)))
-                  (goto-char m2-end)
-                  (throw 'to-fontify t))
-
-                (setq m1-beg (point)))))
-          (throw 'to-fontify nil)))
-      '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t)
-      '(3 'jmt-annotation-qualifier-delimiter t t) '(4 'jmt-annotation-qualifier t t)
-      '(5 'jmt-annotation-qualifier-delimiter t t))
-
-
-     ;; ════════════════
-     ;; Modifier keyword
-     ;; ════════════════
-     (cons; Refontify each using face `jmt-modifier-keyword`. [RP]
-      (lambda (limit)
-        (catch 'to-refontify
-          (while (< (point) limit)
-            (let* ((match-beg (point))
-                   (face (get-text-property match-beg 'face))
-                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (goto-char match-end)
-              (when (and (eq face 'font-lock-keyword-face)
-                         (jmt-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
-                (set-match-data (list match-beg match-end (current-buffer)))
-                (throw 'to-refontify t))))
-          (throw 'to-refontify nil)))
-      '(0 'jmt-modifier-keyword t))
-
-
      ;; ═════════
      ;; Type name  [↑T]
      ;; ═════════
-     (list; Refontify each using either `jmt-type-declaration` or  `jmt-type-reference` face. [RP]
+     (list; Refontify each using either `jmt-type-declaration` or  `jmt-type-reference` face. [RF]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
@@ -462,7 +379,7 @@ is not buffer local."
 
               (goto-char match-end)))
           (throw 'to-refontify nil)))
-      '(1 '(face jmt-type-declaration jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [SF]
+      '(1 '(face jmt-type-declaration jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [QTF, SF]
         ;;; The stabilizer is for a minority of cases which have no discerned pattern.
 
      (cons; Fontify type declaration names unfaced by Java mode.
@@ -528,13 +445,115 @@ is not buffer local."
                           (forward-comment most-negative-fixnum))))))); [←CW]
               (goto-char match-end)))
           (throw 'to-fontify nil)))
-      '(0 'jmt-type-declaration t))
+      '(0 'jmt-type-declaration t)); [QTF]
+
+
+     ;; ══════════
+     ;; Annotation  [↑A]
+     ;; ══════════
+     (list; Fontify each, overriding any misfontification of Java mode.
+      (lambda (limit)
+        (catch 'to-fontify
+          (let ((m1-beg (point)); Start of leading annotation mark ‘@’, till proven otherwise.
+                (m1-beg-limit (1- limit)); Room for two characters, the minimal length.
+                eol face m1-end m2-beg m2-end m3-beg m3-end m4-beg m4-end m5-beg m5-end)
+            (while (< m1-beg m1-beg-limit)
+              (setq m1-end (1+ m1-beg))
+              (if (not (char-equal ?@ (char-after m1-beg)))
+                  (setq m1-beg m1-end)
+                (goto-char m1-end)
+                (catch 'is-annotation
+                  (when (eolp) (throw 'is-annotation nil)); [SL]
+                  (skip-syntax-forward "-" limit); Though unconventional, whitespace is allowed
+                    ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines. [AST, SL]
+                    ;;; Also it excludes commentary, which would be perverse here, not worth coding for.
+                  (setq m2-beg (point))
+                  (skip-chars-forward jmt-name-character-set limit)
+                  (setq m2-end (point))
+                  (unless (< m2-beg m2-end) (throw 'is-annotation nil))
+                  (setq face (get-text-property m2-beg 'face))
+                  (unless (or (eq face nil); The most common case.  Less commonly, a misfontification:
+                              (eq face 'font-lock-function-name-face); ← This one occurs in the case
+                              (jmt-is-Java-mode-type-face face))    ;  e.g. of an empty `()` qualifier.
+                    (throw 'is-annotation nil))
+                  (skip-syntax-forward "-" limit); [SL]
+                  (when (eq ?\( (char-after)); (and not nil)
+                    (setq m3-beg (point); Start of trailing qualifier, it would be.
+                          eol (line-end-position))
+                    (condition-case _x
+                        (progn
+                          (forward-list 1)
+                          (setq m5-end (point))); End of qualifier.  Point now stays here.
+                      (scan-error
+                       (setq m5-end (point-max)))); Forcing the qualifier to be ignored below.
+                    (if (> m5-end eol); The qualifier crosses lines, or a `scan-error` occured above.
+                        (goto-char m2-end); Ignoring it. [SL]
+
+                      ;; Qualified
+                      ;; ─────────
+                      (setq m3-end (1+ m3-beg); ‘(’
+                            m4-beg m3-end
+                            m5-beg (1- m5-end); ‘)’
+                            m4-end m5-beg)
+                      (set-match-data (list m1-beg m5-end m1-beg m1-end m2-beg m2-end m3-beg m3-end
+                                            m4-beg m4-end m5-beg m5-end (current-buffer)))
+                      (throw 'to-fontify t))); With point (still) at `m5-end` as Font Lock stipulates.
+
+                  ;; Unqualified
+                  ;; ───────────
+                  (set-match-data (list m1-beg m2-end m1-beg m1-end m2-beg m2-end (current-buffer)))
+                  (goto-char m2-end)
+                  (throw 'to-fontify t))
+
+                (setq m1-beg (point)))))
+          (throw 'to-fontify nil)))
+      '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t); [QTF]
+      '(3 'jmt-annotation-qualifier-delimiter t t) '(4 'jmt-annotation-qualifier t t)
+      '(5 'jmt-annotation-qualifier-delimiter t t))
+
+
+     ;; ════════════════
+     ;; Modifier keyword
+     ;; ════════════════
+     (cons; Refontify each using face `jmt-modifier-keyword`. [RF]
+      (lambda (limit)
+        (catch 'to-refontify
+          (while (< (point) limit)
+            (let* ((match-beg (point))
+                   (face (get-text-property match-beg 'face))
+                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
+              (goto-char match-end)
+              (when (and (eq face 'font-lock-keyword-face)
+                         (jmt-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
+                (set-match-data (list match-beg match-end (current-buffer)))
+                (throw 'to-refontify t))))
+          (throw 'to-refontify nil)))
+      '(0 'jmt-modifier-keyword t)); [QTF]
+
+
+     ;; ════════════════
+     ;; String delimeter
+     ;; ════════════════
+     (list; Refontify each using face `jmt-string-delimiter`. [RF]
+      (lambda (limit)
+        (catch 'to-refontify
+          (while (< (point) limit)
+            (let* ((match-beg (point))
+                   (face (get-text-property match-beg 'face))
+                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
+              (goto-char match-end)
+              (when (eq face 'font-lock-string-face)
+                (set-match-data (list match-beg match-end match-beg (1+ match-beg)
+                                      (1- match-end) match-end (current-buffer)))
+                (throw 'to-refontify t))))
+          (throw 'to-refontify nil)))
+      '(1 'jmt-string-delimiter t) '(2 'jmt-string-delimiter t)); [QTF]
 
 
      ;; ═══════════════════
      ;; Type parameter name in a type parameter declaration  [↑T]
      ;; ═══════════════════
-     (cons; Refontify each using face `jmt-type-parameter-declaration`. [RP]
+     (cons; Refontify each using face `jmt-type-parameter-declaration`. [RF]
       (lambda (limit)
         (catch 'to-refontify
           (while (< (point) limit)
@@ -590,7 +609,7 @@ is not buffer local."
                   (throw 'to-refontify t)))
               (goto-char match-end)))
           (throw 'to-refontify nil)))
-      '(0 'jmt-type-parameter-declaration t))
+      '(0 'jmt-type-parameter-declaration t)); [QTF]
 
 
      ;; ════════════════════════════════
@@ -705,7 +724,15 @@ is not buffer local."
              (throw 'to-fontify nil)))))
       '(0 jmt-face t)))
 
-    "Elements for ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
+    "Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
+
+
+
+  (defface jmt-string-delimiter; [BC]
+    `((t . (:inherit font-lock-string-face))); [TF, RF]
+    "The face for a string (\") or character (\\=') delimiter.  Customize it to make
+the delimiters less prominent, for example, than the content they delimit."
+    :group 'java-mode-tamed)
 
 
 
@@ -718,7 +745,7 @@ it is for internal use only — leave it to inherit from ‘jmt-type-reference�
 
 
   (defface jmt-type-declaration; [MDF, SF]
-    `((t . (:inherit font-lock-type-face))); [TF, RP]
+    `((t . (:inherit font-lock-type-face))); [TF, RF]
     "The face for the identifier of a class or interface in a type declaration.
 Use it to highlight the identifier where it is declared, as opposed to merely
 referenced; like ‘font-lock-variable-name-face’ does for variable identifiers.
@@ -738,7 +765,7 @@ See also face ‘jmt-type-reference’."
 
 
   (defface jmt-type-reference; [MDF, UF]
-    `((t . (:inherit font-lock-type-face))); [TF, RP]
+    `((t . (:inherit font-lock-type-face))); [TF, RF]
     "The face for the identifier of a class, interface or type parameter
 where it appears as a type reference.  See also faces ‘jmt-type-declaration’
 and ‘jmt-type-parameter-declaration’."
@@ -785,13 +812,18 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
     ;; ────────────────────────────
     (unless jmt--late-initialization-was-begun
       (set 'jmt--late-initialization-was-begun t)
+      (set 'c-literal-faces (append c-literal-faces '(jmt-string-delimiter))); [LF]
 
       ;; Monkey patch the underlying (Java mode) functions. Only now the first Java file is loaded,
       ;; else patching might needlessly delay the start of Emacs.
       (define-error 'jmt-x "Broken monkey patch")
       (condition-case x
-          (let ((source-file (locate-library "cc-fonts.el" t))
-                (source-base-name "cc-fonts"))
+          (let (source-file source-base-name)
+
+            ;; `cc-fonts`
+            ;; ──────────
+            (setq source-file (locate-library "cc-fonts.el" t)
+                  source-base-name "cc-fonts")
             (unless source-file
               (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
             (with-temp-buffer
@@ -820,24 +852,43 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                source-file source-base-name 'c-fontify-recorded-types-and-refs
                (lambda ()
                  (when (re-search-forward
-                        (concat "(c-put-font-lock-face\\s-*(car\\s-*\\(\\w+\\))\\s-*(cdr\\s-*\\1)\\s-*"
+                        (concat "(c-put-font-lock-face\\s-*(car\\s-+\\(\\w+\\))\\s-*(cdr\\s-+\\1)\\s-*"
                                 "'font-lock-type-face)")
                         nil t)
                    (replace-match "(jmt--c/put-type-face \\1)" t)
+                   t))))
+
+            ;; `cc-mode`
+            ;; ─────────
+            (setq source-file (locate-library "cc-mode.el" t)
+                  source-base-name "cc-mode")
+            (unless source-file
+              (signal 'jmt-x `("No such source file on load path: `cc-mode.el`")))
+            (with-temp-buffer
+              (insert-file-contents source-file)
+
+              (jmt--patch
+               source-file source-base-name 'c-before-change
+               (lambda ()
+                 (when (re-search-forward
+                        "'\\s-*(\\s-*\\(font-lock-comment-face\\s-+font-lock-string-face\\)\\s-*)"
+                        nil t); The sought list is used for a `memq` test.
+                   (replace-match "'(\\1 jmt-string-delimiter)" t); Appending it to the list,
+                     ;;; it being a replacement face equivalent to `font-lock-string-face`. [RF]
                    t)))))
 
         (jmt-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
 
     ;; Initialize the buffer
     ;; ─────────────────────
-    (jmt-set-for-buffer 'c-maybe-decl-faces
-         (append c-maybe-decl-faces
-                 '('jmt-modifier-keyword
-                   'jmt--type
-                   'jmt-type-declaration
-                   'jmt-type-parameter-declaration
-                   'jmt-type-reference
-                   'jmt--type-reference-in-parameter-list)))
+    (jmt-set-for-buffer
+     'c-maybe-decl-faces
+     (append c-maybe-decl-faces; [MDF]
+             '('jmt-modifier-keyword; Quoting these only because `c-maybe-decl-faces` “must be evaluated
+               'jmt--type           ; (with ‘eval’) at runtime to get the actual list of faces”. [QTF]
+               'jmt-type-parameter-declaration
+               'jmt-type-reference
+               'jmt--type-reference-in-parameter-list)))
     (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
       (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
@@ -858,19 +909,30 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
 ;; NOTES
 ;; ─────
-;;   ↑A · This marks code section *Annotation* of `jmt-specific-fontifiers-3` and all other code
+;;  ↑A ·· This marks code section *Annotation* of `jmt-specific-fontifiers-3` and all other code
 ;;        that depends on its prior execution.
-;;
-;;   ↑T · This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
-;;        that depends on its prior execution.
-;;
-;;   ←CW  Backward across commentary and whitespace.
 ;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
 ;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.7
 ;;
+;;  ←CW · Backward across commentary and whitespace.
+;;
 ;;   CW→  Forward across commentary and whitespace.
+;;
+;;   LF · `c-literal-faces`: Any replacement face [RF] for a face listed in `c-literal-faces`
+;;        must itself be appended to that list.
+;;
+;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
+;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
+;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
+;;        rectness of `https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html`.
+;;
+;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
+;;        must itself be appended to that list.
+;;
+;;   MI · See `MethodInvocation`.
+;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12
 ;;
 ;;   NAC  Not allowing for comments.  If ever that proves necessary in practice, then the code here
 ;;        (and its facing of type references in type parameter lists) might have to be removed from
@@ -878,24 +940,23 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        Then too the fontification of type parameter lists would need a different stabilization,
 ;;        e.g. using text property `jmt-stabilized`.
 ;;
-;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
-;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
-;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
-;;        rectness of `https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html`.
-;;
-;;   MDF  `c-maybe-decl-faces`: Any replacement face [RP] for a face listed in `c-maybe-decl-faces`
-;;        must itself be appended to the list.
-;;
-;;   MI · See `MethodInvocation`.
-;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12
-;;
 ;;   QSB  Quickly searching backward from an anchor at point.  Regular expressions are inapt here;
 ;;        one needs the anchor for sake of speed, but `looking-back` ‘can be quite slow’ regardless.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Regexp-Search.html
 ;;
-;;   RP · Replacement face.  Every tamed face used by `java-mode-tamed` to override and replace a face
-;;        earlier applied by Java mode (replacement face) ultimately inherits from the face it replaces.
-;;        Function `jmt-faces-are-equivalent` depends on this.
+;;   QTF  Quoting of tamed faces.  Their quoting is required in evaluative contexts, such as fontifiers.
+;;        Font lock evaluates each face argument of a fontifier at runtime, which effectively unquotes
+;;        the tamed faces to yield bare symbols.
+;;
+;;        The common alternative of defining a namesake variable for each face is discouraged.
+;;        ‘In the vast majority of cases, this is not necessary’,
+;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Faces.html`.
+;;        ‘Simply using faces directly is enough’,
+;;        `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.
+;;
+;;   RF · Replacement face: a tamed face used by `java-mode-tamed` to override and replace a face
+;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
+;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
 ;;   SF · Stuck face.  The use of text property `jmt-stabilized` and other stabilization guards
 ;;        may cause certain faces to become stuck on occaision.  A viable workaround in the event
@@ -903,6 +964,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
+;;
+;;  ↑T ·· This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
+;;        that depends on its prior execution.
 ;;
 ;;   TA · See `TypeArgument`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.5.1
 ;;
