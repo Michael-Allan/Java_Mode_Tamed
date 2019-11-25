@@ -510,108 +510,6 @@ is not buffer local."
       '(0 'jmt-type-declaration t)); [QTF]
 
 
-     ;; ════════════════
-     ;; Modifier keyword
-     ;; ════════════════
-     (cons; Refontify each using face `jmt-modifier-keyword`. [RF]
-      (let (face match-beg match-end)
-        (lambda (limit)
-          (setq match-beg (point)); Presumptively.
-          (catch 'to-refontify
-            (while (< match-beg limit)
-              (setq face (get-text-property match-beg 'face)
-                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
-              (when (and (eq face 'font-lock-keyword-face)
-                         (jmt-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
-                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                (throw 'to-refontify t))
-              (setq match-beg match-end))
-            nil)))
-      '(0 'jmt-modifier-keyword t)); [QTF]
-
-
-     ;; ════════════════
-     ;; String delimiter
-     ;; ════════════════
-     (list; Refontify each string delimiter using face `jmt-string-delimiter`. [RF]
-      (let (face match-beg match-end)
-        (lambda (limit)
-          (setq match-beg (point)); Presumptively.
-          (catch 'to-refontify
-            (while (< match-beg limit)
-              (setq face (get-text-property match-beg 'face)
-                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
-              (when (eq face 'font-lock-string-face)
-                (set-match-data (list match-beg match-end match-beg (1+ match-beg)
-                                      (1- match-end) match-end (current-buffer)))
-                (goto-char match-end)
-                (throw 'to-refontify t))
-              (setq match-beg match-end))
-            nil)))
-      '(1 'jmt-string-delimiter t) '(2 'jmt-string-delimiter t)); [QTF]
-
-
-     ;; ═══════════════════
-     ;; Type parameter name in a type parameter declaration  [↑T]
-     ;; ═══════════════════
-     (cons; Refontify each using face `jmt-type-parameter-declaration`. [RF]
-      (lambda (limit)
-        (catch 'to-refontify
-          (while (< (point) limit)
-            (let* ((match-beg (point)); Presumptively.
-                   (face (get-text-property match-beg 'face))
-                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (eq face 'jmt--type-reference-in-parameter-list)
-                (forward-comment most-negative-fixnum); [←CW, QSB]
-                (when
-                    (and; And directly preceding that already fontified parameter name
-                      ;;; is no additional bound operator (`&`) nor `extends` keyword. [TP]
-                     (let ((p (point)))
-                       (not (or (char-equal (char-before p) ?&)
-                                (and (< (skip-chars-backward jmt-name-character-set) 0)
-                                     (string= (buffer-substring-no-properties (point) p)
-                                              "extends")))))
-                     ;; And that parameter name occurs at the top level of the parameter list (depth
-                     ;; of angle bracing 1).  And the list directly follows one of (a) the name of
-                     ;; a type declaration, indicating a generic class or interface declaration,
-                     ;; or (b) neither a type name, type parameter nor `.` delimiter (of a method
-                     ;; call), indicating a generic method or contructor declaration.  [TP, MI]
-                     (catch 'is-proven
-                       (let ((depth 1); Depth of name in bracing, presumed to be 1 as required.
-                             (p (point)) c)
-                         (while (> (setq p (1- p)) 0); Move `p` leftward to emerge from all braces.
-                           (setq c (char-after p))
-                           (cond ((char-equal c ?<); Ascending from the present brace pair.
-                                  (setq depth (1- depth))
-                                  (when (= 0 depth); Then presumeably `p` has emerged left of list.
-                                    (goto-char p)
-                                    (forward-comment most-negative-fixnum); [←CW]
-                                    (when (bobp) (throw 'is-proven t))
-                                           ;;; Apparently a generic method or contructor declaration,
-                                           ;;; though outside of any class body and so misplaced.
-                                    (setq p (1- (point)); Into direct predecessor of parameter list.
-                                          c (char-after p))
-                                    (when (or (char-equal c ?.); `.` delimiter of a method call.
-                                              (char-equal c ?<)); `p` had *not* emerged, and so the
-                                                    ;;; parameter name is *not* at top level, after all.
-                                      (throw 'is-proven nil))
-                                    (setq c (get-text-property p 'face))
-                                    (throw 'is-proven; As the type parameter declaration of:
-                                           (or (eq c 'jmt-type-declaration); [↑T]
-                                                     ;;; (a) a generic class or interface declaration;
-                                               (not (jmt-faces-are-equivalent
-                                                     c 'font-lock-type-face))))))
-                                                     ;;; (b) a generic method or contructor declaration.
-                                 ((char-equal c ?>); Descending into another brace pair.
-                                  (setq depth (1+ depth)))))
-                         nil)))
-                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                  (throw 'to-refontify t)))
-              (goto-char match-end)))
-          nil))
-      '(0 'jmt-type-parameter-declaration t)); [QTF]
-
-
      ;; ════════════════════════════════
      ;; Method or constructor identifier  [↑A, ↑T]
      ;; ════════════════════════════════
@@ -731,7 +629,109 @@ is not buffer local."
                        (throw 'to-fontify 'default))))
                  (goto-char match-end))); Whence the next leg of the search begins.
              nil))))
-      '(0 jmt-face t)))
+      '(0 jmt-face t))
+
+
+     ;; ════════════════
+     ;; Modifier keyword
+     ;; ════════════════
+     (cons; Refontify each using face `jmt-modifier-keyword`. [RF]
+      (let (face match-beg match-end)
+        (lambda (limit)
+          (setq match-beg (point)); Presumptively.
+          (catch 'to-refontify
+            (while (< match-beg limit)
+              (setq face (get-text-property match-beg 'face)
+                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (and (eq face 'font-lock-keyword-face)
+                         (jmt-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'to-refontify t))
+              (setq match-beg match-end))
+            nil)))
+      '(0 'jmt-modifier-keyword t)); [QTF]
+
+
+     ;; ════════════════
+     ;; String delimiter
+     ;; ════════════════
+     (list; Refontify each string delimiter using face `jmt-string-delimiter`. [RF]
+      (let (face match-beg match-end)
+        (lambda (limit)
+          (setq match-beg (point)); Presumptively.
+          (catch 'to-refontify
+            (while (< match-beg limit)
+              (setq face (get-text-property match-beg 'face)
+                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (eq face 'font-lock-string-face)
+                (set-match-data (list match-beg match-end match-beg (1+ match-beg)
+                                      (1- match-end) match-end (current-buffer)))
+                (goto-char match-end)
+                (throw 'to-refontify t))
+              (setq match-beg match-end))
+            nil)))
+      '(1 'jmt-string-delimiter t) '(2 'jmt-string-delimiter t)); [QTF]
+
+
+     ;; ═══════════════════
+     ;; Type parameter name in a type parameter declaration  [↑T]
+     ;; ═══════════════════
+     (cons; Refontify each using face `jmt-type-parameter-declaration`. [RF]
+      (lambda (limit)
+        (catch 'to-refontify
+          (while (< (point) limit)
+            (let* ((match-beg (point)); Presumptively.
+                   (face (get-text-property match-beg 'face))
+                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
+              (when (eq face 'jmt--type-reference-in-parameter-list)
+                (forward-comment most-negative-fixnum); [←CW, QSB]
+                (when
+                    (and; And directly preceding that already fontified parameter name
+                      ;;; is no additional bound operator (`&`) nor `extends` keyword. [TP]
+                     (let ((p (point)))
+                       (not (or (char-equal (char-before p) ?&)
+                                (and (< (skip-chars-backward jmt-name-character-set) 0)
+                                     (string= (buffer-substring-no-properties (point) p)
+                                              "extends")))))
+                     ;; And that parameter name occurs at the top level of the parameter list (depth
+                     ;; of angle bracing 1).  And the list directly follows one of (a) the name of
+                     ;; a type declaration, indicating a generic class or interface declaration,
+                     ;; or (b) neither a type name, type parameter nor `.` delimiter (of a method
+                     ;; call), indicating a generic method or contructor declaration.  [TP, MI]
+                     (catch 'is-proven
+                       (let ((depth 1); Depth of name in bracing, presumed to be 1 as required.
+                             (p (point)) c)
+                         (while (> (setq p (1- p)) 0); Move `p` leftward to emerge from all braces.
+                           (setq c (char-after p))
+                           (cond ((char-equal c ?<); Ascending from the present brace pair.
+                                  (setq depth (1- depth))
+                                  (when (= 0 depth); Then presumeably `p` has emerged left of list.
+                                    (goto-char p)
+                                    (forward-comment most-negative-fixnum); [←CW]
+                                    (when (bobp) (throw 'is-proven t))
+                                           ;;; Apparently a generic method or contructor declaration,
+                                           ;;; though outside of any class body and so misplaced.
+                                    (setq p (1- (point)); Into direct predecessor of parameter list.
+                                          c (char-after p))
+                                    (when (or (char-equal c ?.); `.` delimiter of a method call.
+                                              (char-equal c ?<)); `p` had *not* emerged, and so the
+                                                    ;;; parameter name is *not* at top level, after all.
+                                      (throw 'is-proven nil))
+                                    (setq c (get-text-property p 'face))
+                                    (throw 'is-proven; As the type parameter declaration of:
+                                           (or (eq c 'jmt-type-declaration); [↑T]
+                                                     ;;; (a) a generic class or interface declaration;
+                                               (not (jmt-faces-are-equivalent
+                                                     c 'font-lock-type-face))))))
+                                                     ;;; (b) a generic method or contructor declaration.
+                                 ((char-equal c ?>); Descending into another brace pair.
+                                  (setq depth (1+ depth)))))
+                         nil)))
+                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                  (throw 'to-refontify t)))
+              (goto-char match-end)))
+          nil))
+      '(0 'jmt-type-parameter-declaration t))); [QTF]
 
     "Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
