@@ -67,11 +67,18 @@
 
 
 
+  (defface jmt-angle-bracket
+    `((t . (:inherit jmt-bracket)))
+    "The face for an angle bracket, ‘<’ or ‘>’."
+    :group 'java-mode-tamed)
+
+
+
   (defface jmt-annotation-delimiter
     `((t . (:inherit c-annotation-face)))
     "The face for the ‘(’ and ‘)’ delimiters of an annotation qualifier.
 Customize it to better distinguish the delimiters from the content
-they delimit; making them more prominent, for example, or less prominent.
+they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
     :group 'java-mode-tamed)
 
@@ -89,6 +96,14 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
     "The face for the element assignments of annotation.  Use it to customize
 the appearance of the assignments, e.g. to give them less prominence than
 the ‘c-annotation-face’ of the preceding type name."
+    :group 'java-mode-tamed)
+
+
+
+  (defface jmt-bracket
+    `((t . (:inherit jmt-delimiter)))
+    "The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’,
+‘jmt-round-bracket’ and ‘jmt-square-bracket’."
     :group 'java-mode-tamed)
 
 
@@ -158,12 +173,20 @@ the facing of type and type parameter identifiers.  RANGE is a cons cell."
 
 
 
+  (defface jmt-curly-bracket
+    `((t . (:inherit jmt-bracket)))
+    "The face for a curly bracket, ‘{’ or ‘}’."
+    :group 'java-mode-tamed)
+
+
+
   (defface jmt-delimiter nil
     "The face for a delimiter not already fontified by Java mode.  Customize it
 to better distinguish the delimiters from the content they delimit; making them
-more prominent, for example, or less prominent.  For the delimiters that *are*
-already fontified by Java mode, see ‘font-lock-comment-delimiter-face’,
-‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’ and ‘jmt-string-delimiter’."
+more prominent or less prominent, for example.  See also subfaces ‘jmt-bracket’
+‘jmt-separator’.  And for delimiters that *are* already fontified by Java mode,
+see ‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’, ‘jmt-string-delimiter’
+and ‘font-lock-comment-delimiter-face’."
     :group 'java-mode-tamed)
 
 
@@ -268,8 +291,8 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
     "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
     (nconc
 
-    ;; Underlying Java-mode fontifiers, lightly modified
-    ;; ───────────────────────────────
+     ;; Underlying Java-mode fontifiers, lightly modified
+     ;; ───────────────────────────────
      (let* ((kk (java-font-lock-keywords-3)); List of Java mode’s fontifiers.
             was-found-annotation; Whether the annotation fontifier of was found in `kk`.
             (k kk); Current fontifier element of `kk`.
@@ -289,11 +312,11 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
              (and (not was-found-annotation) k)))
        (unless was-found-annotation
          (jmt-message "(java-mode-tamed): Failed to remove unwanted Java-mode fontifier: `%s` = nil"
-                       (symbol-name 'was-found-annotation)))
+                      (symbol-name 'was-found-annotation)))
        kk)
 
-    ;; Overlying fontifiers to tame them
-    ;; ────────────────────
+     ;; Overlying fontifiers to tame them
+     ;; ────────────────────
      jmt-specific-fontifiers-3))
 
 
@@ -347,9 +370,16 @@ for the function’s return type, making it a *generic* return type.  May move p
 
 
 
+  (defface jmt-round-bracket
+    `((t . (:inherit jmt-bracket)))
+    "The face for a round bracket, ‘(’ or ‘)’."
+    :group 'java-mode-tamed)
+
+
+
   (defface jmt-separator
     `((t . (:inherit jmt-delimiter)))
-    "The face for a separator: a comma (,), semicolon (;), colon (:) or dot (.)."
+    "The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot ‘.’."
     :group 'java-mode-tamed)
 
 
@@ -532,21 +562,57 @@ is not buffer local."
      ;; Delimiter
      ;; ═════════
      (cons; Fontify each delimiter that is not already fontified by Java mode.
-      (let (c match-beg match-end)
+      (let (i j match-beg match-end)
         (lambda (limit)
           (setq match-beg (point)); Presumptively.
           (set
            'jmt-face
            (catch 'to-fontify
              (while (< match-beg limit)
-               (setq c (char-after match-beg)
+               (setq i (syntax-after match-beg)
+                     j (car i); Numeric syntax code.
                      match-end (1+ match-beg))
-               (when (or (char-equal c ?,)
-                         (char-equal c ?\;)
-                         (char-equal c ?:)
-                         (char-equal c ?.))
+               (when (or (= j 4) (= j 5)); When it has bracket syntax, that is.
+                 (setq j (cdr i)); The character of the opposing bracket.
+
+                 ;; Angle bracket
+                 ;; ─────────────
+                 (when (or (char-equal j ?<)
+                           (char-equal j ?>))
+                   (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                   (throw 'to-fontify 'jmt-angle-bracket))
+
+                 ;; Curly bracket
+                 ;; ─────────────
+                 (when (or (char-equal j ?{)
+                           (char-equal j ?}))
+                   (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                   (throw 'to-fontify 'jmt-curly-bracket))
+
+                 ;; Round bracket
+                 ;; ─────────────
+                 (when (or (char-equal j ?\()
+                           (char-equal j ?\)))
+                   (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                   (throw 'to-fontify 'jmt-round-bracket))
+
+                 ;; Square bracket
+                 ;; ──────────────
+                 (when (or (char-equal j ?\[)
+                           (char-equal j ?\]))
+                   (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                   (throw 'to-fontify 'jmt-square-bracket)))
+
+               ;; Separator
+               ;; ─────────
+               (setq j (char-after match-beg))
+               (when (or (char-equal j ?,)
+                         (char-equal j ?\;)
+                         (char-equal j ?:)
+                         (char-equal j ?.))
                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                  (throw 'to-fontify 'jmt-separator))
+
                (setq match-beg match-end))
              nil))))
       '(0 jmt-face))
@@ -775,11 +841,18 @@ is not buffer local."
 
 
 
+  (defface jmt-square-bracket
+    `((t . (:inherit jmt-bracket)))
+    "The face for a square bracket, ‘[’ or ‘]’."
+    :group 'java-mode-tamed)
+
+
+
   (defface jmt-string-delimiter; [LF]
     `((t . (:inherit font-lock-string-face))); [RF]
     "The face for a string (\") or character (\\=') delimiter.
 Customize it to better distinguish the delimiters from the content
-they delimit; making them more prominent, for example, or less prominent.
+they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
     :group 'java-mode-tamed)
 
