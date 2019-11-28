@@ -117,58 +117,24 @@ Java mode (CC mode) source code."
 
 
   (defun jmt--c/put-type-face (range)
-    "Called from a monkey patch over the underlying Java-mode code, this function
-overrides Java mode’s application of ‘font-lock-type-face’ in order to stabilize
-the facing of type and type parameter identifiers.  RANGE is a cons cell."
-    ;; Without this patched override the corresponding refontifications of `jmt-specific-fontifiers-3`
-    ;; alternately appear and disappear.  This occurs because Java mode applies `font-lock-type-face`
-    ;; using a mechanism of its own, outside of Font Lock, which puts the two in an endless tug of war.
+    "Called from a monkey patch applied to the underlying Java-mode code,
+this function overrides Java mode’s application of ‘font-lock-type-face’
+in order to stabilize the facing of type names and type parameter identifiers.
+RANGE is a cons cell."
+    ;; Without such an override, the faces applied by `jmt-specific-fontifiers-3` via Font Lock
+    ;; to type names and type parameter identifiers would alternately appear and disappear,
+    ;; because Java mode applies `font-lock-type-face` using a mechanism of its own,
+    ;; outside of Font Lock, which puts the two in an endless tug of war.
     (let ((beg (car range))
           (end (cdr range)))
       (if
           (and jmt--is-level-3
                (eq major-mode 'java-mode-tamed))
-          (if (catch 'is-enlisted; In a type parameter list delimited by ‘<’ and ‘>’, that is.
-                (or
-                 (let ((p beg) c)
-                   (while; Set `c` to the first non-whitespace character before `range`. [NAC]
-                       (progn (setq c (char-before p))
-                              (when (eq c nil) (throw 'is-enlisted nil)); Out of bounds.
-                              (char-equal (char-syntax c) ?\s))
-                     (setq p (1- p)))
-                   (or (char-equal c ?<)    ; A leading delimiter ‘<’,
-                       (char-equal c ?&)    ; additional bound operator,
-                       (char-equal c ?,)))  ; or separator ‘,’ in a type parameter list.
-                 (let ((p end) c)
-                   (while; Set `c` to the first non-whitespace character after `range`. [NAC]
-                       (progn (setq c (char-after p))
-                              (when (eq c nil) (throw 'is-enlisted nil)); Out of bounds.
-                              (char-equal (char-syntax c) ?\s))
-                     (setq p (1+ p)))
-                   (or (char-equal c ?>)    ; A trailing delimiter ‘>’,
-                       (char-equal c ?&)    ; additional bound operator,
-                       (char-equal c ?,))))); or separator ‘,’.
-
-              ;; Taming an identifier in a type parameter list  [TP, TA]
-              ;; ─────────────────────────────────────────────
-              (progn
-                (unless; Unless already `beg`…`end` is faced `jmt-type-parameter-declaration`. [SF]
-                    (and (eq (get-text-property beg 'face) 'jmt-type-parameter-declaration)
-                         (>= (next-single-property-change beg 'face (current-buffer) end) end))
-                  (c-put-font-lock-face beg end 'jmt--type-reference-in-parameter-list))); [RF]
-                    ;;; Immediately `jmt-specific-fontifiers-3` may override and correct this facing,
-                    ;;; replacing it with `jmt-type-parameter-declaration`.
-
-            ;; Taming an identifier elsewhere
-            ;; ──────────────────────────────
             (unless (get-text-property beg 'jmt-stabilized); [SF]
-              (c-put-font-lock-face beg end 'jmt--type)))
-                ;;; Normally `jmt-specific-fontifiers-3` will immediately override this facing,
-                ;;; replacing it with `jmt-type-declaration` or `jmt-type-reference`.  Occaisionally
-                ;;; this replacement may fail to occur, occur late, or prove to be unstable. [UF]
-
-        ;; Leaving the identifier untamed
-        ;; ──────────────────────────────
+              (c-put-font-lock-face beg end 'jmt--type)); Normally `jmt-specific-fontifiers-3`
+                ;;; will override this facing before it appears, replacing it with `jmt-type-declar-
+                ;;; ation`, `jmt-type-parameter-declaration` or `jmt-type-reference`.  Occaisionally
+                ;;; the replacement may fail to occur, occur late, or prove to be unstable. [UF]
         (c-put-font-lock-face beg end 'font-lock-type-face))))
 
 
@@ -231,10 +197,10 @@ See face ‘jmt-modifier-keyword’."
 
 
   (defun jmt-is-Java-mode-type-face (f)
-    "Answers whether F (face symbol) is a type face which might be set
+    "Answers whether F (face symbol) is a type face which might have been set
 by the underlying (Java mode) code."
-    (or (eq f 'jmt--type); Set by Java mode via `jmt--c/put-type-face`.
-        (eq f 'font-lock-type-face))); Or via (if it occurs) other means.
+    (or (eq f 'jmt--type); This face set by Java mode via `jmt--c/put-type-face`;
+        (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
 
 
 
@@ -362,7 +328,7 @@ function declaration, namely the trailing delimiter of a list of type parameters
 for the function’s return type, making it a *generic* return type.  May move point."
     (when
         (condition-case _x
-            (progn (forward-sexp -1) t); Skip to the front of the leading delimiter.
+            (progn (forward-sexp -1) t); Move backward to the front of the leading delimiter.
           (scan-error nil))
       (forward-comment most-negative-fixnum); [←CW]
       (not (eq (char-before) ?.)))); (not `char-equal`, in case nil)
@@ -512,7 +478,7 @@ is not buffer local."
                              (not (get-text-property match-beg 'face))); The name is unfontified.
                     (setq match-end (point))
                     (goto-char p); Back to the type declarant keyword.
-                    (forward-comment most-negative-fixnum); [←CW]
+                    (forward-comment most-negative-fixnum); [←CW, QSB]
                     (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
                       (backward-char); as that of an annotation type.  Move back past the ‘@’.
                       (forward-comment most-negative-fixnum)); [←CW]
@@ -698,7 +664,7 @@ is not buffer local."
                      ;; Before the identifier
                      ;; ·····················
                      (goto-char match-beg)
-                     (forward-comment most-negative-fixnum); [←CW]
+                     (forward-comment most-negative-fixnum); [←CW, QSB]
                      (when (bobp) (throw 'is-constructor-declaration nil))
                      (when (char-equal (char-before) ?>)
                        (if (preceding->-marks-generic-return-type)
@@ -722,7 +688,7 @@ is not buffer local."
                        ;;; the sequence `public @Override @Warning("non-API") void onCreate()`:
                        ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40`.
                      (goto-char match-beg)
-                     (forward-comment most-negative-fixnum); [←CW]
+                     (forward-comment most-negative-fixnum); [←CW, QSB]
                      (when (bobp) (throw 'is-method-declaration nil))
                      (setq i (char-before))
                      (when (char-equal i ?\]); Return type declared as an array.
@@ -744,7 +710,7 @@ is not buffer local."
                      (when (not (eq face 'font-lock-function-name-face)) (throw 'is-method-call nil))
                        ;;; Only calls misfaced as declarations have been seen.
                      (goto-char match-beg)
-                     (forward-comment most-negative-fixnum); [←CW]
+                     (forward-comment most-negative-fixnum); [←CW, QSB]
                      (when (bobp) (throw 'is-method-call nil))
                      (when (char-equal (char-before) ?.); Always the misfaced identifier directly
                        ;; follows a ‘.’, which excludes the possibility of it being a declaration.
@@ -778,64 +744,82 @@ is not buffer local."
 
 
      ;; ═══════════════════
-     ;; Type parameter name in a type parameter declaration  [↑T]
+     ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
      ;; ═══════════════════
-     (cons; Refontify each using face `jmt-type-parameter-declaration`. [RF]
-      (lambda (limit)
-        (catch 'to-refontify
-          (while (< (point) limit)
-            (let* ((match-beg (point)); Presumptively.
-                   (face (get-text-property match-beg 'face))
-                   (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (eq face 'jmt--type-reference-in-parameter-list)
-                (forward-comment most-negative-fixnum); [←CW, QSB]
+     (cons; Refontify each using face `jmt-type-parameter-declaration`. See optimization note. [RF, TPN]
+      (let (face depth i j match-beg match-end p p-min)
+        (lambda (limit)
+          (catch 'to-refontify
+            (while (< (point) limit)
+              (setq match-beg (point); Presumptively.
+                    face (get-text-property match-beg 'face)
+                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (eq face 'jmt-type-reference); [↑T]
+                (setq p-min (point-min))
+                (while; Skipping back over both any commentary and/or the annotations that
+                    (progn; may appear here, and setting `p` to the resulting point. [TP]
+                      (forward-comment most-negative-fixnum); [←CW, QSB]
+                      (setq p (point))
+                      (if (or (= p p-min)
+                              (not (jmt-faces-are-equivalent
+                                    'c-annotation-face (get-text-property (1- p) 'face)))); [↑A]
+                          nil; Quitting the `while` loop.
+                        (goto-char (previous-single-property-change p 'face)))))
+                          ;;; Continuing the loop by returning (non-nil) point.
+                (setq p (1- p)); Before what should be the delimiter of a type parameter list. [TPL]
                 (when
-                    (and; And directly preceding that already fontified parameter name
-                      ;;; is no additional bound operator (`&`) nor `extends` keyword. [TP]
-                     (let ((p (point)))
-                       (not (or (char-equal (char-before p) ?&)
-                                (and (< (skip-chars-backward jmt-name-character-set) 0)
-                                     (string= (buffer-substring-no-properties (point) p)
-                                              "extends")))))
-                     ;; And that parameter name occurs at the top level of the parameter list (depth
-                     ;; of angle bracing 1).  And the list directly follows one of (a) the name of
-                     ;; a type declaration, indicating a generic class or interface declaration,
-                     ;; or (b) neither a type name, type parameter nor `.` delimiter (of a method
-                     ;; call), indicating a generic method or contructor declaration.  [TP, MI]
-                     (catch 'is-proven
-                       (let ((depth 1); Depth of name in bracing, presumed to be 1 as required.
-                             (p (point)) c)
-                         (while (> (setq p (1- p)) 0); Move `p` leftward to emerge from all braces.
-                           (setq c (char-after p))
-                           (cond ((char-equal c ?<); Ascending from the present brace pair.
-                                  (setq depth (1- depth))
-                                  (when (= 0 depth); Then presumeably `p` has emerged left of list.
-                                    (goto-char p)
-                                    (forward-comment most-negative-fixnum); [←CW]
-                                    (when (bobp) (throw 'is-proven t))
-                                           ;;; Apparently a generic method or contructor declaration,
-                                           ;;; though outside of any class body and so misplaced.
-                                    (setq p (1- (point)); Into direct predecessor of parameter list.
-                                          c (char-after p))
-                                    (when (or (char-equal c ?.); `.` delimiter of a method call.
-                                              (char-equal c ?<)); `p` had *not* emerged, and so the
-                                                    ;;; parameter name is *not* at top level, after all.
-                                      (throw 'is-proven nil))
-                                    (setq c (get-text-property p 'face))
-                                    (throw 'is-proven; As the type parameter declaration of:
-                                           (or (eq c 'jmt-type-declaration); [↑T]
-                                                     ;;; (a) a generic class or interface declaration;
-                                               (not (jmt-faces-are-equivalent
-                                                     c 'font-lock-type-face))))))
-                                                     ;;; (b) a generic method or contructor declaration.
-                                 ((char-equal c ?>); Descending into another brace pair.
-                                  (setq depth (1+ depth)))))
-                         nil)))
+                    (and
+                     (>= p p-min)
+                     (progn
+                       (setq i (char-after p))
+                       (or; And the character after `p` is indeed such a list delimiter, viz. one of:
+                        (eq 'c-<-as-paren-syntax (setq j (get-text-property p 'category))); ‘<’
+                        (eq 'c->-as-paren-syntax j)                                       ; ‘>’
+                        (and (eq (get-text-property p 'c-type) 'c-<>-arg-sep)             ; ‘,’
+                             (eq i ?,)))); Not ‘&’, that is.
+                       ;;; Leaving `i` set to that delimiter character.
+                     (catch 'is-proven; And the matched name occurs at the top level of that list (depth
+                       ;; of angle brackets 1).  And the list directly follows either (a) the name
+                       ;; of a type declaration, indicating a generic class or interface declaration,
+                       ;; or (b) neither a type name, type parameter nor `.` delimiter (of a method
+                       ;; call), indicating a generic method or constructor declaration.  [MI]
+                       (setq depth 1); Nested depth of name in brackets, presumed to be 1 as required.
+                       (while; Ensure `p` has emerged from all brackets,
+                           (progn; moving it leftward as necessary.
+                             (cond ((char-equal i ?<); Ascending from the present bracket pair.
+                                    (setq depth (1- depth))
+                                    (when (= 0 depth); Then presumeably `p` has emerged left of list.
+                                      (goto-char p)
+                                      (forward-comment most-negative-fixnum); [←CW]
+                                      (when (bobp) (throw 'is-proven t))
+                                        ;;; Apparently a generic method or constructor declaration,
+                                        ;;; though outside of any class body and so misplaced.
+                                      (setq p (1- (point)); Into direct predecessor of parameter list.
+                                            i (char-after p))
+                                      (when (or (char-equal i ?.); `.` delimiter of a method call.
+                                                (char-equal i ?<)); `p` had *not* emerged, and so the
+                                                  ;;; parameter name is *not* at top level, after all.
+                                        (throw 'is-proven nil))
+                                      (setq j (get-text-property p 'face))
+                                      (throw 'is-proven; As the type parameter declaration of:
+                                             (or (eq j 'jmt-type-declaration); [↑T]
+                                                   ;;; (a) a generic class or interface declaration;
+                                                 (not (jmt-faces-are-equivalent
+                                                       j 'font-lock-type-face))))))
+                                                   ;;; (b) a generic method or constructor declaration.
+                                   ((char-equal i ?>); Descending into another bracket pair.
+                                    (setq depth (1+ depth))))
+                             (if (= p p-min)
+                                 nil; Quitting the `while` loop.
+                               (setq p (1- p))
+                               (setq i (char-after p))
+                               t))); Continuing the loop.
+                       nil))
                   (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                   (throw 'to-refontify t)))
-              (goto-char match-end)))
-          nil))
-      '(0 'jmt-type-parameter-declaration t))); [QTF]
+              (goto-char match-end))
+            nil)))
+      '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QTF, SF]
 
     "Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
@@ -860,8 +844,9 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
   (defface jmt--type; [MDF, UF]
     `((t . (:inherit jmt-type-reference)))
-    "A signalling face set via ‘jmt--c/put-type-face’.  Do not customize it —
-it is for internal use only — leave it to inherit from ‘jmt-type-reference’."
+    "A signalling face set via ‘jmt--c/put-type-face’.  Do not customize it;
+it is for internal use only.  Rather leave it to inherit the attributes
+of ‘jmt-type-reference’."
     :group 'java-mode-tamed)
 
 
@@ -891,16 +876,6 @@ See also face ‘jmt-type-reference’."
     "The face for the identifier of a class, interface or type parameter
 where it appears as a type reference.  See also faces ‘jmt-type-declaration’
 and ‘jmt-type-parameter-declaration’."
-    :group 'java-mode-tamed)
-
-
-
-  (defface jmt--type-reference-in-parameter-list; [TP, TA, MDF]
-    `((t . (:inherit jmt-type-reference)))
-    "The face for the identifier of a class, interface or type parameter where it
-appears as a type reference in a type parameter list, one delimited by the sym-
-bols ‘<’ and ‘>’.  Do not customize this face — it is for internal use only —
-leave it to inherit from ‘jmt-type-reference’."
     :group 'java-mode-tamed)
 
 
@@ -1013,9 +988,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
      (append c-maybe-decl-faces; [MDF]
              '('jmt-modifier-keyword; Quoting these only because `c-maybe-decl-faces` “must be evaluated
                'jmt--type           ; (with ‘eval’) at runtime to get the actual list of faces”. [QTF]
+               'jmt-type-declaration
                'jmt-type-parameter-declaration
-               'jmt-type-reference
-               'jmt--type-reference-in-parameter-list)))
+               'jmt-type-reference)))
     (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
       (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
@@ -1062,12 +1037,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   MI · See `MethodInvocation`.
 ;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12
 ;;
-;;   NAC  Not allowing for comments.  If ever that proves necessary in practice, then the code here
-;;        (and its facing of type references in type parameter lists) might have to be removed from
-;;        `jmt--c/put-type-face` to a tamed fontifier where the speed constraints are more relaxed.
-;;        Then too the fontification of type parameter lists would need a different stabilization,
-;;        e.g. using text property `jmt-stabilized`.
-;;
 ;;   QSB  Quickly searching backward from an anchor at point.  Regular expressions are inapt here;
 ;;        one needs the anchor for sake of speed, but `looking-back` ‘can be quite slow’ regardless.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Regexp-Search.html
@@ -1086,9 +1055,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
-;;   SF · Stuck face.  The use of text property `jmt-stabilized` and other stabilization guards
-;;        may cause certain faces to become stuck on occaision.  A viable workaround in the event
-;;        would be to delete and re-type the affected text, which tends to be short in length.
+;;   SF · Stuck face.  The use of text property `jmt-stabilized` may cause certain faces
+;;        to become stuck on occaision.  A viable workaround in the event would be to delete
+;;        and re-type the affected text, which tends to be short in length.
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
@@ -1098,9 +1067,17 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;  ↑T ·· This marks all code that must execute after code section *Type name*.
 ;;
-;;   TA · See `TypeArgument`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.5.1
-;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
+;;
+;;   TPL  Type parameter list, aka `TypeParameters`.
+;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.2
+;;
+;;   TPN  Type parameter name in a type parameter declaration.  One might think it slow to seek every
+;;        type reference, as this fontifier does, and test each against the form of a type parameter.
+;;        Yet anchoring the search instead on the relatively infrequent characters that delimit type
+;;        parameter lists, while it would reduce the number of tests, might not yield the time savings
+;;        one would expect; the anchoring matcher would have to extend across multiple lines and the
+;;        addition to `font-lock-extend-region-functions` that this entails would burden all fontifiers.
 ;;
 ;;   UF · Unstable faces `jmt--type` and `jmt-type-reference`.  Certain applications of these faces
 ;;        may be mutually unstable, alternating at times between one and the other.  This was seen,
