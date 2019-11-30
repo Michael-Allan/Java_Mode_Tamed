@@ -377,18 +377,29 @@ is not buffer local."
                 (goto-char m1-end)
                 (catch 'is-annotation
                   (when (eolp) (throw 'is-annotation nil)); [SL]
-                  (skip-syntax-forward "-" limit); Though unconventional, whitespace is allowed
-                    ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines. [AST, SL]
-                    ;;; Also it excludes commentary, which would be perverse here, not worth coding for.
-                  (setq m2-beg (point))
-                  (skip-chars-forward jmt-name-character-set limit)
-                  (setq m2-end (point))
-                  (unless (< m2-beg m2-end) (throw 'is-annotation nil))
-                  (setq face (get-text-property m2-beg 'face))
-                  (unless (or (eq face nil); The most common case.  Less commonly, a misfontification:
-                              (eq face 'font-lock-function-name-face); ← This occurs in the case e.g.
-                              (jmt-is-Java-mode-type-face face)); [T↓]   of an empty `()` qualifier.
-                    (throw 'is-annotation nil))
+                  (while; Capture as group 2 the simple annotation name.
+                      (progn
+                        (skip-syntax-forward "-" limit); Though unconventional, whitespace is allowed
+                          ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines; also
+                          ;;; commentary, which would be perverse here, not worth coding for. [AST,SL]
+                        (setq m2-beg (point))
+                        (skip-chars-forward jmt-name-character-set limit)
+                        (setq m2-end (point))
+                        (unless (< m2-beg m2-end) (throw 'is-annotation nil))
+                        (setq face (get-text-property m2-beg 'face))
+                        (if (eq face 'font-lock-constant-face); Then the (mis)captured name should be
+                            (progn; dot terminated, so formed as a segment of a packagage qualifier.
+                              (skip-syntax-forward "-" limit); [SL]
+                              (unless (eq ?. (char-after)); (and not nil)
+                                (throw 'is-annotation nil))
+                              (forward-char); Past the ‘.’.
+                              t); Continuing the loop, so skipping past this segment of the qualifier.
+                          (unless (or (eq face nil); The most common case.  Else a misfontification:
+                                      (eq face 'font-lock-function-name-face); This one occurs
+                                        ;;; in the case, for instance, of an empty `()` qualifier.
+                                      (jmt-is-Java-mode-type-face face)); [T↓]
+                            (throw 'is-annotation nil))
+                          nil))); Quitting the loop, having matched the simple annotation name.
                   (skip-syntax-forward "-" limit); [SL]
                   (when (eq ?\( (char-after)); (and not nil)
                     (setq m3-beg (point); Start of trailing qualifier, it would be.
