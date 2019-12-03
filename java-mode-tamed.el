@@ -168,7 +168,7 @@ by the underlying (Java mode) code."
 
 
 
-  (defvar jmt-face nil "A face indirectly referred to by a fontifier.")
+  (defvar jmt-face nil "A variable for fontifiers.")
 
 
 
