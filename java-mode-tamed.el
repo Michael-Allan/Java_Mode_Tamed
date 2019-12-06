@@ -91,11 +91,11 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
 
 
-  (defface jmt-annotation-package; [MDF]
-    `((t . (:inherit jmt-package))); [RF]
-    "The face for the name segments of a package qualifier in an annotation
-type reference.  It defaults to ‘jmt-package’; customize it if the default
-fits poorly with your other annotation faces."
+  (defface jmt-annotation-package-name; [MDF]
+    `((t . (:inherit jmt-package-name))); [RF]
+    "The face for each segment of a package name in a qualified reference
+of an annotation type.  It defaults to ‘jmt-package-name’; customize it
+if the default fits poorly with your other annotation faces."
     :group 'java-mode-tamed)
 
 
@@ -120,9 +120,17 @@ other annotation faces."
 
   (defface jmt-annotation-qualifier
     `((t . (:inherit c-annotation-face)))
-    "The face for the element assignments of annotation.  Use it to customize
-the appearance of the assignments, e.g. to give them less prominence than
-the ‘c-annotation-face’ of the preceding type name."
+    "The face for the element assignments of annotation.  Customize it
+e.g. to give the assignments less prominence than the ‘c-annotation-face’
+of the preceding type name."
+    :group 'java-mode-tamed)
+
+
+
+  (defface jmt-boilerplate-keyword; [MDF]
+    `((t . (:inherit jmt-principal-keyword))); [RF]
+    "The face for the keyword of a formal Java declaration in the preamble
+of a compilation unit."
     :group 'java-mode-tamed)
 
 
@@ -188,6 +196,14 @@ and ‘font-lock-comment-delimiter-face’."
 
 
 
+  (defface jmt-expression-keyword; [MDF]
+    `((t . (:inherit jmt-principal-keyword))); [RF]
+    "The face for the keyword of an operator or other element
+of a formal Java expression."
+    :group 'java-mode-tamed)
+
+
+
   (defun jmt-faces-are-equivalent (f1 f2); [RF]
     "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
@@ -205,7 +221,7 @@ by the underlying (Java mode) code."
       (or (eq 'c-annotation-face (jmt-untamed-face f))
           (eq 'jmt-annotation-string f)
           (eq 'jmt-annotation-string-delimiter f)
-          (eq 'jmt-annotation-package f); A package qualifier in an annotation type reference.
+          (eq 'jmt-annotation-package-name f); A package qualifier in an annotation type reference.
           (and (eq 'jmt-separator f) (char-equal ?. (char-before p)))))); A dot ‘.’ in the qualifier.
 
 
@@ -225,24 +241,8 @@ by the underlying (Java mode) code."
 
 
 
-  (defun jmt-is-modifier-keyword (s)
-    "Answers whether string S is a Java modifier in keyword form.
-See face ‘jmt-modifier-keyword’."
-    ;;       `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
-    ;;   `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
-    ;;      `MethodModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.4.3
-    ;; `ConstructorModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.8.3
-    ;;       `FieldModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.3.1
-    (or (jmt-is-type-modifier-keyword s)
-        (string= s "synchronized")
-        (string= s "volatile")
-        (string= s "transient")
-        (string= s "native")))
-
-
-
   (defun jmt-is-type-definitive-keyword (s)
-    "Answers whether string S is the principle keyword of a type definition."
+    "Answers whether string S is the principal keyword of a type definition."
     (or (string= s "class")
         (string= s "interface")
         (string= s "enum")))
@@ -264,6 +264,74 @@ e.g. as opposed to annotation form."
 
 
 
+  (defconst keyword-face-alist
+    '(
+      ;; Frequent
+      ;; ────────
+  ;;; ("assert"       .   jmt-principal-keyword); Of a statement. (but unfaced by Java mode)
+  ;;; ("boolean"      .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("break"        .   jmt-principal-keyword); Of a statement.
+      ("else"         .   jmt-principal-keyword); Of a statement clause.
+      ("final"        .   jmt-qualifier-keyword)
+      ("if"           .   jmt-principal-keyword); Of a statement.
+      ("import"       . jmt-boilerplate-keyword)
+  ;;; ("int"          .        jmt-type-keyword); (but faced rather as a type by Java mode)
+  ;;; ("long"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("private"      .   jmt-qualifier-keyword)
+      ("public"       .   jmt-qualifier-keyword)
+      ("return"       .   jmt-principal-keyword); Of a statement.
+      ("static"       .   jmt-qualifier-keyword)
+
+      ;; Infrequent; typically a few times per buffer
+      ;; ──────────
+      ("abstract"     .   jmt-qualifier-keyword)
+      ("case"         .   jmt-principal-keyword); Of a statement clause.
+      ("catch"        .   jmt-principal-keyword); Of a statement clause.
+  ;;; ("char"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("class"        .   jmt-principal-keyword); Of a type definition.
+      ("continue"     .   jmt-principal-keyword); Of a statement.
+  ;;; ("float"        .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("for"          .   jmt-principal-keyword); Of a statement.
+      ("new"          .  jmt-expression-keyword)
+      ("protected"    .   jmt-qualifier-keyword)
+      ("super"        .  jmt-expression-keyword)
+      ("synchronized" .   jmt-principal-keyword); Of a statement.
+      ("this"         .  jmt-expression-keyword)
+      ("throw"        .   jmt-principal-keyword); Of a statement.
+      ("throws"       .   jmt-qualifier-keyword)
+      ("try"          .   jmt-principal-keyword); Of a statement.
+  ;;; ("void"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("while"        .   jmt-principal-keyword); Of a statement.
+
+      ;; Rare; typically once per buffer, if at all
+      ;; ────
+  ;;; ("_"            .     jmt-misused-keyword); (reserved, yet unfaced by Java mode)
+  ;;; ("byte"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("const"        .   jmt-qualifier-keyword); (but reserved)
+      ("enum"         .   jmt-principal-keyword); Of a type definition.
+      ("default"      .   jmt-principal-keyword); Of a statement clause.
+      ("do"           .   jmt-principal-keyword); Of a statement.
+  ;;; ("double"       .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("extends"      .   jmt-qualifier-keyword)
+      ("finally"      .   jmt-principal-keyword); Of a statement clause.
+      ("goto"         .   jmt-principal-keyword); (but reserved)
+      ("implements"   .   jmt-qualifier-keyword)
+      ("instanceof"   .  jmt-expression-keyword)
+      ("interface"    .   jmt-principal-keyword); Of a type definition.
+      ("native"       .   jmt-qualifier-keyword)
+      ("package"      . jmt-boilerplate-keyword)
+  ;;; ("short"        .        jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("strictfp"     .   jmt-qualifier-keyword)
+      ("switch"       .   jmt-principal-keyword); Of a statement.
+      ("transient"    .   jmt-qualifier-keyword)
+      ("volatile"     .   jmt-qualifier-keyword)
+      )
+    "A list of cons cells of Java keywords (string @ car) each with
+its proper face (symbol @ cdr).  The list excludes all keywords
+that Java mode does not face with ‘font-lock-keyword-face’.")
+
+
+
   (defvar jmt--late-initialization-was-begun nil)
 
 
@@ -272,16 +340,6 @@ e.g. as opposed to annotation form."
     "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
 and \\=`\\='\\=` quotes."
     (message "%s" (apply 'format format-string arguments)))
-
-
-
-  (defface jmt-modifier-keyword; [MDF]
-    `((t . (:inherit font-lock-keyword-face))); [RF]
-    "The face for a keyword-form modifier in a class, interface, method,
-constructor or field definition; any modifier, that is, except an annotation
-modifier.  Use to it customize the appearance of these keywords, e.g. to give
-them less prominence than other, more important keywords."
-    :group 'java-mode-tamed)
 
 
 
@@ -332,11 +390,12 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
 
 
-  (defface jmt-package; [MDF]
+  (defface jmt-package-name; [MDF]
     `((t . (:inherit font-lock-constant-face))); [RF]
-    "The face for the name segments of a package qualifier in a type reference.
-Customize it to distinguish it from other uses of ‘font-lock-constant-face’,
-from which it inherits."
+    "The face for each segment of a package name in a package declaration
+or qualified type reference.  It inherits from ‘font-lock-constant-face’;
+customize it to distinguish package names from other constructs that use
+‘font-lock-constant-face’."
     :group 'java-mode-tamed)
 
 
@@ -387,6 +446,23 @@ for the function’s return type, making it a *generic* return type.  May move p
       (forward-comment most-negative-fixnum); [←CW]
       (not (eq (char-before) ?.)))); (not `char-equal`, in case nil)
         ;;; Here a `.` would indicate a method call, as opposed to a definition.
+
+
+
+  (defface jmt-principal-keyword; [MDF]
+    `((t . (:inherit font-lock-keyword-face))); [RF]
+    "The face for the principal keyword of a definition.
+Cf. ‘jmt-qualifier-keyword’.  See also subfaces
+‘jmt-boilerplate-keyword’ and ‘jmt-expression-keyword’."
+    :group 'java-mode-tamed)
+
+
+
+  (defface jmt-qualifier-keyword; [MDF]
+    `((t . (:inherit font-lock-keyword-face))); [RF]
+    "The face for a secondary keyword in a definition.
+Cf. ‘jmt-principal-keyword’."
+    :group 'java-mode-tamed)
 
 
 
@@ -490,8 +566,31 @@ is not buffer local."
       '(4 'jmt-annotation-qualifier nil t)                  '(5 'jmt-annotation-delimiter t t))
 
 
+     ;; ═══════
+     ;; Keyword  [K↓]
+     ;; ═══════
+     (cons; Refontify each using face `jmt-definition-keyword` or `jmt-qualifier-keyword`.
+      (let (i match-beg match-end)
+        (lambda (limit)
+          (setq match-beg (point)); Presumptively.
+          (catch 'to-refontify
+            (while (< match-beg limit)
+              (setq i (get-text-property match-beg 'face)
+                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (eq i 'font-lock-keyword-face)
+                (setq i (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
+                (set 'jmt-face
+                     (if i (cdr i); Either as predefined in `keyword-face-alist`,
+                       'jmt-principal-keyword)); or a (prominent) default face.
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'to-refontify t))
+              (setq match-beg match-end))
+            nil)))
+      '(0 jmt-face t))
+
+
      ;; ═════════
-     ;; Type name  [T↓]
+     ;; Type name  [↑K, T↓]
      ;; ═════════
      (list; Refontify each using either `jmt-type-definition` or  `jmt-type-reference` face.
       (lambda (limit)
@@ -532,7 +631,7 @@ is not buffer local."
                    (face (get-text-property p 'face))
                    (match-end (next-single-property-change p 'face (current-buffer) limit)))
               (when; A type definitive keyword (`class`, `enum` or `interface`) is found.
-                  (and (eq face 'font-lock-keyword-face)
+                  (and (eq face 'jmt-principal-keyword); [↑K]
                        (jmt-is-type-definitive-keyword
                         (buffer-substring-no-properties (point) match-end)))
                 (goto-char match-end)
@@ -675,7 +774,7 @@ is not buffer local."
                    (catch 'is-constructor-definition; One that needs fontifying, that is.  Or some
                      ;; cases of method definition in need; this section will fontify those, too,
                      ;; just because it happens to precede the method definition section, below.
-                     (when (not (or (eq face nil) (eq face 'jmt-type-reference))); [↑T]
+                     (unless (or (eq face nil) (eq face 'jmt-type-reference)); [↑T]
                        (throw 'is-constructor-definition nil)); Only identifiers left unfaced
                        ;;; or misfaced as type references have been seen.  See for instance
                        ;;; the sequences `public @Warning("non-API") ApplicationX()` at
@@ -697,8 +796,8 @@ is not buffer local."
                            ;; Now point is (invariant) directly after a name (in form).
                            (forward-comment most-positive-fixnum); [CW→]
                            (when (eobp) (throw 'is-past-qualifier t))
-                           (when (not (char-equal ?. (char-after))); Namely the delimiting dot of
-                             (throw 'is-past-qualifier t))         ; a preceding package segment.
+                           (unless (char-equal ?. (char-after)); Namely the delimiting dot of
+                             (throw 'is-past-qualifier t))     ; a preceding package segment.
                            (forward-char); Past the ‘.’.
                            (forward-comment most-positive-fixnum); [CW→] To the next token.
                            (setq i (point)); What follows the qualifier follows its last dot.
@@ -731,8 +830,8 @@ is not buffer local."
                    ;; Method definition
                    ;; ─────────────────
                    (catch 'is-method-definition; One that needs fontifying, that is.
-                     (when (not (eq face nil)) (throw 'is-method-definition nil)); Definitions
-                       ;;; left unfaced have been seen, but misfacing has not.  See for instance
+                     (unless (eq face nil)) (throw 'is-method-definition nil); Definitions
+                       ;;; unfaced have been seen, but misfaced have not.  See for instance
                        ;;; the sequence `public @Override @Warning("non-API") void onCreate()`:
                        ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40`.
                      (goto-char match-beg)
@@ -755,7 +854,7 @@ is not buffer local."
                    ;; Method call
                    ;; ───────────
                    (catch 'is-method-call; One that needs refontifying, that is.
-                     (when (not (eq face 'font-lock-function-name-face)) (throw 'is-method-call nil))
+                     (unless (eq face 'font-lock-function-name-face) (throw 'is-method-call nil))
                        ;;; Only calls misfaced as definitions have been seen.
                      (goto-char match-beg)
                      (forward-comment most-negative-fixnum); [←CW, QSB]
@@ -769,26 +868,6 @@ is not buffer local."
                  (goto-char match-end))); Whence the next leg of the search begins.
              nil))))
       '(0 jmt-face t))
-
-
-     ;; ════════════════
-     ;; Modifier keyword
-     ;; ════════════════
-     (cons; Refontify each using face `jmt-modifier-keyword`.
-      (let (face match-beg match-end)
-        (lambda (limit)
-          (setq match-beg (point)); Presumptively.
-          (catch 'to-refontify
-            (while (< match-beg limit)
-              (setq face (get-text-property match-beg 'face)
-                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
-              (when (and (eq face 'font-lock-keyword-face)
-                         (jmt-is-modifier-keyword (buffer-substring-no-properties match-beg match-end)))
-                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                (throw 'to-refontify t))
-              (setq match-beg match-end))
-            nil)))
-      '(0 'jmt-modifier-keyword t)); [QTF]
 
 
      ;; ══════
@@ -938,7 +1017,7 @@ of ‘jmt-type-reference’."
   (defface jmt-type-definition; [MDF, SF]
     `((t . (:inherit font-lock-type-face))); [RF]
     "The face for the identifier of a class or interface in a type definition.
-Use it to highlight the identifier where initially it is defined (like
+Customize it to highlight the identifier where initially it is defined (like
 ‘font-lock-variable-name-face’ does for variable identifiers), as opposed
 to merely referenced after the fact.  See also face ‘jmt-type-reference’."
     :group 'java-mode-tamed)
@@ -948,7 +1027,7 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
   (defface jmt-type-parameter-declaration; [TP, MDF, SF]
     `((t . (:inherit jmt-type-definition))); [RF]
     "The face for the identifier of a type parameter in a type parameter declaration.
-Use it to highlight the identifier where initially it is declared (like
+Customize it to highlight the identifier where initially it is declared (like
 ‘font-lock-variable-name-face’ does for variable identifiers), as opposed
 to merely referenced after the fact.  See also face ‘jmt-type-reference’."
     :group 'java-mode-tamed)
@@ -1064,7 +1143,8 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                         "'\\s-*(\\s-*\\(font-lock-comment-face\\s-+font-lock-string-face\\)\\s-*)"
                         nil t); The sought list is used for a `memq` test.
                    (replace-match; Appending these to the list: [BC]
-                    "'(\\1 jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter)" t)
+                    "'(\\1 jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter)"
+                    t)
                    t)))))
 
         (jmt-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
@@ -1076,10 +1156,12 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
      (append c-maybe-decl-faces; [MDF]
              ;;   Quoting each of these only because `c-maybe-decl-faces` “must be evaluated
              ;; ↙  (with ‘eval’) at runtime to get the actual list of faces”. [QTF]
-             '('jmt-annotation-package
-               'jmt-modifier-keyword
-               'jmt-package
-               'jmt-package-keyword
+             '('jmt-annotation-package-name
+               'jmt-boilerplate-keyword
+               'jmt-expression-keyword
+               'jmt-package-name
+               'jmt-principal-keyword
+               'jmt-qualifier-keyword
                'jmt--type
                'jmt-type-definition
                'jmt-type-parameter-declaration
@@ -1104,9 +1186,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
 ;; NOTES
 ;; ─────
-;;   A↓ · This marks code section *Annotation* of `jmt-specific-fontifiers-3`.
+;;   A↓ · This marks section *Annotation* of `jmt-specific-fontifiers-3`.
 ;;
-;;  ↑A ·· This marks all code that must execute after code section *Annotation*.
+;;  ↑A ·· This marks all code that must execute after section *Annotation*.
 ;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
@@ -1120,6 +1202,10 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;  ←CW · Backward across commentary and whitespace.
 ;;
 ;;   CW→  Forward across commentary and whitespace.
+;;
+;;   K↓ · This marks section *Keyword* of `jmt-specific-fontifiers-3`.
+;;
+;;  ↑K ·· This marks all code that must execute after section *Keyword*.
 ;;
 ;;   LF · `c-literal-faces`: Any replacement face [RF] for a face listed in `c-literal-faces`
 ;;        must itself be appended to that list.
@@ -1160,10 +1246,10 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy. [BUG]
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
 ;;
-;;   T↓ · This marks code section *Type name* of `jmt-specific-fontifiers-3` and all other code
-;;        that must execute before it.
+;;   T↓ · This marks section *Type name* of `jmt-specific-fontifiers-3` and all other code that must
+;;        execute before it.
 ;;
-;;  ↑T ·· This marks all code that must execute after code section *Type name*.
+;;  ↑T ·· This marks all code that must execute after section *Type name*.
 ;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
 ;;
