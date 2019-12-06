@@ -93,7 +93,7 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
   (defface jmt-annotation-package; [MDF]
     `((t . (:inherit jmt-package))); [RF]
-    "The face for the segment names of a package qualifier in an annotation
+    "The face for the name segments of a package qualifier in an annotation
 type reference.  It defaults to ‘jmt-package’; customize it if the default
 fits poorly with your other annotation faces."
     :group 'java-mode-tamed)
@@ -334,7 +334,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
   (defface jmt-package; [MDF]
     `((t . (:inherit font-lock-constant-face))); [RF]
-    "The face for the segment names of a package qualifier in a type reference.
+    "The face for the name segments of a package qualifier in a type reference.
 Customize it to distinguish it from other uses of ‘font-lock-constant-face’,
 from which it inherits."
     :group 'java-mode-tamed)
@@ -866,7 +866,7 @@ is not buffer local."
                        ;; of angle brackets 1).  And the list directly follows either (a) the identifier
                        ;; of a type definition, indicating the definition of a generic class or inter-
                        ;; face, or (b) neither a type name, type parameter nor `.` delimiter (of a method
-                       ;; call), indicating the definition of a generic method or constructor. [MI]
+                       ;; call), indicating the definition of a generic method or constructor. [MC]
                        (setq depth 1); Nested depth of name in brackets, presumed to be 1 as required.
                        (while; Ensure `p` has emerged from all brackets,
                            (progn; moving it leftward as necessary.
@@ -1079,6 +1079,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
              '('jmt-annotation-package
                'jmt-modifier-keyword
                'jmt-package
+               'jmt-package-keyword
                'jmt--type
                'jmt-type-definition
                'jmt-type-parameter-declaration
@@ -1123,6 +1124,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   LF · `c-literal-faces`: Any replacement face [RF] for a face listed in `c-literal-faces`
 ;;        must itself be appended to that list.
 ;;
+;;   MC · Method call.  See `MethodInvocation` at
+;;        `https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12`.
+;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
 ;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
@@ -1130,9 +1134,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
 ;;        must itself be appended to that list.
-;;
-;;   MI · See `MethodInvocation`.
-;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12
 ;;
 ;;   QSB  Quickly searching backward from an anchor at point.  Regular expressions are inapt here;
 ;;        one needs the anchor for sake of speed, but `looking-back` ‘can be quite slow’ regardless.
