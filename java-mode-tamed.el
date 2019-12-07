@@ -268,67 +268,95 @@ e.g. as opposed to annotation form."
     '(
       ;; Frequent
       ;; ────────
-  ;;; ("assert"       .   jmt-principal-keyword); Of a statement. (but unfaced by Java mode)
-  ;;; ("boolean"      .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("break"        .   jmt-principal-keyword); Of a statement.
-      ("else"         .   jmt-principal-keyword); Of a statement clause.
-      ("final"        .   jmt-qualifier-keyword)
-      ("if"           .   jmt-principal-keyword); Of a statement.
-      ("import"       . jmt-boilerplate-keyword)
-  ;;; ("int"          .        jmt-type-keyword); (but faced rather as a type by Java mode)
-  ;;; ("long"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("private"      .   jmt-qualifier-keyword)
-      ("public"       .   jmt-qualifier-keyword)
-      ("return"       .   jmt-principal-keyword); Of a statement.
-      ("static"       .   jmt-qualifier-keyword)
+  ;;; ("assert"       .     jmt-principal-keyword); Of a statement. (but unfaced by Java mode)
+  ;;; ("boolean"      .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("break"        .     jmt-principal-keyword); Of a statement.
+      ("else"         .     jmt-principal-keyword); Of a statement clause.
+      ("final"        .     jmt-qualifier-keyword)
+      ("if"           .     jmt-principal-keyword); Of a statement.
+      ("import"       .   jmt-boilerplate-keyword)
+  ;;; ("int"          .          jmt-type-keyword); (but faced rather as a type by Java mode)
+  ;;; ("long"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("private"      .     jmt-qualifier-keyword)
+      ("public"       .     jmt-qualifier-keyword)
+      ("return"       .     jmt-principal-keyword); Of a statement.
+      ("static"       .     jmt-qualifier-keyword)
 
       ;; Infrequent; typically a few times per buffer
       ;; ──────────
-      ("abstract"     .   jmt-qualifier-keyword)
-      ("case"         .   jmt-principal-keyword); Of a statement clause.
-      ("catch"        .   jmt-principal-keyword); Of a statement clause.
-  ;;; ("char"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("class"        .   jmt-principal-keyword); Of a type definition.
-      ("continue"     .   jmt-principal-keyword); Of a statement.
-  ;;; ("float"        .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("for"          .   jmt-principal-keyword); Of a statement.
-      ("new"          .  jmt-expression-keyword)
-      ("protected"    .   jmt-qualifier-keyword)
-      ("super"        .  jmt-expression-keyword)
-      ("synchronized" .   jmt-principal-keyword); Of a statement.
-      ("this"         .  jmt-expression-keyword)
-      ("throw"        .   jmt-principal-keyword); Of a statement.
-      ("throws"       .   jmt-qualifier-keyword)
-      ("try"          .   jmt-principal-keyword); Of a statement.
-  ;;; ("void"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("while"        .   jmt-principal-keyword); Of a statement.
+      ("abstract"     .     jmt-qualifier-keyword)
+      ("case"         .     jmt-principal-keyword); Of a statement clause.
+      ("catch"        .     jmt-principal-keyword); Of a statement clause.
+  ;;; ("char"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("class"        .        keyword-face-class); (q.v.)
+      ("continue"     .     jmt-principal-keyword); Of a statement.
+  ;;; ("float"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("for"          .     jmt-principal-keyword); Of a statement.
+      ("new"          .    jmt-expression-keyword)
+      ("protected"    .     jmt-qualifier-keyword)
+      ("super"        .    jmt-expression-keyword)
+      ("synchronized" . keyword-face-synchronized); (q.v.)
+      ("this"         .    jmt-expression-keyword)
+      ("throw"        .     jmt-principal-keyword); Of a statement.
+      ("throws"       .     jmt-qualifier-keyword)
+      ("try"          .     jmt-principal-keyword); Of a statement.
+  ;;; ("void"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("while"        .     jmt-principal-keyword); Of a statement.
 
       ;; Rare; typically once per buffer, if at all
       ;; ────
-  ;;; ("_"            .     jmt-misused-keyword); (reserved, yet unfaced by Java mode)
-  ;;; ("byte"         .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("const"        .   jmt-qualifier-keyword); (but reserved)
-      ("enum"         .   jmt-principal-keyword); Of a type definition.
-      ("default"      .   jmt-principal-keyword); Of a statement clause.
-      ("do"           .   jmt-principal-keyword); Of a statement.
-  ;;; ("double"       .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("extends"      .   jmt-qualifier-keyword)
-      ("finally"      .   jmt-principal-keyword); Of a statement clause.
-      ("goto"         .   jmt-principal-keyword); (but reserved)
-      ("implements"   .   jmt-qualifier-keyword)
-      ("instanceof"   .  jmt-expression-keyword)
-      ("interface"    .   jmt-principal-keyword); Of a type definition.
-      ("native"       .   jmt-qualifier-keyword)
-      ("package"      . jmt-boilerplate-keyword)
-  ;;; ("short"        .        jmt-type-keyword); (but faced rather as a type by Java mode)
-      ("strictfp"     .   jmt-qualifier-keyword)
-      ("switch"       .   jmt-principal-keyword); Of a statement.
-      ("transient"    .   jmt-qualifier-keyword)
-      ("volatile"     .   jmt-qualifier-keyword)
+  ;;; ("_"            .       jmt-misused-keyword); (reserved, yet unfaced by Java mode)
+  ;;; ("byte"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("const"        .     jmt-qualifier-keyword); (but reserved)
+      ("enum"         .     jmt-principal-keyword); Of a type definition.
+      ("default"      .     jmt-principal-keyword); Of a statement clause.
+      ("do"           .     jmt-principal-keyword); Of a statement.
+  ;;; ("double"       .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("extends"      .     jmt-qualifier-keyword)
+      ("finally"      .     jmt-principal-keyword); Of a statement clause.
+      ("goto"         .     jmt-principal-keyword); (but reserved)
+      ("implements"   .     jmt-qualifier-keyword)
+      ("instanceof"   .    jmt-expression-keyword)
+      ("interface"    .     jmt-principal-keyword); Of a type definition.
+      ("native"       .     jmt-qualifier-keyword)
+      ("package"      .   jmt-boilerplate-keyword)
+  ;;; ("short"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
+      ("strictfp"     .     jmt-qualifier-keyword)
+      ("switch"       .     jmt-principal-keyword); Of a statement.
+      ("transient"    .     jmt-qualifier-keyword)
+      ("volatile"     .     jmt-qualifier-keyword)
       )
-    "A list of cons cells of Java keywords (string @ car) each with
-its proper face (symbol @ cdr).  The list excludes all keywords
-that Java mode does not face with ‘font-lock-keyword-face’.")
+    "A list of cons cells of Java keywords (string @ car) each with the symbol
+of its proper face (@ cdr).  If the symbol instead points to a function,
+then the function has the form of ‘keyword-face-class’ and returns
+a face symbol.  The list excludes all keywords that Java mode
+does not face with ‘font-lock-keyword-face’.")
+
+
+
+  (defun keyword-face-class (beg _end)
+    "Returns the face (symbol) to give to the `class` keyword present
+in the buffer from position BEG (inclusive number) to _END (exclusive number).
+Leaves point indeterminate."
+    (goto-char beg)
+    (forward-comment most-negative-fixnum); [←CW]
+    (if (eq ?. (char-before)); (and not nil)
+        'jmt-expression-keyword
+          ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-ClassLiteral
+      'jmt-principal-keyword)); Of a type definition.
+
+
+
+  (defun keyword-face-synchronized (_beg end)
+    "Returns the face (symbol) to give to the `synchronized` keyword present
+in the buffer from position _BEG (inclusive number) to END (exclusive number).
+Leaves point indeterminate."
+    (goto-char end)
+    (forward-comment most-positive-fixnum); [CW→]
+    (if (eq ?\( (char-after)); (and not nil)
+        'jmt-principal-keyword; Of a statement.
+          ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-14.html#jls-14.19
+      'jmt-qualifier-keyword))
 
 
 
@@ -569,18 +597,20 @@ is not buffer local."
      ;; ═══════
      ;; Keyword  [K↓]
      ;; ═══════
-     (cons; Refontify each using face `jmt-definition-keyword` or `jmt-qualifier-keyword`.
-      (let (kf match-beg match-end)
+     (cons; Refontify each as defined in `keyword-face-alist`.
+      (let (f match-beg match-end)
         (lambda (limit)
           (setq match-beg (point)); Presumptively.
           (catch 'to-refontify
             (while (< match-beg limit)
               (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
               (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
-                (setq kf (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
+                (setq f (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
                 (set 'jmt-face
-                     (if kf (cdr kf); Either as predefined in `keyword-face-alist`,
-                       'jmt-principal-keyword)); or a (prominent) default face.
+                     (if (not f) 'jmt-principal-keyword    ; Setting either a default face,
+                       (setq f (cdr f))                    ; or, from `keyword-face-alist`,
+                       (if (not (functionp f)) f           ; a face either directly named
+                         (funcall f match-beg match-end)))); or given by a named function.
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-refontify t))
               (setq match-beg match-end))
@@ -598,7 +628,7 @@ is not buffer local."
             (let* ((match-beg (point)); Presumptively.
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
               (when (jmt-is-Java-mode-type-face (get-text-property match-beg 'face))
-                (forward-comment most-negative-fixnum); [←CW, QSB]
+                (forward-comment most-negative-fixnum); [←CW]
 
                 ;; Either defining (1) a type
                 ;; ───────────────
@@ -640,7 +670,7 @@ is not buffer local."
                              (not (get-text-property match-beg 'face))); The name is unfontified.
                     (setq match-end (point))
                     (goto-char p); Back to the type definitive keyword.
-                    (forward-comment most-negative-fixnum); [←CW, QSB]
+                    (forward-comment most-negative-fixnum); [←CW]
                     (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this definition
                       (backward-char); as that of an annotation type.  Move back past the ‘@’.
                       (forward-comment most-negative-fixnum)); [←CW]
@@ -809,7 +839,7 @@ is not buffer local."
                      ;; Before the identifier
                      ;; ·····················
                      (goto-char match-beg)
-                     (forward-comment most-negative-fixnum); [←CW, QSB]
+                     (forward-comment most-negative-fixnum); [←CW]
                      (when (bobp) (throw 'is-constructor-definition nil))
                      (when (char-equal (char-before) ?>)
                        (if (preceding->-marks-generic-return-type)
@@ -832,7 +862,7 @@ is not buffer local."
                        ;;; the sequence `public @Override @Warning("non-API") void onCreate()`:
                        ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40`.
                      (goto-char match-beg)
-                     (forward-comment most-negative-fixnum); [←CW, QSB]
+                     (forward-comment most-negative-fixnum); [←CW]
                      (when (bobp) (throw 'is-method-definition nil))
                      (setq i (char-before))
                      (when (char-equal i ?\]); Return type declared as an array.
@@ -854,7 +884,7 @@ is not buffer local."
                      (unless (eq face 'font-lock-function-name-face) (throw 'is-method-call nil))
                        ;;; Only calls misfaced as definitions have been seen.
                      (goto-char match-beg)
-                     (forward-comment most-negative-fixnum); [←CW, QSB]
+                     (forward-comment most-negative-fixnum); [←CW]
                      (when (bobp) (throw 'is-method-call nil))
                      (when (char-equal (char-before) ?.); Always the misfaced identifier directly
                        ;; follows a ‘.’, which excludes the possibility of it being a definition.
@@ -917,7 +947,7 @@ is not buffer local."
                 (setq p-min (point-min))
                 (while; Skipping back over both any commentary and/or the annotations that
                     (progn; may appear here, and setting `p` to the resulting point. [TP]
-                      (forward-comment most-negative-fixnum); [←CW, QSB]
+                      (forward-comment most-negative-fixnum); [←CW]
                       (setq p (point))
                       (if (or (= p p-min)
                               (not (jmt-is-annotation-ish-before p))); [↑A]
@@ -1215,10 +1245,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
 ;;        must itself be appended to that list.
-;;
-;;   QSB  Quickly searching backward from an anchor at point.  Regular expressions are inapt here;
-;;        one needs the anchor for sake of speed, but `looking-back` ‘can be quite slow’ regardless.
-;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Regexp-Search.html
 ;;
 ;;   QTF  Quoting of tamed faces.  Their quoting is required in evaluative contexts, such as fontifiers.
 ;;        Font lock evaluates each face argument of a fontifier at runtime, which effectively unquotes
