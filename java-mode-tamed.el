@@ -570,17 +570,16 @@ is not buffer local."
      ;; Keyword  [K↓]
      ;; ═══════
      (cons; Refontify each using face `jmt-definition-keyword` or `jmt-qualifier-keyword`.
-      (let (i match-beg match-end)
+      (let (kf match-beg match-end)
         (lambda (limit)
           (setq match-beg (point)); Presumptively.
           (catch 'to-refontify
             (while (< match-beg limit)
-              (setq i (get-text-property match-beg 'face)
-                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
-              (when (eq i 'font-lock-keyword-face)
-                (setq i (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
+              (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
+                (setq kf (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
                 (set 'jmt-face
-                     (if i (cdr i); Either as predefined in `keyword-face-alist`,
+                     (if kf (cdr kf); Either as predefined in `keyword-face-alist`,
                        'jmt-principal-keyword)); or a (prominent) default face.
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-refontify t))
@@ -597,9 +596,8 @@ is not buffer local."
         (catch 'to-refontify
           (while (< (point) limit)
             (let* ((match-beg (point)); Presumptively.
-                   (face (get-text-property match-beg 'face))
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-              (when (jmt-is-Java-mode-type-face face)
+              (when (jmt-is-Java-mode-type-face (get-text-property match-beg 'face))
                 (forward-comment most-negative-fixnum); [←CW, QSB]
 
                 ;; Either defining (1) a type
@@ -628,10 +626,9 @@ is not buffer local."
         (catch 'to-fontify
           (while (< (point) limit)
             (let* ((p (point))
-                   (face (get-text-property p 'face))
                    (match-end (next-single-property-change p 'face (current-buffer) limit)))
               (when; A type definitive keyword (`class`, `enum` or `interface`) is found.
-                  (and (eq face 'jmt-principal-keyword); [↑K]
+                  (and (eq 'jmt-principal-keyword (get-text-property p 'face)); [↑K]
                        (jmt-is-type-definitive-keyword
                         (buffer-substring-no-properties (point) match-end)))
                 (goto-char match-end)
@@ -880,9 +877,8 @@ is not buffer local."
           (setq match-beg (point)); Presumptively.
           (catch 'to-refontify
             (while (< match-beg limit)
-              (setq f (get-text-property match-beg 'face)
-                    match-end (next-single-property-change match-beg 'face (current-buffer) limit))
-              (when (eq f 'font-lock-string-face)
+              (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (eq 'font-lock-string-face (get-text-property match-beg 'face))
                 (setq body-beg (1+ match-beg)
                       body-end (1- match-end)
                       f (get-text-property match-end 'face))
@@ -911,14 +907,13 @@ is not buffer local."
      ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
      ;; ═══════════════════
      (cons; Refontify each using face `jmt-type-parameter-declaration`. See optimization note. [TPN]
-      (let (face depth i j match-beg match-end p p-min)
+      (let (depth i j match-beg match-end p p-min)
         (lambda (limit)
           (catch 'to-refontify
             (while (< (point) limit)
               (setq match-beg (point); Presumptively.
-                    face (get-text-property match-beg 'face)
                     match-end (next-single-property-change match-beg 'face (current-buffer) limit))
-              (when (eq face 'jmt-type-reference); [↑T]
+              (when (eq 'jmt-type-reference (get-text-property match-beg 'face)); [↑T]
                 (setq p-min (point-min))
                 (while; Skipping back over both any commentary and/or the annotations that
                     (progn; may appear here, and setting `p` to the resulting point. [TP]
