@@ -182,10 +182,10 @@ RANGE is a cons cell."
 
 
   (defface jmt-delimiter nil
-    "The face for a delimiter not already fontified by Java mode.  Customize it
+    "The face for a delimiter not already faced by Java mode.  Customize it
 to better distinguish the delimiters from the content they delimit; making them
 more prominent or less prominent, for example.  See also subfaces ‘jmt-bracket’
-‘jmt-separator’.  And for delimiters that *are* already fontified by Java mode,
+‘jmt-separator’.  And for delimiters that *are* already faced by Java mode,
 see ‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’, ‘jmt-string-delimiter’
 and ‘font-lock-comment-delimiter-face’."
     :group 'java-mode-tamed)
@@ -211,7 +211,7 @@ by the underlying (Java mode) code."
 
 
 
-  (defvar jmt-face nil "A variable for fontifiers.")
+  (defvar jmt-face nil "A variable for the use of fontifiers.")
 
 
 
@@ -520,7 +520,7 @@ is not buffer local."
     (list
 
      ;; ══════════
-     ;; Annotation  [A↓, T↓]
+     ;; Annotation  [A, T↓]
      ;; ══════════
      (list; Fontify each, overriding any misfontification of Java mode.
       (lambda (limit)
@@ -590,18 +590,18 @@ is not buffer local."
 
                 (setq m1-beg (point)))))
           nil))
-      '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t) '(3 'jmt-annotation-delimiter t t); [A↓, QTF]
+      '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t) '(3 'jmt-annotation-delimiter t t); [QTF]
       '(4 'jmt-annotation-qualifier nil t)                  '(5 'jmt-annotation-delimiter t t))
 
 
      ;; ═══════
-     ;; Keyword  [K↓]
+     ;; Keyword  [K]
      ;; ═══════
-     (cons; Refontify each as defined in `keyword-face-alist`.
+     (cons; Reface each as defined in `keyword-face-alist`.
       (let (f match-beg match-end)
         (lambda (limit)
           (setq match-beg (point)); Presumptively.
-          (catch 'to-refontify
+          (catch 'to-reface
             (while (< match-beg limit)
               (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
               (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
@@ -612,18 +612,18 @@ is not buffer local."
                        (if (not (functionp f)) f           ; a face either directly named
                          (funcall f match-beg match-end)))); or given by a named function.
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                (throw 'to-refontify t))
+                (throw 'to-reface t))
               (setq match-beg match-end))
             nil)))
       '(0 jmt-face t))
 
 
      ;; ═════════
-     ;; Type name  [↑K, T↓]
+     ;; Type name  [↑K, T]
      ;; ═════════
-     (list; Refontify each using either `jmt-type-definition` or  `jmt-type-reference` face.
+     (list; Reface each either `jmt-type-definition` or  `jmt-type-reference`.
       (lambda (limit)
-        (catch 'to-refontify
+        (catch 'to-reface
           (while (< (point) limit)
             (let* ((match-beg (point)); Presumptively.
                    (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
@@ -636,24 +636,24 @@ is not buffer local."
                     (let ((p (point)))
                       (and (< (skip-chars-backward jmt-name-character-set) 0)
                            (jmt-is-type-definitive-keyword (buffer-substring-no-properties (point) p))))
-                  (set-match-data; Capturing the already fontified name as group 1.
+                  (set-match-data; Capturing the already faced name as group 1.
                    (list match-beg (goto-char match-end) match-beg match-end (current-buffer)))
-                  (throw 'to-refontify t))
+                  (throw 'to-reface t))
 
                 ;; Or merely referring (2) to one
                 ;; ───────────────────
                 (set-match-data; Capturing the name instead as group 2.
                  (list match-beg (goto-char match-end) nil nil match-beg match-end (current-buffer)))
-                (throw 'to-refontify t))
+                (throw 'to-reface t))
 
               (goto-char match-end)))
           nil))
-      '(1 '(face jmt-type-definition jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [QTF, SF, T↓]
+      '(1 '(face jmt-type-definition jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [QTF, SF]
         ;;; The stabilizer is for a minority of cases which have no discerned pattern.
 
-     (cons; Fontify type definition names incorrectly left unfaced by Java mode.
+     (cons; Face each type definition name incorrectly left unfaced by Java mode.
       (lambda (limit)
-        (catch 'to-fontify
+        (catch 'to-face
           (while (< (point) limit)
             (let* ((p (point))
                    (match-end (next-single-property-change p 'face (current-buffer) limit)))
@@ -667,7 +667,7 @@ is not buffer local."
                       (annotation-count 0))
                   (when (and (< match-beg limit)
                              (> (skip-chars-forward jmt-name-character-set limit) 0); A name follows.
-                             (not (get-text-property match-beg 'face))); The name is unfontified.
+                             (not (get-text-property match-beg 'face))); The name is unfaced.
                     (setq match-end (point))
                     (goto-char p); Back to the type definitive keyword.
                     (forward-comment most-negative-fixnum); [←CW]
@@ -693,7 +693,7 @@ is not buffer local."
                             (if (= annotation-count 0)
                                 (forward-comment most-negative-fixnum); [←CW]
                               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                              (throw 'to-fontify t)); The keyword precedes annotation.  With this.
+                              (throw 'to-face t)); The keyword precedes annotation.  With this.
                                 ;;; Java mode fails at times to face the type name.  This was seen,
                                 ;;; for instance, here in the sequence `public @ThreadSafe class ID`:
                                 ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`.
@@ -713,19 +713,19 @@ is not buffer local."
                           (forward-comment most-negative-fixnum))))))); [←CW]
               (goto-char match-end)))
           nil))
-      '(0 'jmt-type-definition t)); [QTF, T↓]
+      '(0 'jmt-type-definition t)); [QTF]
 
 
      ;; ═════════
      ;; Delimiter
      ;; ═════════
-     (cons; Fontify each delimiter that is not already fontified by Java mode.
+     (cons; Face each delimiter unfaced by Java mode.
       (let (i j match-beg match-end)
         (lambda (limit)
           (setq match-beg (point)); Presumptively.
           (set
            'jmt-face
-           (catch 'to-fontify
+           (catch 'to-face
              (while (< match-beg limit)
                (setq i (syntax-after match-beg)
                      j (car i); Numeric syntax code.
@@ -738,28 +738,28 @@ is not buffer local."
                  (when (or (char-equal j ?<)
                            (char-equal j ?>))
                    (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                   (throw 'to-fontify 'jmt-angle-bracket))
+                   (throw 'to-face 'jmt-angle-bracket))
 
                  ;; Curly bracket
                  ;; ─────────────
                  (when (or (char-equal j ?{)
                            (char-equal j ?}))
                    (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                   (throw 'to-fontify 'jmt-curly-bracket))
+                   (throw 'to-face 'jmt-curly-bracket))
 
                  ;; Round bracket
                  ;; ─────────────
                  (when (or (char-equal j ?\()
                            (char-equal j ?\)))
                    (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                   (throw 'to-fontify 'jmt-round-bracket))
+                   (throw 'to-face 'jmt-round-bracket))
 
                  ;; Square bracket
                  ;; ──────────────
                  (when (or (char-equal j ?\[)
                            (char-equal j ?\]))
                    (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                   (throw 'to-fontify 'jmt-square-bracket)))
+                   (throw 'to-face 'jmt-square-bracket)))
 
                ;; Separator
                ;; ─────────
@@ -769,7 +769,7 @@ is not buffer local."
                          (char-equal j ?:)
                          (char-equal j ?.))
                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                 (throw 'to-fontify 'jmt-separator))
+                 (throw 'to-face 'jmt-separator))
 
                (setq match-beg match-end))
              nil))))
@@ -880,7 +880,7 @@ is not buffer local."
 
                    ;; Method call
                    ;; ───────────
-                   (catch 'is-method-call; One that needs refontifying, that is.
+                   (catch 'is-method-call; One that needs refacing, that is.
                      (unless (eq face 'font-lock-function-name-face) (throw 'is-method-call nil))
                        ;;; Only calls misfaced as definitions have been seen.
                      (goto-char match-beg)
@@ -936,10 +936,10 @@ is not buffer local."
      ;; ═══════════════════
      ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
      ;; ═══════════════════
-     (cons; Refontify each using face `jmt-type-parameter-declaration`. See optimization note. [TPN]
+     (cons; Reface each `jmt-type-parameter-declaration`. See optimization note. [TPN]
       (let (depth i j match-beg match-end p p-min)
         (lambda (limit)
-          (catch 'to-refontify
+          (catch 'to-reface
             (while (< (point) limit)
               (setq match-beg (point); Presumptively.
                     match-end (next-single-property-change match-beg 'face (current-buffer) limit))
@@ -1004,7 +1004,7 @@ is not buffer local."
                                t))); Continuing the loop.
                        nil))
                   (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                  (throw 'to-refontify t)))
+                  (throw 'to-reface t)))
               (goto-char match-end))
             nil)))
       '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QTF, SF]
@@ -1211,9 +1211,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
 ;; NOTES
 ;; ─────
-;;   A↓ · This marks section *Annotation* of `jmt-specific-fontifiers-3`.
+;;   A ·· Section *Annotation* of `jmt-specific-fontifiers-3`.
 ;;
-;;  ↑A ·· This marks all code that must execute after section *Annotation*.
+;;  ↑A ·· Code that must execute after section *Annotation*.
 ;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
@@ -1228,9 +1228,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   CW→  Forward across commentary and whitespace.
 ;;
-;;   K↓ · This marks section *Keyword* of `jmt-specific-fontifiers-3`.
+;;   K ·· Section *Keyword* of `jmt-specific-fontifiers-3`.
 ;;
-;;  ↑K ·· This marks all code that must execute after section *Keyword*.
+;;  ↑K ·· Code that must execute after section *Keyword*.
 ;;
 ;;   LF · `c-literal-faces`: Any replacement face [RF] for a face listed in `c-literal-faces`
 ;;        must itself be appended to that list.
@@ -1267,10 +1267,11 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy. [BUG]
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
 ;;
-;;   T↓ · This marks section *Type name* of `jmt-specific-fontifiers-3` and all other code that must
-;;        execute before it.
+;;   T↓ · Code that must execute before section *Type name*  of `jmt-specific-fontifiers-3`.
 ;;
-;;  ↑T ·· This marks all code that must execute after section *Type name*.
+;;   T ·· Section *Type name* itself.
+;;
+;;  ↑T ·· Code that must execute after section *Type name*.
 ;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
 ;;
