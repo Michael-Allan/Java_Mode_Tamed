@@ -204,14 +204,14 @@ of a formal Java expression."
 
 
 
+  (defvar jmt-f nil); [GVF]
+
+
+
   (defun jmt-faces-are-equivalent (f1 f2); [RF]
     "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
     (eq (jmt-untamed-face f1) (jmt-untamed-face f2)))
-
-
-
-  (defvar jmt-face nil "A variable for the use of fontifiers.")
 
 
 
@@ -606,7 +606,7 @@ is not buffer local."
               (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
               (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
                 (setq f (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
-                (set 'jmt-face
+                (set 'jmt-f
                      (if (not f) 'jmt-principal-keyword    ; Setting either a default face,
                        (setq f (cdr f))                    ; or, from `keyword-face-alist`,
                        (if (not (functionp f)) f           ; a face either directly named
@@ -615,7 +615,7 @@ is not buffer local."
                 (throw 'to-reface t))
               (setq match-beg match-end))
             nil)))
-      '(0 jmt-face t))
+      '(0 jmt-f t))
 
 
      ;; ═════════
@@ -716,6 +716,7 @@ is not buffer local."
       '(0 'jmt-type-definition t)); [QTF]
 
 
+
      ;; ═════════
      ;; Delimiter
      ;; ═════════
@@ -724,7 +725,7 @@ is not buffer local."
         (lambda (limit)
           (setq match-beg (point)); Presumptively.
           (set
-           'jmt-face
+           'jmt-f
            (catch 'to-face
              (while (< match-beg limit)
                (setq i (syntax-after match-beg)
@@ -773,7 +774,7 @@ is not buffer local."
 
                (setq match-beg match-end))
              nil))))
-      '(0 jmt-face))
+      '(0 jmt-f))
 
 
      ;; ════════════════════════════════
@@ -784,7 +785,7 @@ is not buffer local."
             face i match-beg match-end)
         (lambda (limit)
           (set
-           'jmt-face
+           'jmt-f
            (catch 'to-fontify
              (while (re-search-forward identifier-pattern limit t)
                (setq match-beg (match-beginning 0); Presumptively.
@@ -894,7 +895,7 @@ is not buffer local."
                        (throw 'to-fontify 'default))))
                  (goto-char match-end))); Whence the next leg of the search begins.
              nil))))
-      '(0 jmt-face t))
+      '(0 jmt-f t))
 
 
      ;; ══════
@@ -918,19 +919,19 @@ is not buffer local."
 
                     ;; Within annotation
                     ;; ─────────────────
-                      (set 'jmt-face 'jmt-annotation-string-delimiter)
+                      (set 'jmt-f 'jmt-annotation-string-delimiter)
                       (set-match-data (list match-beg match-end match-beg body-beg body-beg body-end
                                             body-end match-end (current-buffer))))
                   ;; Elsewhere
                   ;; ─────────
-                  (set 'jmt-face 'jmt-string-delimiter)
+                  (set 'jmt-f 'jmt-string-delimiter)
                   (set-match-data (list match-beg match-end match-beg body-beg nil nil
                                         body-end match-end (current-buffer))))
                 (goto-char match-end)
                 (throw 'to-refontify t))
               (setq match-beg match-end))
             nil)))
-      '(1 jmt-face t) '(2 'jmt-annotation-string t t) '(3 jmt-face t)); [QTF]
+      '(1 jmt-f t) '(2 'jmt-annotation-string t t) '(3 jmt-f t)); [QTF]
 
 
      ;; ═══════════════════
@@ -1227,6 +1228,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;  ←CW · Backward across commentary and whitespace.
 ;;
 ;;   CW→  Forward across commentary and whitespace.
+;;
+;;   GVF  A global variable for the use of fontifiers, e.g. from within forms they quote and pass
+;;        to Font Lock to be evaluated outside of their lexical scope.
 ;;
 ;;   K ·· Section *Keyword* of `jmt-specific-fontifiers-3`.
 ;;
