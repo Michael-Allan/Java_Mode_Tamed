@@ -21,9 +21,9 @@
 ;; TEXT PROPERTIES
 ;; ───────────────
 ;;   jmt-stabilized
-;;       Marks text whose fontification is stabilized by Java mode tamed.  Blocks the underlying code
-;;       of Java mode from overriding the `face` properties of the marked text by its own mechanisms,
-;;       outside of Font Lock that is. [SF]
+;;       Marks Java type names and type parameter identifiers whose facing is stabilized
+;;       by Java mode tamed.  Blocks the underlying code (of Java mode) from overriding the
+;;       `face` properties of these by its own mechanisms, outside of Font Lock that is. [SF]
 ;;
 ;;
 ;; NOTES  (see at bottom)
@@ -420,10 +420,18 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
   (defface jmt-package-name; [MDF]
     `((t . (:inherit font-lock-constant-face))); [RF]
-    "The face for each segment of a package name in a package declaration
-or qualified type reference.  It inherits from ‘font-lock-constant-face’;
-customize it to distinguish package names from other constructs that use
-‘font-lock-constant-face’."
+    "The face for each segment of a package name in a qualified type reference.
+It inherits from ‘font-lock-constant-face’; customize it to distinguish package
+names from other constructs that use ‘font-lock-constant-face’."
+    :group 'java-mode-tamed)
+
+
+
+  (defface jmt-package-name-declared; [MDF]
+    `((t . (:inherit jmt-package-name))); [RF]
+    "The face for each segment of a package name in a package declaration,
+as opposed to a qualified type reference.  Customize it to better distinguish
+between the two."
     :group 'java-mode-tamed)
 
 
@@ -545,8 +553,8 @@ is not buffer local."
                         (setq m2-end (point))
                         (unless (< m2-beg m2-end) (throw 'is-annotation nil))
                         (setq face (get-text-property m2-beg 'face))
-                        (if (eq face 'font-lock-constant-face); Then the (mis)captured name should be
-                            (progn; dot terminated, so formed as a segment of a packagage qualifier.
+                        (if (eq face 'font-lock-constant-face); Then the (mis)captured name should be dot
+                            (progn; terminated, so forming a name segment of a package qualifier. [PPN]
                               (skip-syntax-forward "-" limit); [SL]
                               (unless (eq ?. (char-after)); (and not nil)
                                 (throw 'is-annotation nil))
@@ -681,7 +689,7 @@ is not buffer local."
                               (forward-sexp -1); Skip to the front of it.
                             (scan-error (throw 'is-modifier nil)))
                           (forward-comment most-negative-fixnum)); [←CW]
-                            ;;; Holding still the (would be) invariant.
+                            ;;; Holding still the (would be) loop invariant.
                         (setq p (point))
                         (when (= (skip-chars-backward jmt-name-character-set) 0)
                           (throw 'is-modifier nil))
@@ -714,6 +722,50 @@ is not buffer local."
               (goto-char match-end)))
           nil))
       '(0 'jmt-type-definition t)); [QTF]
+
+
+
+     ;; ════════════
+     ;; Package name, and apparent type name misfaced as such  [↑K, T]
+     ;; ════════════
+     (let; Reface each name segment of a package declararation `jmt-package-name`.
+         (face last-seg-was-found match-beg match-end seg-end)
+       (list; (1) The declaration begins with a `package` keyword.
+        (lambda (limit)
+          (setq match-beg (point)); Presumptively.
+          (catch 'is-package-declaration
+            (while (< match-beg limit)
+              (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+              (when (and (eq 'jmt-boilerplate-keyword (get-text-property match-beg 'face)); [↑K]
+                         (string= "package" (buffer-substring-no-properties match-beg match-end)))
+                (setq last-seg-was-found nil)
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'is-package-declaration t))
+              (setq match-beg match-end))
+            nil))
+        (list; (2, anchored highlighter) The declaration continues with a series of name segments.
+         (lambda (limit)
+           (catch 'to-reface
+             (when last-seg-was-found (throw 'to-reface nil)); The last segment was already refaced.
+             (while (< (point) limit); Now point should (invariant) be before any remaining segment name,
+               (skip-syntax-forward "-" limit); with at most whitespace intervening. [PPN, SL]
+               (setq match-beg (point))
+               (skip-chars-forward jmt-name-character-set limit)
+               (setq seg-end (point))
+               (unless (< match-beg seg-end) (throw 'to-reface nil)); Malformed or multi-line. [SL]
+               (skip-syntax-forward "-" limit)
+               (if (eq ?. (char-after)); (and not nil)
+                   (forward-char); To the (would be) loop invariant.
+                 (setq last-seg-was-found t))
+               (setq face (get-text-property match-beg 'face))
+               (when (or (eq face nil); Java mode leaves unfaced all but the last segment.
+                         (eq face 'font-lock-constant-face)); The refacing of this final segment
+                   ;;; is unstable when (edge case) no trailing ‘;’ appears on the same line.
+                   ;;; It might be stabilized by generalizing the mechanism of `jmt-stabilized`. [BUG]
+                 (set-match-data (list match-beg (point) match-beg seg-end (current-buffer)))
+                 (throw 'to-reface t)))
+             nil))
+         nil nil '(1 'jmt-package-name-declared t)))); [QTF]
 
 
 
@@ -821,11 +873,11 @@ is not buffer local."
                          (throw 'to-fontify 'font-lock-function-name-face))
                        (catch 'is-past-qualifier; Leaving `i` at either the next token to deal with,
                          (while t; or the buffer end, scan past any itervening package qualifier.
-                           ;; Now point is (invariant) directly after a name (in form).
-                           (forward-comment most-positive-fixnum); [CW→]
+                           ;; Now point lies (invariant) directly after a name (in form).
+                           (forward-comment most-positive-fixnum); [CW→, PPN]
                            (when (eobp) (throw 'is-past-qualifier t))
-                           (unless (char-equal ?. (char-after)); Namely the delimiting dot of
-                             (throw 'is-past-qualifier t))     ; a preceding package segment.
+                           (unless (char-equal ?. (char-after)); Namely the delimiting dot of a
+                             (throw 'is-past-qualifier t))     ; preceding package name segment.
                            (forward-char); Past the ‘.’.
                            (forward-comment most-positive-fixnum); [CW→] To the next token.
                            (setq i (point)); What follows the qualifier follows its last dot.
@@ -1186,6 +1238,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                'jmt-boilerplate-keyword
                'jmt-expression-keyword
                'jmt-package-name
+               'jmt-package-name-declared
                'jmt-principal-keyword
                'jmt-qualifier-keyword
                'jmt--type
@@ -1250,6 +1303,8 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
 ;;        must itself be appended to that list.
 ;;
+;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
+;;
 ;;   QTF  Quoting of tamed faces.  Their quoting is required in evaluative contexts, such as fontifiers.
 ;;        Font lock evaluates each face argument of a fontifier at runtime, which effectively unquotes
 ;;        the tamed faces to yield bare symbols.
@@ -1273,7 +1328,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   T↓ · Code that must execute before section *Type name*  of `jmt-specific-fontifiers-3`.
 ;;
-;;   T ·· Section *Type name* itself.
+;;   T ·· Section *Type name* itself, or code that must execute in unison with it.
 ;;
 ;;  ↑T ·· Code that must execute after section *Type name*.
 ;;
