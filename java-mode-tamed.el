@@ -137,14 +137,6 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 
 
-(defun jmt-c-lisp-top-construct-end () "\
-Returns the position just before the next top-level Lisp construct, if any,
-else `point-max`.  Leaves point indeterminate.  For use on buffers that contain
-the (Emacs Lisp) source code of Java mode (of CC mode, that is)."
-  (if (re-search-forward "^(" nil t) (1- (point)) (point-max)))
-
-
-
 (defun jmt--c/put-type-face (range) "\
 Called from a monkey patch applied to the underlying Java-mode code,
 this function overrides Java mode’s application of ‘font-lock-type-face’
@@ -445,7 +437,7 @@ function must return t on success, nil on failure."
            (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t)
     (signal 'jmt-x `("Function definition not found in source file"
                       ,function-symbol ,source-file)))
-  (narrow-to-region (match-beginning 0) (jmt-c-lisp-top-construct-end))
+  (narrow-to-region (match-beginning 0) (progn (end-of-defun) (point))); [EDM]
     ;;; Narrowing the temporary patch buffer to the function definition alone.
   (goto-char (point-min))
   (unless (funcall patch-function); Patching the definition.
@@ -1277,6 +1269,11 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;  ←CW · Backward across commentary and whitespace.
 ;;
 ;;   CW→  Forward across commentary and whitespace.
+;;
+;;   EDM  Emacs ‘defun’, that is; a misnomer apt to cause confusion.  ‘defin’ would be better;
+;;        though (to compound the confusion) it happens to mean the same thing in the context
+;;        of a function defined by the macro `defun`.
+;;        https://www.gnu.org/software/emacs/manual/html_node/emacs/Defuns.html
 ;;
 ;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
 ;;        or ‘assignment to free variable’.
