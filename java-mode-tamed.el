@@ -53,8 +53,8 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-(defgroup java-mode-tamed nil
-  "A tamer, more controllable Java mode"
+(defgroup java-mode-tamed nil "\
+A tamer, more controllable Java mode"
   :group 'languages :group 'faces
   :prefix "jmt-"
   :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
@@ -62,15 +62,15 @@
 
 
 (defface jmt-angle-bracket
-  `((t . (:inherit jmt-bracket)))
-  "The face for an angle bracket, ‘<’ or ‘>’."
+  `((t . (:inherit jmt-bracket))) "\
+The face for an angle bracket, ‘<’ or ‘>’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-annotation-delimiter
-  `((t . (:inherit c-annotation-face))); Only for sake of replacement subface `jmt-annotation-mark`.
-  "The face for the ‘@’, ‘(’ and ‘)’ delimiters of annotation.
+(defface jmt-annotation-delimiter; ↙ Only for sake of replacement subface `jmt-annotation-mark`.
+  `((t . (:inherit c-annotation-face))) "\
+The face for the ‘@’, ‘(’ and ‘)’ delimiters of annotation.
 Customize it to better distinguish the delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
@@ -78,34 +78,34 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
 
 
-(defface jmt-annotation-mark
-  `((t . (:inherit jmt-annotation-delimiter))); [RF]
-  "The face for the ‘@’ symbol denoting annotation."
+(defface jmt-annotation-mark; [RF]
+  `((t . (:inherit jmt-annotation-delimiter))) "\
+The face for the ‘@’ symbol denoting annotation."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-annotation-package-name; [MDF]
-  `((t . (:inherit jmt-package-name))); [RF]
-  "The face for each segment of a package name in a qualified reference
+(defface jmt-annotation-package-name; [MDF, RF]
+  `((t . (:inherit jmt-package-name))) "\
+The face for each segment of a package name in a qualified reference
 of an annotation type.  It defaults to ‘jmt-package-name’; customize it
 if the default fits poorly with your other annotation faces."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-annotation-string; [BC, LF]
-  `((t . (:inherit font-lock-string-face))); [RF]
-  "The face for a string in an annotation qualifier.  It defaults
+(defface jmt-annotation-string; [BC, LF, RF]
+  `((t . (:inherit font-lock-string-face))) "\
+The face for a string in an annotation qualifier.  It defaults
 to ‘font-lock-string-face’; customize it if the default fits poorly
 with your other annotation faces."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-annotation-string-delimiter; [BC, LF]
-  `((t . (:inherit jmt-string-delimiter))); [RF]
-  "The face for a string delimiter in an annotation qualifier.  It defaults
+(defface jmt-annotation-string-delimiter; [BC, LF, RF]
+  `((t . (:inherit jmt-string-delimiter))) "\
+The face for a string delimiter in an annotation qualifier.  It defaults
 to ‘jmt-string-delimiter’; customize it if the default fits poorly with your
 other annotation faces."
   :group 'java-mode-tamed)
@@ -113,40 +113,40 @@ other annotation faces."
 
 
 (defface jmt-annotation-qualifier
-  `((t . (:inherit c-annotation-face)))
-  "The face for the element assignments of annotation.  Customize it
+  `((t . (:inherit c-annotation-face))) "\
+The face for the element assignments of annotation.  Customize it
 e.g. to give the assignments less prominence than the ‘c-annotation-face’
 of the preceding type name."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-boilerplate-keyword; [MDF]
-  `((t . (:inherit jmt-principal-keyword))); [RF]
-  "The face for the keyword of a formal Java declaration in the preamble
+(defface jmt-boilerplate-keyword; [MDF, RF]
+  `((t . (:inherit jmt-principal-keyword))) "\
+The face for the keyword of a formal Java declaration in the preamble
 of a compilation unit."
   :group 'java-mode-tamed)
 
 
 
 (defface jmt-bracket
-  `((t . (:inherit jmt-delimiter)))
-  "The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’,
+  `((t . (:inherit jmt-delimiter))) "\
+The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’,
 ‘jmt-round-bracket’ and ‘jmt-square-bracket’."
   :group 'java-mode-tamed)
 
 
 
-(defun jmt-c-lisp-top-construct-end ()
-  "Returns the position just before the next top-level Lisp construct, if any,
+(defun jmt-c-lisp-top-construct-end () "\
+Returns the position just before the next top-level Lisp construct, if any,
 else `point-max`.  Leaves point indeterminate.  For use on buffers that contain
 the (Emacs Lisp) source code of Java mode (of CC mode, that is)."
   (if (re-search-forward "^(" nil t) (1- (point)) (point-max)))
 
 
 
-(defun jmt--c/put-type-face (range)
-  "Called from a monkey patch applied to the underlying Java-mode code,
+(defun jmt--c/put-type-face (range) "\
+Called from a monkey patch applied to the underlying Java-mode code,
 this function overrides Java mode’s application of ‘font-lock-type-face’
 in order to stabilize the facing of type names and type parameter identifiers.
 RANGE is a cons cell."
@@ -169,14 +169,14 @@ RANGE is a cons cell."
 
 
 (defface jmt-curly-bracket
-  `((t . (:inherit jmt-bracket)))
-  "The face for a curly bracket, ‘{’ or ‘}’."
+  `((t . (:inherit jmt-bracket))) "\
+The face for a curly bracket, ‘{’ or ‘}’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-delimiter nil
-  "The face for a delimiter not already faced by Java mode.  Customize it
+(defface jmt-delimiter nil "\
+The face for a delimiter not already faced by Java mode.  Customize it
 to better distinguish the delimiters from the content they delimit; making them
 more prominent or less prominent, for example.  See also subfaces ‘jmt-bracket’
 ‘jmt-separator’.  And for delimiters that *are* already faced by Java mode,
@@ -190,9 +190,9 @@ and ‘font-lock-comment-delimiter-face’."
 
 
 
-(defface jmt-expression-keyword; [MDF]
-  `((t . (:inherit jmt-principal-keyword))); [RF]
-  "The face for the keyword of an operator or other element
+(defface jmt-expression-keyword; [MDF, RF]
+  `((t . (:inherit jmt-principal-keyword))) "\
+The face for the keyword of an operator or other element
 of a formal Java expression."
   :group 'java-mode-tamed)
 
@@ -202,15 +202,15 @@ of a formal Java expression."
 
 
 
-(defun jmt-faces-are-equivalent (f1 f2); [RF]
-  "Answers whether F1 and F2 (face symbols) should be treated as equivalent
+(defun jmt-faces-are-equivalent (f1 f2) "\
+Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
-  (eq (jmt-untamed-face f1) (jmt-untamed-face f2)))
+  (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
 
 
-(defun jmt-is-annotation-ish-before (p)
-  "Answers whether the position before P (integer) might be within annotation."
+(defun jmt-is-annotation-ish-before (p) "\
+Answers whether the position before P (integer) might be within annotation."
   (let ((f (get-text-property (1- p) 'face)))
     (or (eq 'c-annotation-face (jmt-untamed-face f))
         (eq 'jmt-annotation-string f)
@@ -220,31 +220,31 @@ by the underlying (Java mode) code."
 
 
 
-(defun jmt-is-annotation-terminal-face (f)
-  "Answers whether F (face symbol) is a face that might be set
+(defun jmt-is-annotation-terminal-face (f) "\
+Answers whether F (face symbol) is a face that might be set
 on the last character of annotation."
   (eq 'c-annotation-face (jmt-untamed-face f)))
 
 
 
-(defun jmt-is-Java-mode-type-face (f)
-  "Answers whether F (face symbol) is a type face which might have been set
+(defun jmt-is-Java-mode-type-face (f) "\
+Answers whether F (face symbol) is a type face which might have been set
 by the underlying (Java mode) code."
   (or (eq f 'jmt--type); This face set by Java mode via `jmt--c/put-type-face`;
       (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
 
 
 
-(defun jmt-is-type-definitive-keyword (s)
-  "Answers whether string S is the principal keyword of a type definition."
+(defun jmt-is-type-definitive-keyword (s) "\
+Answers whether string S is the principal keyword of a type definition."
   (or (string= s "class")
       (string= s "interface")
       (string= s "enum")))
 
 
 
-(defun jmt-is-type-modifier-keyword (s)
-  "Answers whether string S is a type definition modifier in keyword form,
+(defun jmt-is-type-modifier-keyword (s) "\
+Answers whether string S is a type definition modifier in keyword form,
 e.g. as opposed to annotation form."
   ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
   ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
@@ -319,8 +319,8 @@ e.g. as opposed to annotation form."
     ("switch"       .     jmt-principal-keyword); Of a statement.
     ("transient"    .     jmt-qualifier-keyword)
     ("volatile"     .     jmt-qualifier-keyword)
-    )
-  "A list of cons cells of Java keywords (string @ car) each with the symbol
+    ) "\
+A list of cons cells of Java keywords (string @ car) each with the symbol
 of its proper face (@ cdr).  If the symbol instead points to a function,
 then the function has the form of ‘keyword-face-class’ and returns
 a face symbol.  The list excludes all keywords that Java mode
@@ -328,8 +328,8 @@ does not face with ‘font-lock-keyword-face’.")
 
 
 
-(defun keyword-face-class (beg _end)
-  "Returns the face (symbol) to give to the `class` keyword present
+(defun keyword-face-class (beg _end) "\
+Returns the face (symbol) to give to the `class` keyword present
 in the buffer from position BEG (inclusive number) to _END (exclusive number).
 Leaves point indeterminate."
   (goto-char beg)
@@ -341,8 +341,8 @@ Leaves point indeterminate."
 
 
 
-(defun keyword-face-synchronized (_beg end)
-  "Returns the face (symbol) to give to the `synchronized` keyword present
+(defun keyword-face-synchronized (_beg end) "\
+Returns the face (symbol) to give to the `synchronized` keyword present
 in the buffer from position _BEG (inclusive number) to END (exclusive number).
 Leaves point indeterminate."
   (goto-char end)
@@ -358,28 +358,28 @@ Leaves point indeterminate."
 
 
 
-(defun jmt-message (format-string &rest arguments)
-  "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
+(defun jmt-message (format-string &rest arguments) "\
+Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
 and \\=`\\='\\=` quotes."
   (message "%s" (apply 'format format-string arguments)))
 
 
 
-(defconst jmt-name-character-set "[:alnum:]_$"
-  "The set of characters from which a Java identifier may be formed.")
+(defconst jmt-name-character-set "[:alnum:]_$" "\
+The set of characters from which a Java identifier may be formed.")
   ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-3.html#jls-3.8
 
 
 
-(defun jmt-new-fontifiers-2 ()
-  "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
+(defun jmt-new-fontifiers-2 () "\
+Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
 See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
   (java-font-lock-keywords-2))
 
 
 
-(defun jmt-new-fontifiers-3 ()
-  "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
+(defun jmt-new-fontifiers-3 () "\
+Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
   (nconc
 
    ;; Underlying Java-mode fontifiers, lightly modified
@@ -412,26 +412,26 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
 
 
-(defface jmt-package-name; [MDF]
-  `((t . (:inherit font-lock-constant-face))); [RF]
-  "The face for each segment of a package name in a qualified type reference.
+(defface jmt-package-name; [MDF, RF]
+  `((t . (:inherit font-lock-constant-face))) "\
+The face for each segment of a package name in a qualified type reference.
 It inherits from ‘font-lock-constant-face’; customize it to distinguish package
 names from other constructs that use ‘font-lock-constant-face’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-package-name-declared; [MDF]
-  `((t . (:inherit jmt-package-name))); [RF]
-  "The face for each segment of a package name in a package declaration,
+(defface jmt-package-name-declared; [MDF, RF]
+  `((t . (:inherit jmt-package-name))) "\
+The face for each segment of a package name in a package declaration,
 as opposed to a qualified type reference.  Customize it to better distinguish
 between the two."
   :group 'java-mode-tamed)
 
 
 
-(defun jmt--patch (source-file source-base-name function-symbol patch-function)
-  "Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
+(defun jmt--patch (source-file source-base-name function-symbol patch-function) "\
+Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
 which has the given BASE-NAME) using the named PATCH-FUNCTION.  The patch
 function must return t on success, nil on failure."
   (unless (functionp function-symbol)
@@ -465,8 +465,8 @@ function must return t on success, nil on failure."
 
 
 
-(defun preceding->-marks-generic-return-type ()
-  "Answers whether the ‘>’ character before point could be a delimiter within a
+(defun preceding->-marks-generic-return-type () "\
+Answers whether the ‘>’ character before point could be a delimiter within a
 function definition, namely the trailing delimiter of a list of type parameters
 for the function’s return type, making it a *generic* return type.  May move point."
   (when
@@ -479,39 +479,39 @@ for the function’s return type, making it a *generic* return type.  May move p
 
 
 
-(defface jmt-principal-keyword; [MDF]
-  `((t . (:inherit font-lock-keyword-face))); [RF]
-  "The face for the principal keyword of a definition.
+(defface jmt-principal-keyword; [MDF, RF]
+  `((t . (:inherit font-lock-keyword-face))) "\
+The face for the principal keyword of a definition.
 Cf. ‘jmt-qualifier-keyword’.  See also subfaces
 ‘jmt-boilerplate-keyword’ and ‘jmt-expression-keyword’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-qualifier-keyword; [MDF]
-  `((t . (:inherit font-lock-keyword-face))); [RF]
-  "The face for a secondary keyword in a definition.
+(defface jmt-qualifier-keyword; [MDF, RF]
+  `((t . (:inherit font-lock-keyword-face))) "\
+The face for a secondary keyword in a definition.
 Cf. ‘jmt-principal-keyword’."
   :group 'java-mode-tamed)
 
 
 
 (defface jmt-round-bracket
-  `((t . (:inherit jmt-bracket)))
-  "The face for a round bracket, ‘(’ or ‘)’."
+  `((t . (:inherit jmt-bracket))) "\
+The face for a round bracket, ‘(’ or ‘)’."
   :group 'java-mode-tamed)
 
 
 
 (defface jmt-separator
-  `((t . (:inherit jmt-delimiter)))
-  "The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot ‘.’."
+  `((t . (:inherit jmt-delimiter))) "\
+The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot ‘.’."
   :group 'java-mode-tamed)
 
 
 
-(defun jmt-set-for-buffer (variable value)
-  "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting
+(defun jmt-set-for-buffer (variable value) "\
+Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting
 is not buffer local."
   (set variable value)
   (cl-assert (local-variable-p variable)))
@@ -1055,21 +1055,21 @@ is not buffer local."
             (goto-char match-end))
           nil)))
     '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QTF, SF]
-
-  "Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
+  "\
+Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
 
 
 (defface jmt-square-bracket
-  `((t . (:inherit jmt-bracket)))
-  "The face for a square bracket, ‘[’ or ‘]’."
+  `((t . (:inherit jmt-bracket))) "\
+The face for a square bracket, ‘[’ or ‘]’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-string-delimiter; [BC, LF]
-  `((t . (:inherit font-lock-string-face))); [RF]
-  "The face for a string (\") or character (\\=') delimiter.
+(defface jmt-string-delimiter; [BC, LF, RF]
+  `((t . (:inherit font-lock-string-face))) "\
+The face for a string (\") or character (\\=') delimiter.
 Customize it to better distinguish the delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
@@ -1077,18 +1077,18 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
 
 
-(defface jmt--type; [MDF, UF]
-  `((t . (:inherit jmt-type-reference))); [RF]
-  "A signalling face set via ‘jmt--c/put-type-face’.  Do not customize it;
+(defface jmt--type; [MDF, RF, UF]
+  `((t . (:inherit jmt-type-reference))) "\
+A signalling face set via ‘jmt--c/put-type-face’.  Do not customize it;
 it is for internal use only.  Rather leave it to inherit the attributes
 of ‘jmt-type-reference’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-type-definition; [MDF, SF]
-  `((t . (:inherit font-lock-type-face))); [RF]
-  "The face for the identifier of a class or interface in a type definition.
+(defface jmt-type-definition; [MDF, RF, SF]
+  `((t . (:inherit font-lock-type-face))) "\
+The face for the identifier of a class or interface in a type definition.
 Customize it to highlight the identifier where initially it is defined (like
 ‘font-lock-variable-name-face’ does for variable identifiers), as opposed
 to merely referenced after the fact.  See also face ‘jmt-type-reference’."
@@ -1096,9 +1096,9 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 
 
-(defface jmt-type-parameter-declaration; [TP, MDF, SF]
-  `((t . (:inherit jmt-type-definition))); [RF]
-  "The face for the identifier of a type parameter in a type parameter declaration.
+(defface jmt-type-parameter-declaration; [TP, MDF, RF, SF]
+  `((t . (:inherit jmt-type-definition))) "\
+The face for the identifier of a type parameter in a type parameter declaration.
 Customize it to highlight the identifier where initially it is declared (like
 ‘font-lock-variable-name-face’ does for variable identifiers), as opposed
 to merely referenced after the fact.  See also face ‘jmt-type-reference’."
@@ -1106,17 +1106,17 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 
 
-(defface jmt-type-reference; [MDF, UF]
-  `((t . (:inherit font-lock-type-face))); [RF]
-  "The face for the identifier of a class, interface or type parameter
+(defface jmt-type-reference; [MDF, RF, UF]
+  `((t . (:inherit font-lock-type-face))) "\
+The face for the identifier of a class, interface or type parameter
 where it appears as a type reference.  See also faces ‘jmt-type-definition’
 and ‘jmt-type-parameter-declaration’."
   :group 'java-mode-tamed)
 
 
 
-(defun jmt-untamed-face (face)
-  "Returns FACE itself if untamed, else the untamed ancestral face
+(defun jmt-untamed-face (face) "\
+Returns FACE itself if untamed, else the untamed ancestral face
 from which ultimately it inherits.  Necessarily every face defined
 by ‘java-mode-tamed’ (tamed face) ultimately inherits from a face
 defined elsewhere (untamed ancestral face)."
@@ -1141,8 +1141,8 @@ defined elsewhere (untamed ancestral face)."
 
 
 (define-derived-mode java-mode-tamed java-mode
-  "Java"
-  "Java mode tamed - A tamer, more controllable Java mode.
+  "Java" "\
+Java mode tamed - A tamer, more controllable Java mode.
       Home page URL ‘http://reluk.ca/project/Java/Emacs/’
 User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el’"
   :group 'java-mode-tamed
