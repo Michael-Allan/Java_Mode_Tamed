@@ -33,9 +33,7 @@
 (eval-when-compile
   (require 'cc-mode)
   (require 'cl-lib))
-(defvar c-maybe-decl-faces)
-  ;;; Suppressing sporadic compiler warnings ‘reference to free variable’
-  ;;; or ‘assignment to free variable’.
+(defvar c-maybe-decl-faces); [FV]
 
 
 
@@ -1279,6 +1277,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;  ←CW · Backward across commentary and whitespace.
 ;;
 ;;   CW→  Forward across commentary and whitespace.
+;;
+;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
+;;        or ‘assignment to free variable’.
 ;;
 ;;   GVF  A global variable for the use of fontifiers, e.g. from within forms they quote and pass
 ;;        to Font Lock to be evaluated outside of their lexical scope.
