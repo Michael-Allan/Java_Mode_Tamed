@@ -137,8 +137,8 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 
 
-(defun jmt--c/put-type-face (range) "\
-Called from a monkey patch applied to the underlying Java-mode code,
+(defun jmt--c/put-type-face (range)
+  "Called from a monkey patch applied to the underlying Java-mode code,
 this function overrides Java mode’s application of ‘font-lock-type-face’
 in order to stabilize the facing of type names and type parameter identifiers.
 RANGE is a cons cell."
@@ -194,15 +194,15 @@ of a formal Java expression."
 
 
 
-(defun jmt-faces-are-equivalent (f1 f2) "\
-Answers whether F1 and F2 (face symbols) should be treated as equivalent
+(defun jmt-faces-are-equivalent (f1 f2)
+  "Answers whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java mode) code."
   (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
 
 
-(defun jmt-is-annotation-ish-before (p) "\
-Answers whether the position before P (integer) might be within annotation."
+(defun jmt-is-annotation-ish-before (p)
+  "Answers whether the position before P (integer) might be within annotation."
   (let ((f (get-text-property (1- p) 'face)))
     (or (eq 'c-annotation-face (jmt-untamed-face f))
         (eq 'jmt-annotation-string f)
@@ -212,31 +212,31 @@ Answers whether the position before P (integer) might be within annotation."
 
 
 
-(defun jmt-is-annotation-terminal-face (f) "\
-Answers whether F (face symbol) is a face that might be set
+(defun jmt-is-annotation-terminal-face (f)
+  "Answers whether F (face symbol) is a face that might be set
 on the last character of annotation."
   (eq 'c-annotation-face (jmt-untamed-face f)))
 
 
 
-(defun jmt-is-Java-mode-type-face (f) "\
-Answers whether F (face symbol) is a type face which might have been set
+(defun jmt-is-Java-mode-type-face (f)
+  "Answers whether F (face symbol) is a type face which might have been set
 by the underlying (Java mode) code."
   (or (eq f 'jmt--type); This face set by Java mode via `jmt--c/put-type-face`;
       (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
 
 
 
-(defun jmt-is-type-definitive-keyword (s) "\
-Answers whether string S is the principal keyword of a type definition."
+(defun jmt-is-type-definitive-keyword (s)
+  "Answers whether string S is the principal keyword of a type definition."
   (or (string= s "class")
       (string= s "interface")
       (string= s "enum")))
 
 
 
-(defun jmt-is-type-modifier-keyword (s) "\
-Answers whether string S is a type definition modifier in keyword form,
+(defun jmt-is-type-modifier-keyword (s)
+  "Answers whether string S is a type definition modifier in keyword form,
 e.g. as opposed to annotation form."
   ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
   ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
@@ -320,8 +320,8 @@ does not face with ‘font-lock-keyword-face’.")
 
 
 
-(defun keyword-face-class (beg _end) "\
-Returns the face (symbol) to give to the `class` keyword present
+(defun keyword-face-class (beg _end)
+  "Returns the face (symbol) to give to the `class` keyword present
 in the buffer from position BEG (inclusive number) to _END (exclusive number).
 Leaves point indeterminate."
   (goto-char beg)
@@ -333,8 +333,8 @@ Leaves point indeterminate."
 
 
 
-(defun keyword-face-synchronized (_beg end) "\
-Returns the face (symbol) to give to the `synchronized` keyword present
+(defun keyword-face-synchronized (_beg end)
+  "Returns the face (symbol) to give to the `synchronized` keyword present
 in the buffer from position _BEG (inclusive number) to END (exclusive number).
 Leaves point indeterminate."
   (goto-char end)
@@ -350,8 +350,8 @@ Leaves point indeterminate."
 
 
 
-(defun jmt-message (format-string &rest arguments) "\
-Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
+(defun jmt-message (format-string &rest arguments)
+  "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
 and \\=`\\='\\=` quotes."
   (message "%s" (apply 'format format-string arguments)))
 
@@ -363,15 +363,15 @@ The set of characters from which a Java identifier may be formed.")
 
 
 
-(defun jmt-new-fontifiers-2 () "\
-Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
+(defun jmt-new-fontifiers-2 ()
+  "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
 See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
   (java-font-lock-keywords-2))
 
 
 
-(defun jmt-new-fontifiers-3 () "\
-Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
+(defun jmt-new-fontifiers-3 ()
+  "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
   (nconc
 
    ;; Underlying Java-mode fontifiers, lightly modified
@@ -421,8 +421,8 @@ posed to a type reference.  Customize it to better distinguish between the two."
 
 
 
-(defun jmt--patch (source-file source-base-name function-symbol patch-function) "\
-Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
+(defun jmt--patch (source-file source-base-name function-symbol patch-function)
+  "Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
 which has the given BASE-NAME) using the named PATCH-FUNCTION.  The patch
 function must return t on success, nil on failure."
   (unless (functionp function-symbol)
@@ -456,8 +456,8 @@ function must return t on success, nil on failure."
 
 
 
-(defun preceding->-marks-generic-return-type () "\
-Answers whether the ‘>’ character before point could be a delimiter within a
+(defun preceding->-marks-generic-return-type ()
+  "Answers whether the ‘>’ character before point could be a delimiter within a
 function definition, namely the trailing delimiter of a list of type parameters
 for the function’s return type, making it a *generic* return type.  May move point."
   (when
@@ -501,8 +501,8 @@ The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot
 
 
 
-(defun jmt-set-for-buffer (variable value) "\
-Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting
+(defun jmt-set-for-buffer (variable value)
+  "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting
 is not buffer local."
   (set variable value)
   (cl-assert (local-variable-p variable)))
@@ -1106,8 +1106,8 @@ and ‘jmt-type-parameter-declaration’."
 
 
 
-(defun jmt-untamed-face (face) "\
-Returns FACE itself if untamed, else the untamed ancestral face
+(defun jmt-untamed-face (face)
+  "Returns FACE itself if untamed, else the untamed ancestral face
 from which ultimately it inherits.  Necessarily every face defined
 by ‘java-mode-tamed’ (tamed face) ultimately inherits from a face
 defined elsewhere (untamed ancestral face)."
