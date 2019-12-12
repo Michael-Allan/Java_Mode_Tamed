@@ -148,15 +148,21 @@ RANGE is a cons cell."
   ;; outside of Font Lock, which puts the two in an endless tug of war.
   (let ((beg (car range))
         (end (cdr range)))
-    (if
-        (and jmt--is-level-3
-             (eq major-mode 'java-mode-tamed))
-          (unless (get-text-property beg 'jmt-stabilized); [SF]
-            (c-put-font-lock-face beg end 'jmt--type)); Normally `jmt-specific-fontifiers-3`
-              ;;; will override this facing before it appears, replacing it with `jmt-type-defin-
-              ;;; ition`, `jmt-type-parameter-declaration` or `jmt-type-reference`.  Occaisionally
-              ;;; the replacement may fail to occur, occur late, or prove to be unstable. [UF]
-      (c-put-font-lock-face beg end 'font-lock-type-face))))
+    (condition-case _x
+        (if (and jmt--is-level-3
+                 (eq major-mode 'java-mode-tamed))
+            (unless (get-text-property beg 'jmt-stabilized); [SF]
+              (c-put-font-lock-face beg end 'jmt--type)); Normally `jmt-specific-fontifiers-3`
+                  ;;; will override this facing before it appears, replacing it with `jmt-type-defin-
+                  ;;; ition`, `jmt-type-parameter-declaration` or `jmt-type-reference`.  Occaisionally
+                  ;;; the replacement may fail to occur, occur late, or prove to be unstable. [UF]
+          (c-put-font-lock-face beg end 'font-lock-type-face))
+      (args-out-of-range nil)))); Java mode has tried to put a face beyond the accessible region.
+        ;;; Suppress the resulting error report.  Seen e.g. at `public class KittedPolyStatorSR<T,S,R>`,
+        ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L16`.
+        ;;; Reproduce there by inserting a space before identifier `T`, then undoing the insertion.
+        ;;; Note that the error report interrupts JIT Lock.  This causes a visible flash of misfaced text
+        ;;; when running under Java mode tamed.
 
 
 
