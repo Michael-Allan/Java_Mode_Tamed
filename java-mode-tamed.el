@@ -629,26 +629,26 @@ is not buffer local."
             (when (jmt-is-Java-mode-type-face (get-text-property match-beg 'face))
               (forward-comment most-negative-fixnum); [←CW]
 
-              ;; Either defining (1) a type
+              ;; Either defining a type
               ;; ───────────────
-              (when; Keyword `class`, `enum` or `interface` directly precedes the type name.
+              (when; A keyword `class`, `enum` or `interface` directly precedes the type name.
                   (let ((p (point)))
                     (and (< (skip-chars-backward jmt-name-character-set) 0)
                          (jmt-is-type-definitive-keyword (buffer-substring-no-properties (point) p))))
-                (set-match-data; Capturing the already faced name as group 1.
-                 (list match-beg (goto-char match-end) match-beg match-end (current-buffer)))
+                (set 'jmt-f '(face jmt-type-definition jmt-stabilized t)); [SF]
+                  ;;; The stabilizer is for a minority of cases which have no discerned pattern.
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t))
 
-              ;; Or merely referring (2) to one
-              ;; ───────────────────
-              (set-match-data; Capturing the name instead as group 2.
-               (list match-beg (goto-char match-end) nil nil match-beg match-end (current-buffer)))
+              ;; Or referring to one already defined
+              ;; ────────────
+              (set 'jmt-f 'jmt-type-reference)
+              (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
               (throw 'to-reface t))
 
             (goto-char match-end)))
         nil))
-    '(1 '(face jmt-type-definition jmt-stabilized t) t t) '(2 'jmt-type-reference t t)); [QTF, SF]
-      ;;; The stabilizer is for a minority of cases which have no discerned pattern.
+    '(0 jmt-f t t))
 
    (cons; Face each type definition name incorrectly left unfaced by Java mode.
     (lambda (limit)
