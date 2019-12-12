@@ -87,9 +87,9 @@ The face for the ‘@’ symbol denoting annotation."
 
 (defface jmt-annotation-package-name; [MDF, RF]
   `((t . (:inherit jmt-package-name))) "\
-The face for each segment of a package name in a qualified reference
-of an annotation type.  It defaults to ‘jmt-package-name’; customize it
-if the default fits poorly with your other annotation faces."
+The face for each segment of a package name in an annotation type reference.
+It defaults to ‘jmt-package-name’; customize it if the default fits poorly
+with your other annotation faces."
   :group 'java-mode-tamed)
 
 
@@ -207,8 +207,8 @@ Answers whether the position before P (integer) might be within annotation."
     (or (eq 'c-annotation-face (jmt-untamed-face f))
         (eq 'jmt-annotation-string f)
         (eq 'jmt-annotation-string-delimiter f)
-        (eq 'jmt-annotation-package-name f); A package qualifier in an annotation type reference.
-        (and (eq 'jmt-separator f) (char-equal ?. (char-before p)))))); A dot ‘.’ in the qualifier.
+        (eq 'jmt-annotation-package-name f); A package name in an annotation type reference.
+        (and (eq 'jmt-separator f) (char-equal ?. (char-before p)))))); A dot ‘.’ in the package name.
 
 
 
@@ -406,18 +406,17 @@ Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
 
 (defface jmt-package-name; [MDF, RF]
   `((t . (:inherit font-lock-constant-face))) "\
-The face for each segment of a package name in a qualified type reference.
-It inherits from ‘font-lock-constant-face’; customize it to distinguish package
-names from other constructs that use ‘font-lock-constant-face’."
+The face for each segment of a package name in a type reference.  It inherits
+from ‘font-lock-constant-face’; customize it to distinguish package names from
+other constructs that use ‘font-lock-constant-face’."
   :group 'java-mode-tamed)
 
 
 
 (defface jmt-package-name-declared; [MDF, RF]
   `((t . (:inherit jmt-package-name))) "\
-The face for each segment of a package name in a package declaration,
-as opposed to a qualified type reference.  Customize it to better distinguish
-between the two."
+The face for each segment of a package name in a package declaration, as op-
+posed to a type reference.  Customize it to better distinguish between the two."
   :group 'java-mode-tamed)
 
 
@@ -540,15 +539,15 @@ is not buffer local."
                       (unless (< m2-beg m2-end) (throw 'is-annotation nil))
                       (setq face (get-text-property m2-beg 'face))
                       (if (eq face 'font-lock-constant-face); Then the (mis)captured name should be dot
-                          (progn; terminated, so forming a name segment of a package qualifier. [PPN]
+                          (progn; terminated, so forming a segment of a package name. [PPN]
                             (skip-syntax-forward "-" limit); [SL]
                             (unless (eq ?. (char-after)); (and not nil)
                               (throw 'is-annotation nil))
                             (forward-char); Past the ‘.’.
-                            t); Continuing the loop, so skipping past this segment of the qualifier.
+                            t); Continuing the loop, so skipping past this segment of the name.
                         (unless (or (eq face nil); The most common case.  Else a misfontification:
-                                    (eq face 'font-lock-function-name-face); This one occurs
-                                      ;;; in the case, for instance, of an empty `()` qualifier.
+                                    (eq face 'font-lock-function-name-face); This one occurs in the case,
+                                      ;;; for instance, of an empty `()` annotation qualifier.
                                     (jmt-is-Java-mode-type-face face)); [T↓]
                           (throw 'is-annotation nil))
                         nil))); Quitting the loop, having matched the simple annotation name.
@@ -714,7 +713,7 @@ is not buffer local."
    ;; ════════════
    ;; Package name, and apparent type name misfaced as such  [↑K, T]
    ;; ════════════
-   (let; Reface each name segment of a package declararation `jmt-package-name`.
+   (let; Reface each name segment of a package declararation using face `jmt-package-name-declared`.
        (face last-seg-was-found match-beg match-end seg-end)
      (list; (1) The declaration begins with a `package` keyword.
       (lambda (limit)
@@ -857,18 +856,18 @@ is not buffer local."
                      (when (string= "final" (buffer-substring-no-properties i (point)))
                        (goto-char match-end)
                        (throw 'to-fontify 'font-lock-function-name-face))
-                     (catch 'is-past-qualifier; Leaving `i` at either the next token to deal with,
-                       (while t; or the buffer end, scan past any itervening package qualifier.
+                     (catch 'is-past-package; Leaving `i` at either the next token to deal with,
+                       (while t; or the buffer end, scan past any itervening package name.
                          ;; Now point lies (invariant) directly after a name (in form).
                          (forward-comment most-positive-fixnum); [CW→, PPN]
-                         (when (eobp) (throw 'is-past-qualifier t))
+                         (when (eobp) (throw 'is-past-package t))
                          (unless (char-equal ?. (char-after)); Namely the delimiting dot of a
-                           (throw 'is-past-qualifier t))     ; preceding package name segment.
+                           (throw 'is-past-package t))       ; preceding package name segment.
                          (forward-char); Past the ‘.’.
                          (forward-comment most-positive-fixnum); [CW→] To the next token.
-                         (setq i (point)); What follows the qualifier follows its last dot.
+                         (setq i (point)); What follows the package name follows its last dot.
                          (when (= (skip-chars-forward jmt-name-character-set) 0)
-                           (throw 'is-past-qualifier t)))))
+                           (throw 'is-past-package t)))))
                    (when (and (/= i (point-max))
                               (or (char-equal ?@ (char-after i))
                                   (eq (get-text-property i 'face) 'jmt-type-reference))); [↑T]
@@ -1046,7 +1045,7 @@ is not buffer local."
                 (throw 'to-reface t)))
             (goto-char match-end))
           nil)))
-    '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QTF, SF]
+    '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QFS, SF]
   "\
 Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
 
@@ -1301,11 +1300,13 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
-;;   QTF  Quoting of tamed faces.  Their quoting is required in evaluative contexts, such as fontifiers.
-;;        Font lock evaluates each face argument of a fontifier at runtime, which effectively unquotes
-;;        the tamed faces to yield bare symbols.
+;;   QFS  Quote each *facespec* formed as either a face symbol or a list, because Font lock evaluates it.
+;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
 ;;
-;;        The common alternative of defining a namesake variable for each face is discouraged.
+;;   QTF  Quoting of tamed face references.  Their quoting is required for passage to evaluators,
+;;        e.g. in the case of a Font Lock *facespec*. [QFS]
+;;
+;;        That might seem obvious, but many packages define a namesake variable for each face symbol.
 ;;        ‘In the vast majority of cases, this is not necessary’,
 ;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Faces.html`.
 ;;        ‘Simply using faces directly is enough’,
