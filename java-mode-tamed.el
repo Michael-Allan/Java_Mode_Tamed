@@ -830,6 +830,36 @@ is not buffer local."
        '(0 'jmt-annotation-package-name t))))
 
 
+   ;; Package name occuring elsewhere
+   ;; ────────────
+   (cons; Reface each name segment using face `jmt-package-name`, and each apparently misfaced
+    (let (match-beg match-end); type name using `jmt-type-reference`.
+      (lambda (limit)
+        (setq match-beg (point)); Presumptively.
+        (catch 'to-reface
+          (while (< match-beg limit)
+            (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+            (when (eq 'font-lock-constant-face (get-text-property match-beg 'face))
+              (goto-char match-end)
+              (forward-comment most-positive-fixnum); [CW→, PPN]
+              (when (eobp) (throw 'to-reface nil))
+              (when (char-equal ?. (char-after))
+                (set 'jmt-f
+                     (if (string= "Lu" (get-char-code-property (char-after match-beg) 'general-category))
+                         'jmt-type-reference; Workaround for what is probably a misfacing by Java mode.
+                           ;;; It occurs e.g. with a class-qualified reference to a class member
+                           ;;; whose name begins in upper case, such as `Foo.BAR` or `Foo.FooBar`;
+                           ;;; here Java mode misfaces the class name (`Foo`) as a package name segment.
+                           ;;; This workaround assumes that a real segment would begin in lower case,
+                           ;;; which itself is not quite correct. [BUG]
+                       'jmt-package-name))
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'to-reface t)))
+            (setq match-beg match-end))
+          nil)))
+    '(0 jmt-f t))
+
+
 
    ;; ═════════
    ;; Delimiter
