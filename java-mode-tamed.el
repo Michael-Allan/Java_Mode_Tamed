@@ -332,7 +332,7 @@ in the buffer from position BEG (inclusive number) to _END (exclusive number).
 Leaves point indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
-  (if (eq ?. (char-before)); (and not nil)
+  (if (eq ?. (char-before)); [NCE]
       'jmt-expression-keyword
         ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-ClassLiteral
     'jmt-principal-keyword)); Of a type definition.
@@ -345,7 +345,7 @@ in the buffer from position _BEG (inclusive number) to END (exclusive number).
 Leaves point indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
-  (if (eq ?\( (char-after)); (and not nil)
+  (if (eq ?\( (char-after)); [NCE]
       'jmt-principal-keyword; Of a statement.
         ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-14.html#jls-14.19
     'jmt-qualifier-keyword))
@@ -407,6 +407,10 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
    ;; Overlying fontifiers to tame them
    ;; ────────────────────
    jmt-specific-fontifiers-3))
+
+
+
+(defvar jmt-p nil); [GVF]
 
 
 
@@ -485,6 +489,10 @@ Cf. ‘jmt-qualifier-keyword’.  See also subfaces
 
 
 
+(defvar jmt-q nil); [GVF]
+
+
+
 (defface jmt-qualifier-keyword; [MDF, RF]
   `((t . (:inherit font-lock-keyword-face))) "\
 The face for a secondary keyword in a definition.
@@ -544,10 +552,10 @@ is not buffer local."
                       (setq m2-end (point))
                       (unless (< m2-beg m2-end) (throw 'is-annotation nil))
                       (setq face (get-text-property m2-beg 'face))
-                      (if (eq face 'font-lock-constant-face); Then the (mis)captured name should be dot
-                          (progn; terminated, so forming a segment of a package name. [PPN]
+                      (if (eq face 'font-lock-constant-face); [P↓] Then the (mis)captured name should
+                          (progn; be dot terminated, so forming a segment of a package name. [PPN]
                             (skip-syntax-forward "-" limit); [SL]
-                            (unless (eq ?. (char-after)); (and not nil)
+                            (unless (eq ?. (char-after)); [NCE]
                               (throw 'is-annotation nil))
                             (forward-char); Past the ‘.’.
                             t); Continuing the loop, so skipping past this segment of the name.
@@ -558,7 +566,7 @@ is not buffer local."
                           (throw 'is-annotation nil))
                         nil))); Quitting the loop, having matched the simple annotation name.
                 (skip-syntax-forward "-" limit); [SL]
-                (when (eq ?\( (char-after)); (and not nil)
+                (when (eq ?\( (char-after)); [NCE]
                   (setq m3-beg (point); Start of trailing qualifier, it would be.
                         eol (line-end-position))
                   (condition-case _x
@@ -650,6 +658,7 @@ is not buffer local."
         nil))
     '(0 jmt-f t t))
 
+
    (cons; Face each type definition name incorrectly left unfaced by Java mode.
     (lambda (limit)
       (catch 'to-face
@@ -717,12 +726,16 @@ is not buffer local."
 
 
    ;; ════════════
-   ;; Package name, and apparent type name misfaced as such  [↑K, T]
+   ;; Package name, or a type name misfaced as such  [↑A, ↑K, P, T]
    ;; ════════════
+
+   ;; Package declaration
+   ;; ───────────────────
    (let; Reface each name segment of a package declararation using face `jmt-package-name-declared`.
-       (face last-seg-was-found match-beg match-end seg-end)
-     (list; (1) The declaration begins with a `package` keyword.
-      (lambda (limit)
+       (face last-seg-was-found match-beg match-end)
+     (list
+
+      (lambda (limit); (1) Anchoring on the `package` keyword that begins each declaration.
         (setq match-beg (point)); Presumptively.
         (catch 'is-package-declaration
           (while (< match-beg limit)
@@ -734,18 +747,19 @@ is not buffer local."
               (throw 'is-package-declaration t))
             (setq match-beg match-end))
           nil))
-      (list; (2, anchored highlighter) The declaration continues with a series of name segments.
+
+      (list; (2, anchored highlighter) Thence scanning rightward for each name segment.
        (lambda (limit)
          (catch 'to-reface
            (when last-seg-was-found (throw 'to-reface nil)); The last segment was already refaced.
-           (while (< (point) limit); Now point should (invariant) be before any remaining segment name,
+           (while (< (point) limit); Now point should (invariant) be before any remaining name segment,
              (skip-syntax-forward "-" limit); with at most whitespace intervening. [PPN, SL]
              (setq match-beg (point))
              (skip-chars-forward jmt-name-character-set limit)
-             (setq seg-end (point))
-             (unless (< match-beg seg-end) (throw 'to-reface nil)); Malformed or multi-line. [SL]
-             (skip-syntax-forward "-" limit)
-             (if (eq ?. (char-after)); (and not nil)
+             (setq match-end (point))
+             (unless (< match-beg match-end) (throw 'to-reface nil)); Malformed or multi-line. [SL]
+             (skip-syntax-forward "-" limit); [SL]
+             (if (eq ?. (char-after)); [NCE]
                  (forward-char); To the (would be) loop invariant.
                (setq last-seg-was-found t))
              (setq face (get-text-property match-beg 'face))
@@ -753,10 +767,67 @@ is not buffer local."
                        (eq face 'font-lock-constant-face)); The refacing of this final segment
                  ;;; is unstable when (edge case) no trailing ‘;’ appears on the same line.
                  ;;; It might be stabilized by generalizing the mechanism of `jmt-stabilized`. [BUG]
-               (set-match-data (list match-beg (point) match-beg seg-end (current-buffer)))
+               (set-match-data (list match-beg (point) match-beg match-end (current-buffer)))
                (throw 'to-reface t)))
            nil))
        nil nil '(1 'jmt-package-name-declared t)))); [QTF]
+
+
+   ;; Package qualifier on an annotation type reference
+   ;; ─────────────────
+   (let (match-beg match-end seg-beg seg-end); Reface each package name segment using
+     (list                                   ; face `jmt-annotation-package-name`.
+
+      ;; 1. Anchor on the simple type name of each annotation type reference
+      ;; ─────────
+      (lambda (limit)
+        (setq match-beg (point)); Presumptively.
+        (catch 'is-type-ref
+          (while (< match-beg limit)
+            (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+            (when (eq 'c-annotation-face (get-text-property match-beg 'face)); [↑A]
+              (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+              (set 'jmt-p match-beg); Saving the anchor’s bounds.
+              (set 'jmt-q match-end)
+              (throw 'is-type-ref t))
+            (setq match-beg match-end))
+          nil))
+
+       ;; 3. Reface name segments by unstacking (from 2) the bounds of each
+       ;; ───────────────────────
+      (list; (anchored highlighter)
+       (lambda (limit)
+         (when (setq seg-beg (car jmt-f))
+           (set 'jmt-f (cdr jmt-f)); Popping the bounds from the stack.
+           (setq seg-end (car jmt-f))
+           (set 'jmt-f (cdr jmt-f))
+           (cl-assert (<= seg-end limit))
+           (set-match-data (list seg-beg (goto-char seg-end) seg-beg seg-end (current-buffer)))
+           t))
+
+       ;; 2. Seek name segments leftward of the anchor, stacking the bounds of each  [PPN]
+       ;; ─────────────────────
+       '(let (seg-beg seg-end); (pre-form)
+          (set 'jmt-f nil); The stack of bounds, two per segment, initially empty.
+          (goto-char jmt-p); To `match-beg` effectively.
+          (while
+              (progn; Now point should (invariant) be after the dot delimiter of any preceding segment,
+                (skip-syntax-backward "-"); with at most whitespace intervening. [SL]
+                (when (eq ?. (char-before)); [NCE]
+                  (backward-char); To before the dot.
+                  (skip-syntax-backward "-"); [SL]
+                  (setq seg-end (point))
+                  (skip-chars-backward jmt-name-character-set)
+                  (setq seg-beg (point))
+                  (when (< seg-beg seg-end)
+                    (set 'jmt-f (cons seg-end jmt-f)); Pushing the bounds to the stack.
+                    (set 'jmt-f (cons seg-beg jmt-f))))))
+          jmt-p); Returning > point in order to delimit the search region, in effect to `match-beg`.
+
+       ;; 4. Reposition in readiness for the next anchor search
+       ;; ─────────────
+       '(goto-char jmt-q); (post-form) To `match-end` effectively.
+       '(0 'jmt-annotation-package-name t))))
 
 
 
@@ -838,7 +909,7 @@ is not buffer local."
                        (eq face 'jmt-type-reference)); [↑T]
                  ;;; Vanguard, redundant but for sake of speed.  See the other face guards below.
                (forward-comment most-positive-fixnum); [CW→]
-               (when (eq ?\( (char-after)); (and not nil)
+               (when (eq ?\( (char-after)); [NCE]
 
                  ;; Constructor definition  (assumption: point is directly before the ‘(’)
                  ;; ──────────────────────
@@ -1303,6 +1374,13 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
 ;;        must itself be appended to that list.
+;;
+;;   NCE  Not `char-equal`; it fails if the position is out of bounds.  Rather `eq`, which instead
+;;        returns nil.
+;;
+;;   P↓ · Code that must execute before section *Package name*  of `jmt-specific-fontifiers-3`.
+;;
+;;   P ·· Section *Package name* itself.
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
