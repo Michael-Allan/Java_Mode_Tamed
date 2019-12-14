@@ -529,7 +529,7 @@ is not buffer local."
    ;; ══════════
    ;; Annotation  [A, T↓]
    ;; ══════════
-   (list; Fontify each, overriding any misfontification of Java mode.
+   (list; Fontify each instance of annotation, overriding any misfontification of Java mode.
     (lambda (limit)
       (catch 'to-fontify
         (let ((m1-beg (point)); Presumed start of leading annotation mark ‘@’.
@@ -604,7 +604,7 @@ is not buffer local."
    ;; ═══════
    ;; Keyword  [K]
    ;; ═══════
-   (cons; Reface each as defined in `keyword-face-alist`.
+   (cons; Reface each Java keyword as defined in `keyword-face-alist`.
     (let (f match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
@@ -628,7 +628,7 @@ is not buffer local."
    ;; ═════════
    ;; Type name  [↑K, T]
    ;; ═════════
-   (list; Reface each either `jmt-type-definition` or  `jmt-type-reference`.
+   (list; Reface each Java type name using either `jmt-type-definition` or  `jmt-type-reference`.
     (lambda (limit)
       (catch 'to-reface
         (while (< (point) limit)
@@ -659,7 +659,7 @@ is not buffer local."
     '(0 jmt-f t t))
 
 
-   (cons; Face each type definition name incorrectly left unfaced by Java mode.
+   (cons; Face each name of a type definition that was incorrectly left unfaced by Java mode.
     (lambda (limit)
       (catch 'to-face
         (while (< (point) limit)
@@ -864,7 +864,7 @@ is not buffer local."
    ;; ═════════
    ;; Delimiter
    ;; ═════════
-   (cons; Face each delimiter unfaced by Java mode.
+   (cons; Face each Java delimiter that was left unfaced by Java mode.
     (let (i j match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
@@ -924,7 +924,7 @@ is not buffer local."
    ;; ════════════════════════════════
    ;; Method or constructor identifier  [↑A, ↑T]
    ;; ════════════════════════════════
-   (cons; Fontify where misfaced by Java mode, or incorrectly unfaced.
+   (cons; Fontify each identifier that was misfaced by Java mode, or incorrectly left unfaced.
     (let ((identifier-pattern (concat "[" jmt-name-character-set "]+"))
           face i match-beg match-end)
       (lambda (limit)
@@ -1042,11 +1042,11 @@ is not buffer local."
     '(0 jmt-f t))
 
 
-   ;; ══════
-   ;; String  [↑A]
-   ;; ══════
-   (list; Refontify each string using face `jmt-string-delimiter`, or faces
-      ;;; `jmt-annotation-string` and `jmt-annotation-string-delimiter`.
+   ;; ══════════════
+   ;; String literal  [↑A]
+   ;; ══════════════
+   (list; Refontify each Java string literal using face `jmt-string-delimiter`,
+      ;;; `or faces jmt-annotation-string` and `jmt-annotation-string-delimiter`.
     (let (body-beg body-end f match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
@@ -1081,7 +1081,7 @@ is not buffer local."
    ;; ═══════════════════
    ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
    ;; ═══════════════════
-   (cons; Reface each `jmt-type-parameter-declaration`. See optimization note. [TPN]
+   (cons; Reface each name using `jmt-type-parameter-declaration`.  See optimization note. [TPN]
     (let (depth i j match-beg match-end p p-min)
       (lambda (limit)
         (catch 'to-reface
