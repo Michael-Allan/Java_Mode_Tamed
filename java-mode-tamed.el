@@ -256,7 +256,7 @@ e.g. as opposed to annotation form."
 
 
 
-(defconst keyword-face-alist
+(defconst jmt-keyword-face-alist
   '(
     ;; Frequent
     ;; ────────
@@ -280,14 +280,14 @@ e.g. as opposed to annotation form."
     ("case"         .     jmt-principal-keyword); Of a statement clause.
     ("catch"        .     jmt-principal-keyword); Of a statement clause.
 ;;; ("char"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
-    ("class"        .        keyword-face-class); (q.v.)
+    ("class"        .    jmt-keyword-face-class); (q.v.)
     ("continue"     .     jmt-principal-keyword); Of a statement.
 ;;; ("float"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("for"          .     jmt-principal-keyword); Of a statement.
     ("new"          .    jmt-expression-keyword)
     ("protected"    .     jmt-qualifier-keyword)
     ("super"        .    jmt-expression-keyword)
-    ("synchronized" . keyword-face-synchronized); (q.v.)
+    ("synchronized" .     jmt-keyword-face-sync); (q.v.)
     ("this"         .    jmt-expression-keyword)
     ("throw"        .     jmt-principal-keyword); Of a statement.
     ("throws"       .     jmt-qualifier-keyword)
@@ -320,13 +320,13 @@ e.g. as opposed to annotation form."
     ) "\
 A list of cons cells of Java keywords (string @ car) each with the symbol
 of its proper face (@ cdr).  If the symbol instead points to a function,
-then the function has the form of ‘keyword-face-class’ and returns
+then the function has the form of ‘jmt-keyword-face-class’ and returns
 a face symbol.  The list excludes all keywords that Java mode
 does not face with ‘font-lock-keyword-face’.")
 
 
 
-(defun keyword-face-class (beg _end)
+(defun jmt-keyword-face-class (beg _end)
   "Returns the face (symbol) to give to the `class` keyword present
 in the buffer from position BEG (inclusive number) to _END (exclusive number).
 Leaves point indeterminate."
@@ -339,7 +339,7 @@ Leaves point indeterminate."
 
 
 
-(defun keyword-face-synchronized (_beg end)
+(defun jmt-keyword-face-sync (_beg end)
   "Returns the face (symbol) to give to the `synchronized` keyword present
 in the buffer from position _BEG (inclusive number) to END (exclusive number).
 Leaves point indeterminate."
@@ -466,7 +466,7 @@ function must return t on success, nil on failure."
 
 
 
-(defun preceding->-marks-generic-return-type ()
+(defun jmt-preceding->-marks-generic-return-type ()
   "Answers whether the ‘>’ character before point could be a delimiter within a
 function definition, namely the trailing delimiter of a list of type parameters
 for the function’s return type, making it a *generic* return type.  May move point."
@@ -604,7 +604,7 @@ is not buffer local."
    ;; ═══════
    ;; Keyword  [K]
    ;; ═══════
-   (cons; Reface each Java keyword as defined in `keyword-face-alist`.
+   (cons; Reface each Java keyword as defined in `jmt-keyword-face-alist`.
     (let (f match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
@@ -612,10 +612,11 @@ is not buffer local."
           (while (< match-beg limit)
             (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
             (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
-              (setq f (assoc (buffer-substring-no-properties match-beg match-end) keyword-face-alist))
+              (setq f (assoc (buffer-substring-no-properties match-beg match-end)
+                             jmt-keyword-face-alist))
               (set 'jmt-f
                    (if (not f) 'jmt-principal-keyword    ; Setting either a default face,
-                     (setq f (cdr f))                    ; or, from `keyword-face-alist`,
+                     (setq f (cdr f))                    ; or, from `jmt-keyword-face-alist`,
                      (if (not (functionp f)) f           ; a face either directly named
                        (funcall f match-beg match-end)))); or given by a named function.
               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
@@ -860,7 +861,6 @@ is not buffer local."
     '(0 jmt-f t))
 
 
-
    ;; ═════════
    ;; Delimiter
    ;; ═════════
@@ -987,7 +987,7 @@ is not buffer local."
                    (forward-comment most-negative-fixnum); [←CW]
                    (when (bobp) (throw 'is-constructor-definition nil))
                    (when (char-equal (char-before) ?>)
-                     (if (preceding->-marks-generic-return-type)
+                     (if (jmt-preceding->-marks-generic-return-type)
                          (goto-char match-end)
                          (throw 'to-fontify 'font-lock-function-name-face)
                        (throw 'is-constructor-definition nil)))
@@ -1014,7 +1014,7 @@ is not buffer local."
                      (goto-char match-end)
                      (throw 'to-fontify 'font-lock-function-name-face))
                    (when (char-equal i ?>)
-                     (if (preceding->-marks-generic-return-type)
+                     (if (jmt-preceding->-marks-generic-return-type)
                          (goto-char match-end)
                          (throw 'to-fontify 'font-lock-function-name-face)
                        (throw 'is-method-definition nil)))
