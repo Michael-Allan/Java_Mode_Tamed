@@ -256,6 +256,25 @@ e.g. as opposed to annotation form."
 
 
 
+(defface jmt-javadoc-delimiter; [RF]
+  `((t . (:inherit font-lock-doc-face))) "\
+The face for a delimiter in a Javadoc comment.  Customize it
+to better distinguish the delimiters from the content they delimit;
+making them more prominent or less prominent, for example.
+See also subface ‘jmt-javadoc-outer-delimiter’."
+  :group 'java-mode-tamed)
+
+
+
+(defface jmt-javadoc-outer-delimiter; [RF]
+  `((t . (:inherit jmt-javadoc-delimiter))) "\
+The face for the outermost delimiters `/**` and `*/` that between them
+contain a Javadoc comment, and for the left-marginal asterisks `*`
+that may lead any of its lines."
+  :group 'java-mode-tamed)
+
+
+
 (defconst jmt-keyword-face-alist
   '(
     ;; Frequent
@@ -828,13 +847,13 @@ is not buffer local."
        ;; 4. Reposition in readiness for the next anchor search
        ;; ─────────────
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
-       '(0 'jmt-annotation-package-name t))))
+       '(0 'jmt-annotation-package-name t)))); [QTF]
 
 
    ;; Package name occuring elsewhere
    ;; ────────────
    (cons; Reface each name segment using face `jmt-package-name`, and each apparently misfaced
-    (let (match-beg match-end); type name using `jmt-type-reference`.
+    (let (match-beg match-end); type name using face `jmt-type-reference`.
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
         (catch 'to-reface
@@ -919,6 +938,47 @@ is not buffer local."
              (setq match-beg match-end))
            nil))))
     '(0 jmt-f))
+
+
+   ;; ═══════════════
+   ;; Javadoc comment
+   ;; ═══════════════
+   (cons; Reface each Javadoc outermost delimiter `/**` using face `jmt-javadoc-outer-delimiter`.
+    (let (p)
+      (lambda (limit)
+        (catch 'to-reface
+          (while (search-forward "/**" limit t)
+            (setq p (match-beginning 0))
+            (when (and (eq 'font-lock-doc-face (get-text-property p 'face)); When inside is a Javadoc,
+                       (or (= p (point-min))                               ; but outside is not.
+                           (not (eq 'font-lock-doc-face (get-text-property (1- p) 'face)))))
+              (throw 'to-reface t)))
+          nil)))
+    '(0 'jmt-javadoc-outer-delimiter t)); [QTF]
+
+
+   (cons; Reface each Javadoc left-marginal delimiter `*` using face `jmt-javadoc-outer-delimiter`.
+    (lambda (limit)
+      (catch 'to-reface
+        (while (re-search-forward "^\\s-*\\(\\*\\)" limit t)
+          (when (eq 'font-lock-doc-face (get-text-property (match-beginning 1) 'face))
+            (throw 'to-reface t)))
+        nil))
+    '(1 'jmt-javadoc-outer-delimiter t)); [QTF]
+
+
+   (cons; Reface each Javadoc outermost delimiter `*/` using face `jmt-javadoc-outer-delimiter`.
+    (let (p)
+      (lambda (limit)
+        (catch 'to-reface
+          (while (search-forward "*/" limit t)
+            (setq p (match-end 0))
+            (when (and (eq 'font-lock-doc-face (get-text-property (1- p) 'face)); When inside is,
+                       (or (= p (point-max))                      ; but outside is not, a Javadoc.
+                           (not (eq 'font-lock-doc-face (get-text-property p 'face)))))
+              (throw 'to-reface t)))
+          nil)))
+    '(0 'jmt-javadoc-outer-delimiter t)); [QTF]
 
 
    ;; ════════════════════════════════
@@ -1081,7 +1141,7 @@ is not buffer local."
    ;; ═══════════════════
    ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
    ;; ═══════════════════
-   (cons; Reface each name using `jmt-type-parameter-declaration`.  See optimization note. [TPN]
+   (cons; Reface each name using face `jmt-type-parameter-declaration`.  See optimization note. [TPN]
     (let (depth i j match-beg match-end p p-min)
       (lambda (limit)
         (catch 'to-reface
