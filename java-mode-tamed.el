@@ -1331,6 +1331,16 @@ User instructions URL â€˜http://reluk.ca/project/Java/Emacs/java-mode-tamed.elâ€
             (insert-file-contents source-file)
 
             (jmt--patch
+             source-file source-base-name 'c-fontify-recorded-types-and-refs
+             (lambda ()
+               (when (re-search-forward
+                      (concat "(c-put-font-lock-face\\s-*(car\\s-+\\(\\w+\\))\\s-*(cdr\\s-+\\1)\\s-*"
+                              "'font-lock-type-face)")
+                      nil t)
+                 (replace-match "(jmt--c/put-type-face \\1)" t)
+                 t)))
+
+            (jmt--patch
              source-file source-base-name 'c-font-lock-<>-arglists
              (lambda ()
                (let (is-patched)
@@ -1347,16 +1357,6 @@ User instructions URL â€˜http://reluk.ca/project/Java/Emacs/java-mode-tamed.elâ€
                               "'font-lock-keyword-face)")
                       nil t)
                  (replace-match "jmt-faces-are-equivalent" t t nil 1)
-                 t)))
-
-            (jmt--patch
-             source-file source-base-name 'c-fontify-recorded-types-and-refs
-             (lambda ()
-               (when (re-search-forward
-                      (concat "(c-put-font-lock-face\\s-*(car\\s-+\\(\\w+\\))\\s-*(cdr\\s-+\\1)\\s-*"
-                              "'font-lock-type-face)")
-                      nil t)
-                 (replace-match "(jmt--c/put-type-face \\1)" t)
                  t))))
 
           ;; `cc-mode`
