@@ -202,7 +202,7 @@ of a formal Java expression."
 
 (defun jmt-faces-are-equivalent (f1 f2)
   "Answers whether F1 and F2 (face symbols) should be treated as equivalent
-by the underlying (Java mode) code."
+by the underlying (Java-mode) code."
   (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
 
@@ -227,7 +227,7 @@ on the last character of annotation."
 
 (defun jmt-is-Java-mode-type-face (f)
   "Answers whether F (face symbol) is a type face which might have been set
-by the underlying (Java mode) code."
+by the underlying (Java-mode) code."
   (or (eq f 'jmt--type); This face set by Java mode via `jmt--c/put-type-face`;
       (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
 
@@ -256,7 +256,7 @@ e.g. as opposed to annotation form."
 
 
 
-(defface jmt-javadoc-delimiter; [RF]
+(defface jmt-javadoc-delimiter; [LF, RF]
   `((t . (:inherit font-lock-doc-face))) "\
 The face for a delimiter in a Javadoc comment.  Customize it
 to better distinguish the delimiters from the content they delimit;
@@ -266,7 +266,7 @@ See also subface ‘jmt-javadoc-outer-delimiter’."
 
 
 
-(defface jmt-javadoc-outer-delimiter; [RF]
+(defface jmt-javadoc-outer-delimiter; [LF, RF]
   `((t . (:inherit jmt-javadoc-delimiter))) "\
 The face for the outermost delimiters `/**` and `*/` that between them
 contain a Javadoc comment, and for the left-marginal asterisks `*`
@@ -391,7 +391,7 @@ The set of characters from which a Java identifier may be formed.")
 (defun jmt-new-fontifiers-2 ()
   "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
 See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
-  (java-font-lock-keywords-2))
+  (java-font-lock-keywords-2)); [L2U]
 
 
 
@@ -1313,9 +1313,11 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
                    jmt-annotation-string-delimiter
+                   jmt-javadoc-delimiter
+                   jmt-javadoc-outer-delimiter
                    jmt-string-delimiter)))
 
-    ;; Monkey patch the underlying (Java mode) functions. Only now the first Java file is loaded,
+    ;; Monkey patch the underlying (Java-mode) functions. Only now the first Java file is loaded,
     ;; else patching might needlessly delay the start of Emacs.
     (define-error 'jmt-x "Broken monkey patch")
     (condition-case x
@@ -1358,6 +1360,17 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                       nil t)
                  (replace-match "jmt-faces-are-equivalent" t t nil 1)
                  t))))
+
+        ;;; (jmt--patch
+        ;;;  source-file source-base-name 'c-font-lock-labels
+        ;;;  (lambda ()
+        ;;;    (when (re-search-forward
+        ;;;           (concat "(\\(eq\\) (get-text-property (1- (point)) 'face)\\s-*"
+        ;;;                   "c-label-face-name)"); [FLC]
+        ;;;           nil t)
+        ;;;      (replace-match "jmt-faces-are-equivalent" t t nil 1)
+        ;;;      t)))
+        ;;;;;; ‘This function is only used on decoration level 2’, therefore no patch is needed. [L2U]
 
           ;; `cc-mode`
           ;; ─────────
@@ -1441,6 +1454,10 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        of a function defined by the macro `defun`.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/emacs/Defuns.html
 ;;
+;;   FLC  `font-lock-constant-face`: the Java-mode code refers to `font-lock-constant-face` indirectly
+;;        by way of variables `c-constant-face-name`, `c-doc-markup-face-name`, `c-label-face-name`
+;;        and `c-reference-face-name`.
+;;
 ;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
 ;;        or ‘assignment to free variable’.
 ;;
@@ -1450,6 +1467,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   K ·· Section *Keyword* of `jmt-specific-fontifiers-3`.
 ;;
 ;;  ↑K ·· Code that must execute after section *Keyword*.
+;;
+;;   L2U  Level-two highlighting is untamed.  ‘L2U’ marks code that enforces the fact and code
+;;        that depends on it.
 ;;
 ;;   LF · `c-literal-faces`: Any replacement face [RF] for a face listed in `c-literal-faces`
 ;;        must itself be appended to that list.
