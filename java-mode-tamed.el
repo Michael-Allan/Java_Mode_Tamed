@@ -1334,7 +1334,7 @@ User instructions URL â€˜http://reluk.ca/project/Java/Emacs/java-mode-tamed.elâ€
              source-file source-base-name 'c-fontify-recorded-types-and-refs
              (lambda ()
                (when (re-search-forward
-                      (concat "(c-put-font-lock-face\\s-*(car\\s-+\\(\\w+\\))\\s-*(cdr\\s-+\\1)\\s-*"
+                      (concat "(c-put-font-lock-face (car \\(\\w+\\)) (cdr \\1)\\s-*"
                               "'font-lock-type-face)")
                       nil t)
                  (replace-match "(jmt--c/put-type-face \\1)" t)
@@ -1344,7 +1344,7 @@ User instructions URL â€˜http://reluk.ca/project/Java/Emacs/java-mode-tamed.elâ€
              source-file source-base-name 'c-font-lock-<>-arglists
              (lambda ()
                (let (is-patched)
-                 (while (re-search-forward "(\\s-*\\(eq\\)\\s-+[^)]+?-face" nil t)
+                 (while (re-search-forward "(\\(eq\\) id-face" nil t)
                    (replace-match "jmt-faces-are-equivalent" t t nil 1)
                    (setq is-patched t))
                  is-patched)))
@@ -1353,7 +1353,7 @@ User instructions URL â€˜http://reluk.ca/project/Java/Emacs/java-mode-tamed.elâ€
              source-file source-base-name 'c-font-lock-declarations
              (lambda ()
                (when (re-search-forward
-                      (concat "(\\s-*\\(eq\\)\\s-*(get-text-property\\s-*(point)\\s-*'face)\\s-*"
+                      (concat "(\\(eq\\) (get-text-property (point) 'face)\\s-*"
                               "'font-lock-keyword-face)")
                       nil t)
                  (replace-match "jmt-faces-are-equivalent" t t nil 1)
@@ -1372,9 +1372,9 @@ User instructions URL â€˜http://reluk.ca/project/Java/Emacs/java-mode-tamed.elâ€
              source-file source-base-name 'c-before-change
              (lambda ()
                (when (re-search-forward
-                      "'\\s-*(\\s-*\\(font-lock-comment-face\\s-+font-lock-string-face\\)\\s-*)"
-                      nil t); The sought list is used for a `memq` test.
-                 (replace-match; Appending these to the list: [BC]
+                      "'(\\(font-lock-comment-face font-lock-string-face\\))"
+                      nil t)   ; â†‘ Because Java mode uses this face list for a `memq` test,
+                 (replace-match;   to it append these replacement faces: [BC]
                   "'(\\1 jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter)"
                   t)
                  t)))))
