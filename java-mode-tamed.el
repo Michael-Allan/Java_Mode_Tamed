@@ -48,6 +48,12 @@
 
 
 
+(defun jmt-make-Javadoc-tag-facing (f)
+  "Makes a face property for a Javadoc tag using F (face symbol) as a base."
+  (list f 'font-lock-doc-face)); [PDF]
+
+
+
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 ;;  D e c l a r a t i o n s   i n   l e x i c o g r a p h i c   o r d e r
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -158,8 +164,8 @@ RANGE is a cons cell."
                   ;;; the replacement may fail to occur, occur late, or prove to be unstable. [UF]
           (c-put-font-lock-face beg end 'font-lock-type-face))
       (args-out-of-range nil)))); Java mode has tried to put a face beyond the accessible region.
-        ;;; Suppress the resulting error report.  Seen e.g. at `public class KittedPolyStatorSR<T,S,R>`,
-        ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L16`.
+        ;;; Suppress the resulting error report.  Seen e.g. at `public class KittedPolyStatorSR<T,S,R>`.
+        ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L16]
         ;;; Reproduce there by inserting a space before identifier `T`, then undoing the insertion.
         ;;; Note that the error report interrupts JIT Lock.  This causes a visible flash of misfaced text
         ;;; when running under Java mode tamed.
@@ -225,6 +231,16 @@ on the last character of annotation."
 
 
 
+(defun jmt-is-Java-mode-tag-faced (v)
+  "Answers whether property value V (face symbol or list) is one which might have
+been set on a Javadoc tag by the underlying (Java-mode) code."
+  (and (consp v); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
+       (eq 'font-lock-constant-face (car v))
+       (eq 'font-lock-doc-face (car (setq v (cdr v))))
+       (eq nil (cdr v))))
+
+
+
 (defun jmt-is-Java-mode-type-face (f)
   "Answers whether F (face symbol) is a type face which might have been set
 by the underlying (Java-mode) code."
@@ -256,22 +272,100 @@ e.g. as opposed to annotation form."
 
 
 
-(defface jmt-javadoc-delimiter; [LF, RF]
-  `((t . (:inherit font-lock-doc-face))) "\
-The face for a delimiter in a Javadoc comment.  Customize it
-to better distinguish the delimiters from the content they delimit;
-making them more prominent or less prominent, for example.
-See also subface ‘jmt-javadoc-outer-delimiter’."
+(defface jmt-Javadoc-link-label; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-rendered-parameter))) "\
+The face for the rendered label of a Javadoc `link` or `linkplain` tag."
   :group 'java-mode-tamed)
 
+(defconst jmt-Javadoc-link-label-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-link-label))
 
 
-(defface jmt-javadoc-outer-delimiter; [LF, RF]
-  `((t . (:inherit jmt-javadoc-delimiter))) "\
+
+(defface jmt-Javadoc-rendered-parameter; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag-parameter))) "\
+The face for a rendered parameter of a Javadoc inline tag;
+one that gets rendered in the resulting Javadocs, that is."
+  :group 'java-mode-tamed)
+
+(defconst jmt-Javadoc-rendered-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-rendered-parameter))
+
+
+
+(defface jmt-Javadoc-outer-delimiter; [LF, RF]
+  `((t . (:inherit font-lock-doc-face))) "\
 The face for the outermost delimiters `/**` and `*/` that between them
 contain a Javadoc comment, and for the left-marginal asterisks `*`
-that may lead any of its lines."
+that may lead any of its lines.  Customize it to better distinguish
+the delimiters from the content they delimit; making them more prominent
+or less prominent, for example."
   :group 'java-mode-tamed)
+
+
+
+(defface jmt-Javadoc-tag; [NDF, RF]
+  `((t . (:inherit font-lock-constant-face))) "\
+The face for a Javadoc or HTML tag embedded in a Javadoc comment.
+It inherits from ‘font-lock-constant-face’; customize it to distinguish
+Javadoc tags from other constructs that use ‘font-lock-constant-face’.
+See also subfaces ‘jmt-Javadoc-tag-delimiter’, ‘jmt-Javadoc-tag-name’
+and  ‘jmt-Javadoc-tag-parameter’."
+  :group 'java-mode-tamed)
+
+
+
+(defface jmt-Javadoc-tag-delimiter; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag))) "\
+The face for the ‘@’, ‘{’ and ‘}’ delimiters of a Javadoc tag,
+and the ‘<’, ‘</’, ‘/>’ and ‘>’ delimiters of an HTML tag.
+Customize it to better distinguish the delimiters from the content
+they delimit; making them more prominent or less prominent, for example.
+See also subface ‘jmt-Javadoc-tag-mark’."
+  :group 'java-mode-tamed)
+
+(defconst jmt-Javadoc-tag-delimiter-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-delimiter))
+
+
+
+(defface jmt-Javadoc-tag-mark; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag-delimiter))) "\
+The face for the ‘@’ symbol denoting a Javadoc tag."
+  :group 'java-mode-tamed)
+
+(defconst jmt-Javadoc-tag-mark-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-mark))
+
+
+
+(defface jmt-Javadoc-tag-name; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag))) "\
+The face for the nominal identifier of a Javadoc or HTML tag.
+See also subface ‘jmt-Javadoc-value-tag-name’."
+  :group 'java-mode-tamed)
+
+(defconst jmt-Javadoc-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-name))
+
+
+
+(defconst jmt-Javadoc-tag-name-character-set "[:alnum:]" "\
+The approximate set of characters from which a Javadoc tag name may be formed.")
+
+
+
+(defface jmt-Javadoc-tag-parameter; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag))) "\
+The face for a parameter of a Javadoc tag.  See also subfaces
+‘jmt-Javadoc-link-label’ and ‘jmt-Javadoc-rendered-parameter’."
+  :group 'java-mode-tamed)
+
+(defconst jmt-Javadoc-tag-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-parameter))
+
+
+
+(defface jmt-Javadoc-value-tag-name; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag-name))) "\
+The face for the nominal identifier `value` of a Javadoc value tag."
+  :group 'java-mode-tamed)
+
+(defconst jmt-Javadoc-value-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-value-tag-name))
 
 
 
@@ -451,9 +545,10 @@ posed to a type reference.  Customize it to better distinguish between the two."
 
 
 (defun jmt--patch (source-file source-base-name function-symbol patch-function)
-  "Monkey patches function FUNCTION-SYMBOL of file SOURCE-FILE (a string,
-which has the given BASE-NAME) using the named PATCH-FUNCTION.  The patch
-function must return t on success, nil on failure."
+  "Called from within a temporary buffer, this function monkey patches
+the function FUNCTION-SYMBOL, originally from file SOURCE-FILE (a string,
+which has the given BASE-NAME), using the named PATCH-FUNCTION.  The patch
+function must return t on success, nil on failure."; [NW]
   (unless (functionp function-symbol)
     (signal 'jmt-x `("No such function loaded" ,function-symbol)))
   (let ((load-file (symbol-file function-symbol)))
@@ -723,11 +818,11 @@ is not buffer local."
                             (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                             (throw 'to-face t)); The keyword precedes annotation.  With this.
                               ;;; Java mode fails at times to face the type name.  This was seen,
-                              ;;; for instance, here in the sequence `public @ThreadSafe class ID`:
-                              ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`.
+                              ;;; for instance, here in the sequence `public @ThreadSafe class ID`.
+                              ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`]
                               ;;;     It seems Java mode expects to find keywords *before* annotation,
-                              ;;; which, although it ‘is customary’, is nevertheless ‘not required’,
-                              ;;; `https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1`.
+                              ;;; which, although it ‘is customary’, is nevertheless ‘not required’.
+                              ;;; [https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1]
                               ;;; Here therefore the missing face is applied.
 
                         ;; Annotation, the modifier is an annotation modifier, or should be
@@ -943,7 +1038,7 @@ is not buffer local."
    ;; ═══════════════
    ;; Javadoc comment
    ;; ═══════════════
-   (cons; Reface each Javadoc outermost delimiter `/**` using face `jmt-javadoc-outer-delimiter`.
+   (cons; Reface each Javadoc outermost delimiter `/**` using face `jmt-Javadoc-outer-delimiter`.
     (let (p)
       (lambda (limit)
         (catch 'to-reface
@@ -954,20 +1049,20 @@ is not buffer local."
                            (not (eq 'font-lock-doc-face (get-text-property (1- p) 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-javadoc-outer-delimiter t)); [QTF]
+    '(0 'jmt-Javadoc-outer-delimiter t)); [QTF]
 
 
-   (cons; Reface each Javadoc left-marginal delimiter `*` using face `jmt-javadoc-outer-delimiter`.
+   (cons; Reface each Javadoc left-marginal delimiter `*` using face `jmt-Javadoc-outer-delimiter`.
     (lambda (limit)
       (catch 'to-reface
         (while (re-search-forward "^\\s-*\\(\\*\\)" limit t)
           (when (eq 'font-lock-doc-face (get-text-property (match-beginning 1) 'face))
             (throw 'to-reface t)))
         nil))
-    '(1 'jmt-javadoc-outer-delimiter t)); [QTF]
+    '(1 'jmt-Javadoc-outer-delimiter t)); [QTF]
 
 
-   (cons; Reface each Javadoc outermost delimiter `*/` using face `jmt-javadoc-outer-delimiter`.
+   (cons; Reface each Javadoc outermost delimiter `*/` using face `jmt-Javadoc-outer-delimiter`.
     (let (p)
       (lambda (limit)
         (catch 'to-reface
@@ -978,7 +1073,51 @@ is not buffer local."
                            (not (eq 'font-lock-doc-face (get-text-property p 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-javadoc-outer-delimiter t)); [QTF]
+    '(0 'jmt-Javadoc-outer-delimiter t)); [QTF]
+
+
+   (list; Reface each Javadoc inline tag using the `jmt-Javadoc-tag-` faces.
+    (let (match-beg tag-name)
+      (lambda (limit)
+        (catch 'to-reface
+          (while (re-search-forward
+                  (concat "\\({\\)\\s-*\\(@\\)\\s-*\\([" jmt-Javadoc-tag-name-character-set
+                      ;;;     ·           ·          └─────────────────────────────────────┈
+                      ;;;     {           @                        tag name
+
+                          "]+\\)\\(?:\\s-+\\([^[:space:]}]+\\)\\)?\\(?:\\s-+\\([^}]*\\)\\)?\\(}\\)")
+                      ;;; ┈────┘            └────────────────┘                └───────┘       ·
+                      ;;;                      parameters 1                     and 2+        }
+                  limit t)
+            (setq match-beg (match-beginning 0))
+            (when (and (jmt-is-Java-mode-tag-faced (get-text-property match-beg 'face))
+                       (>= (match-end 0); And that facing is uniform.
+                           (next-single-property-change match-beg 'face (current-buffer) limit)))
+              (setq tag-name (match-string-no-properties 3))
+              (cond ((or (string= tag-name "code")
+                         (string= tag-name "index")
+                         (string= tag-name "literal")
+                         (string= tag-name "summary"))
+                     (setq jmt-f jmt-Javadoc-tag-name-f
+                           jmt-p jmt-Javadoc-rendered-parameter-f
+                           jmt-q jmt-Javadoc-tag-parameter-f)); (if any)
+                    ((or (string= tag-name "link")
+                         (string= tag-name "linkplain"))
+                     (setq jmt-f jmt-Javadoc-tag-name-f
+                           jmt-p jmt-Javadoc-tag-parameter-f
+                           jmt-q jmt-Javadoc-link-label-f))
+                    (    (string= tag-name "value")
+                     (setq jmt-f jmt-Javadoc-value-tag-name-f
+                           jmt-p jmt-Javadoc-tag-parameter-f; (if any)
+                           jmt-q jmt-Javadoc-tag-parameter-f))
+                    (t
+                     (setq jmt-f jmt-Javadoc-tag-name-f
+                           jmt-p jmt-Javadoc-tag-parameter-f; (if any)
+                           jmt-q jmt-Javadoc-tag-parameter-f)))
+              (throw 'to-reface t)))
+          nil)))
+    '(1 jmt-Javadoc-tag-delimiter-f t) '(2 jmt-Javadoc-tag-mark-f t)
+    '(3 jmt-f t) '(4 jmt-p t t) '(5 jmt-q t t) '(6 jmt-Javadoc-tag-delimiter-f t))
 
 
    ;; ════════════════════════════════
@@ -1064,8 +1203,8 @@ is not buffer local."
                  (catch 'is-method-definition; One that needs fontifying, that is.
                    (unless (eq face nil)) (throw 'is-method-definition nil); Definitions
                      ;;; unfaced have been seen, but misfaced have not.  See for instance
-                     ;;; the sequence `public @Override @Warning("non-API") void onCreate()`:
-                     ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40`.
+                     ;;; the sequence `public @Override @Warning("non-API") void onCreate()`.
+                     ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
                    (when (bobp) (throw 'is-method-definition nil))
@@ -1093,8 +1232,8 @@ is not buffer local."
                    (when (bobp) (throw 'is-method-call nil))
                    (when (char-equal (char-before) ?.); Always the misfaced identifier directly
                      ;; follows a ‘.’, which excludes the possibility of it being a definition.
-                     ;; See for instance the sequence `assert stators.getClass()`:
-                     ;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
+                     ;; See for instance the sequence `assert stators.getClass()`.
+                     ;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
                      (goto-char match-end)
                      (throw 'to-fontify 'default))))
                (goto-char match-end))); Whence the next leg of the search begins.
@@ -1313,8 +1452,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
                    jmt-annotation-string-delimiter
-                   jmt-javadoc-delimiter
-                   jmt-javadoc-outer-delimiter
+                   jmt-Javadoc-outer-delimiter
                    jmt-string-delimiter)))
 
     ;; Monkey patch the underlying (Java-mode) functions. Only now the first Java file is loaded,
@@ -1329,14 +1467,14 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                 source-base-name "cc-fonts")
           (unless source-file
             (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
-          (with-temp-buffer
+          (with-temp-buffer; [NW]
             (insert-file-contents source-file)
 
             (jmt--patch
              source-file source-base-name 'c-fontify-recorded-types-and-refs
              (lambda ()
                (when (re-search-forward
-                      (concat "(c-put-font-lock-face (car elem) (cdr elem)\\s-*"
+                      (concat "(c-put-font-lock-face (car elem) (cdr elem)\\s-*"; [NW]
                               "'font-lock-type-face)")
                       nil t)
                  (replace-match "(jmt--c/put-type-face elem)" t t)
@@ -1355,7 +1493,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
              source-file source-base-name 'c-font-lock-declarations
              (lambda ()
                (when (re-search-forward
-                      (concat "(\\(eq\\) (get-text-property (point) 'face)\\s-*"
+                      (concat "(\\(eq\\) (get-text-property (point) 'face)\\s-*"; [NW]
                               "'font-lock-keyword-face)")
                       nil t)
                  (replace-match "jmt-faces-are-equivalent" t t nil 1)
@@ -1365,7 +1503,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
         ;;;  source-file source-base-name 'c-font-lock-labels
         ;;;  (lambda ()
         ;;;    (when (re-search-forward
-        ;;;           (concat "(\\(eq\\) (get-text-property (1- (point)) 'face)\\s-*"
+        ;;;           (concat "(\\(eq\\) (get-text-property (1- (point)) 'face)\\s-*"; [NW]
         ;;;                   "c-label-face-name)"); [FLC]
         ;;;           nil t)
         ;;;      (replace-match "jmt-faces-are-equivalent" t t nil 1)
@@ -1485,9 +1623,23 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   NCE  Not `char-equal`; it fails if the position is out of bounds.  Rather `eq`, which instead
 ;;        returns nil.
 ;;
+;;   NDF  Not a declaration face, therefore it need not be appended to `c-maybe-decl-faces`. [MDF]
+;;        The face only appears in Javadoc comments.  Meanwhile `c-maybe-decl-faces` is only used,
+;;        in conjunction with `c-decl-start-re`, as a bounding argument in a call to `c-find-decl-spots`.
+;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el?id=fd1b34bfba#n1490]
+;;           A trace in the source of both references indicates that a ‘decl-spot’ is not something
+;;        that would appear in a Javadoc comment.
+;;
+;;   NW · Newline characters have whitespace syntax in this (temporary) buffer, though in a proper
+;;        Java or Emacs Lisp buffer, they do not.
+;;
 ;;   P↓ · Code that must execute before section *Package name*  of `jmt-specific-fontifiers-3`.
 ;;
 ;;   P ·· Section *Package name* itself.
+;;
+;;   PDF  Prepending to the documentation face.  In order to duplicate the behaviour of Java mode
+;;        (see `jmt-is-Java-mode-tag-faced`), the face of a Javadoc tag must not simply override
+;;        the `font-lock-doc-face` of the surrounding Javadoc comment, but rather prepend to it.
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
@@ -1496,12 +1648,11 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   QTF  Quoting of tamed face references.  Their quoting is required for passage to evaluators,
 ;;        e.g. in the case of a Font Lock *facespec*. [QFS]
-;;
-;;        That might seem obvious, but many packages define a namesake variable for each face symbol.
-;;        ‘In the vast majority of cases, this is not necessary’,
-;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Faces.html`.
-;;        ‘Simply using faces directly is enough’,
-;;        `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.
+;;            That might seem obvious, but many packages define a namesake variable for each face symbol.
+;;        ‘In the vast majority of cases, this is not necessary’.
+;;        [https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Faces.html]
+;;        ‘Simply using faces directly is enough.’
+;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el?id=fd1b34bfba]
 ;;
 ;;   RF · Replacement face: a tamed face used by `java-mode-tamed` to override and replace a face
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
