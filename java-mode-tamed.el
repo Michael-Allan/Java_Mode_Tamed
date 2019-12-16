@@ -737,7 +737,7 @@ is not buffer local."
                         (unless (eq (char-before (point)) ?@); (and not nil)
                           (throw 'is-modifier nil))
                         (setq annotation-count (1+ annotation-count))
-                        (backward-char)
+                        (backward-char); To before the ‘@’.
                         (forward-comment most-negative-fixnum))))))); [←CW]
             (goto-char match-end)))
         nil))
@@ -1336,18 +1336,18 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
              source-file source-base-name 'c-fontify-recorded-types-and-refs
              (lambda ()
                (when (re-search-forward
-                      (concat "(c-put-font-lock-face (car \\(\\w+\\)) (cdr \\1)\\s-*"
+                      (concat "(c-put-font-lock-face (car elem) (cdr elem)\\s-*"
                               "'font-lock-type-face)")
                       nil t)
-                 (replace-match "(jmt--c/put-type-face \\1)" t)
+                 (replace-match "(jmt--c/put-type-face elem)" t t)
                  t)))
 
             (jmt--patch
              source-file source-base-name 'c-font-lock-<>-arglists
              (lambda ()
                (let (is-patched)
-                 (while (re-search-forward "(\\(eq\\) id-face" nil t)
-                   (replace-match "jmt-faces-are-equivalent" t t nil 1)
+                 (while (search-forward "(eq id-face" nil t)
+                   (replace-match "(jmt-faces-are-equivalent id-face" t t)
                    (setq is-patched t))
                  is-patched)))
 
@@ -1383,13 +1383,10 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
             (jmt--patch
              source-file source-base-name 'c-before-change
-             (lambda ()
-               (when (re-search-forward
-                      "'(\\(font-lock-comment-face font-lock-string-face\\))"
-                      nil t)   ; ↑ Because Java mode uses this face list for a `memq` test,
-                 (replace-match;   to it append these replacement faces: [BC]
-                  "'(\\1 jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter)"
-                  t)
+             (lambda (); Java mode uses the following list of faces for a `memq` test.
+               (when (search-forward "'(font-lock-comment-face font-lock-string-face)" nil t)
+                 (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
+                 (insert " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
                  t)))))
 
       (jmt-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
