@@ -207,6 +207,34 @@ by the underlying (Java-mode) code."
 
 
 
+(defface jmt-HTML-end-tag-name; [NDF, RF]
+  `((t . (:inherit jmt-HTML-tag-name))) "\
+The face for the tag name in the end tag of an HTML element
+in a Javadoc comment."
+  :group 'java-mode-tamed)
+
+(defconst jmt-HTML-end-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-HTML-end-tag-name))
+
+
+
+(defface jmt-HTML-start-tag-name; [NDF, RF]
+  `((t . (:inherit jmt-HTML-tag-name))) "\
+The face for the tag name in the start tag of an HTML element
+in a Javadoc comment."
+  :group 'java-mode-tamed)
+
+(defconst jmt-HTML-start-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-HTML-start-tag-name))
+
+
+
+(defface jmt-HTML-tag-name; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag-name))) "\
+The face for the tag name of an HTML element in a Javadoc comment.
+See also subfaces ‘jmt-HTML-start-tag-name’ and ‘jmt-HTML-end-tag-name’."
+  :group 'java-mode-tamed)
+
+
+
 (defun jmt-is-annotation-ish-before (p)
   "Answers whether the position before P (integer) might be within annotation."
   (let ((f (get-text-property (1- p) 'face)))
@@ -338,22 +366,17 @@ The face for the ‘@’ symbol denoting a Javadoc tag."
 (defface jmt-Javadoc-tag-name; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for the nominal identifier of a Javadoc or HTML tag.
-See also subface ‘jmt-Javadoc-value-tag-name’."
+See also subfaces ‘jmt-HTML-tag-name’ and ‘jmt-Javadoc-value-tag-name’."
   :group 'java-mode-tamed)
 
 (defconst jmt-Javadoc-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-name))
 
 
 
-(defconst jmt-Javadoc-tag-name-character-set "[:alnum:]" "\
-The approximate set of characters from which a Javadoc tag name may be formed.")
-
-
-
 (defface jmt-Javadoc-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
-The face for a parameter of a Javadoc tag.  See also subfaces
-‘jmt-Javadoc-link-label’ and ‘jmt-Javadoc-rendered-parameter’."
+The face for a parameter of a Javadoc tag or attribute of an HTML tag.  See
+also subfaces ‘jmt-Javadoc-link-label’ and ‘jmt-Javadoc-rendered-parameter’."
   :group 'java-mode-tamed)
 
 (defconst jmt-Javadoc-tag-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-parameter))
@@ -1081,13 +1104,13 @@ is not buffer local."
       (lambda (limit)
         (catch 'to-reface
           (while (re-search-forward
-                  (concat "\\({\\)\\s-*\\(@\\)\\s-*\\([" jmt-Javadoc-tag-name-character-set
-                      ;;;     ·           ·          └─────────────────────────────────────┈
-                      ;;;     {           @                        tag name
+                  (concat "\\({\\)\\s-*\\(@\\)\\s-*\\([[:alnum:]]+\\)";    This search might be made
+                      ;;;     ·           ·          └──────────────┘        more reliable. [JIL]
+                      ;;;     {           @              tag name
 
-                          "]+\\)\\(?:\\s-+\\([^[:space:]}]+\\)\\)?\\(?:\\s-+\\([^}]*\\)\\)?\\(}\\)")
-                      ;;; ┈────┘            └────────────────┘                └───────┘       ·
-                      ;;;                      parameters 1                     and 2+        }
+                          "\\(?:\\s-+\\([^[:space:]}\n]+\\)\\)?\\(?:\\s-+\\([^}\n]*\\)\\)?\\(}\\)"); [SL]
+                      ;;;              └──────────────────┘                └─────────┘       ·
+                      ;;;                 parameters 1,                        2, …          }
                   limit t)
             (setq match-beg (match-beginning 0))
             (when (and (jmt-is-Java-mode-tag-faced (get-text-property match-beg 'face))
@@ -1118,6 +1141,43 @@ is not buffer local."
           nil)))
     '(1 jmt-Javadoc-tag-delimiter-f t) '(2 jmt-Javadoc-tag-mark-f t)
     '(3 jmt-f t) '(4 jmt-p t t) '(5 jmt-q t t) '(6 jmt-Javadoc-tag-delimiter-f t))
+
+
+   (list; Reface each HTML tag using the `jmt-Javadoc-tag-` and `jmt-HTML-tag-` faces.
+    (let (match-beg match-end)
+      (lambda (limit)
+        (setq match-beg (point)); Presumptively.
+        (catch 'to-reface
+          (while (< match-beg limit)
+            (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+            (when (and (char-equal ?< (char-after match-beg))
+                       (jmt-is-Java-mode-tag-faced (get-text-property match-beg 'face)))
+              (goto-char match-beg)
+              (save-restriction
+                (narrow-to-region match-beg match-end)
+
+                ;; End tag
+                ;; ───────
+                (when (looking-at "\\\(./\\)\\([[:alnum:]]+\\)\\(\\s-*\\)\\(>\\)$"); ‘$’ [NBE]
+                              ;;;     └────┘  └──────────────┘              ·
+                              ;;;       </        tag name                  >
+
+                  (setq jmt-f jmt-HTML-end-tag-name-f
+                        jmt-p jmt-Javadoc-tag-parameter-f); (actually this is just space, if present)
+                  (throw 'to-reface t))
+
+                ;; Start tag
+                ;; ─────────
+                (when (looking-at "\\(.\\)\\([[:alnum:]]+\\)\\(\\s-.*\\)?\\(/?>\\)$"); ‘$’ [NBE]
+                              ;;;     ·     └──────────────┘  └────────┘    · ·
+                              ;;;     <         tag name      attributes    / >
+
+                  (setq jmt-f jmt-HTML-start-tag-name-f
+                        jmt-p jmt-Javadoc-tag-parameter-f); (or maybe just space, if present at all)
+                  (throw 'to-reface t))))
+            (setq match-beg match-end))
+          nil)))
+    '(1 jmt-Javadoc-tag-delimiter-f t) '(2 jmt-f t) '(3 jmt-p t t) '(4 jmt-Javadoc-tag-delimiter-f t))
 
 
    ;; ════════════════════════════════
@@ -1599,6 +1659,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   GVF  A global variable for the use of fontifiers, e.g. from within forms they quote and pass
 ;;        to Font Lock to be evaluated outside of their lexical scope.
 ;;
+;;   JIL  Javadoc inline tags.  Double anchoring the tag search on the bounds of a `jmt-is-Java-mode-
+;;        -tag-faced` region, like the other tag fontifiers do, might make it more reliable.
+;;
 ;;   K ·· Section *Keyword* of `jmt-specific-fontifiers-3`.
 ;;
 ;;  ↑K ·· Code that must execute after section *Keyword*.
@@ -1619,6 +1682,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
 ;;        must itself be appended to that list.
+;;
+;;   NBE  Not ‘\'’ to match only the buffer end.  Rather ‘$’ to include the line end in the event
+;;        the (narrowed) buffer happens to cross lines. [SL]
 ;;
 ;;   NCE  Not `char-equal`; it fails if the position is out of bounds.  Rather `eq`, which instead
 ;;        returns nil.
