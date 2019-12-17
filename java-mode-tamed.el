@@ -42,12 +42,6 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-(defvar-local jmt--is-level-3 nil); An in-buffer cache of this boolean flag.  It works only because any
-  ;;; ‘customization of `font-lock-maximum-decoration` should be done *before* the file is visited’.
-  ;;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Font-Lock.html
-
-
-
 (defun jmt-make-Javadoc-tag-facing (f)
   "Makes a face property for a Javadoc tag using F (face symbol) as a base."
   (list f 'font-lock-doc-face)); [PDF]
@@ -246,6 +240,12 @@ been set on a Javadoc tag by the underlying (Java-mode) code."
 by the underlying (Java-mode) code."
   (or (eq f 'jmt--type); This face set by Java mode via `jmt--c/put-type-face`;
       (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
+
+
+
+(defvar-local jmt--is-level-3 nil); An in-buffer cache of this boolean flag.  It works only because any
+  ;;; ‘customization of `font-lock-maximum-decoration` should be done *before* the file is visited’.
+  ;;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Font-Lock.html
 
 
 
