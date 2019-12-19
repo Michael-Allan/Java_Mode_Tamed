@@ -419,7 +419,7 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
     ("private"      .     jmt-qualifier-keyword)
     ("public"       .     jmt-qualifier-keyword)
     ("return"       .     jmt-principal-keyword); Of a statement.
-    ("static"       .     jmt-qualifier-keyword)
+    ("static"       .   jmt-keyword-face-static); (q.v.)
 
     ;; Infrequent; typically a few times per buffer
     ;; ──────────
@@ -483,6 +483,21 @@ Leaves point indeterminate."
       'jmt-expression-keyword
         ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-ClassLiteral
     'jmt-principal-keyword)); Of a type definition.
+
+
+
+(defun jmt-keyword-face-static (beg end)
+  "Returns the face (symbol) to give to the `static` keyword present
+in the buffer from position BEG (inclusive number) to _END (exclusive number).
+Leaves point indeterminate."
+  (goto-char beg)
+  (forward-comment most-negative-fixnum); [←CW]
+  (setq end (point)); The presumed end of the preceding keyword.
+  (if (and (< (skip-chars-backward jmt-name-character-set) 0)
+           (string= "import" (buffer-substring-no-properties (point) end)))
+      'jmt-boilerplate-keyword; In a static import declaration.
+        ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-7.html#jls-7.5.3
+    'jmt-qualifier-keyword)); Elsewhere.
 
 
 
