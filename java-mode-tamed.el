@@ -495,8 +495,7 @@ Leaves point indeterminate."
   (setq end (point)); The presumed end of the preceding keyword.
   (if (and (< (skip-chars-backward jmt-name-character-set) 0)
            (string= "import" (buffer-substring-no-properties (point) end)))
-      'jmt-boilerplate-keyword; In a static import declaration.
-        ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-7.html#jls-7.5.3
+      'jmt-boilerplate-keyword; In a static import declaration. [SI]
     'jmt-qualifier-keyword)); Elsewhere.
 
 
@@ -805,6 +804,32 @@ is not buffer local."
    ;; ═════════
    ;; Type name  [↑K, T]
    ;; ═════════
+
+   (cons; Unface each terminal token of a static import incorrectly faced as a type name by Java mode.
+    (let (i j)
+      (lambda (limit)
+        (setq i (point)); Presumptively.
+        (catch 'to-reface
+          (while (< i limit)
+            (setq j (next-single-property-change i 'face (current-buffer) limit))
+            (when (and (eq 'jmt-boilerplate-keyword (get-text-property i 'face)); [↑K]
+                       (string= "static" (buffer-substring-no-properties i j)))
+              (goto-char j)
+              (when (and (re-search-forward
+                          (concat "[[:space:]\n." jmt-name-character-set "]+\\_>"
+                              ;;;  └───────────────────────────────────────┘
+                              ;;;                 TypeName                       [SI]
+
+                                  "\\.\\([" jmt-name-character-set "]+\\);")
+                              ;;;    ·   └───────────────────────────┘   ·
+                              ;;;   dot            Identifier            ;
+                          limit t)
+                         (jmt-is-Java-mode-type-face (get-text-property (match-beginning 1) 'face)))
+                (throw 'to-reface t)))
+            (setq i j))
+          nil)))
+    '(1 'default t))
+
 
    (list; Reface each Java type name using either `jmt-type-definition` or  `jmt-type-reference`.
     (lambda (limit)
@@ -1929,6 +1954,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   SF · Stuck face.  The use of text property `jmt-stabilized` may cause certain faces
 ;;        to become stuck on occaision.  A viable workaround in the event would be to delete
 ;;        and re-type the affected text, which tends to be short in length.
+;;
+;;   SI · Static import declaration.
+;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-7.html#jls-7.5.3
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy. [BUG]
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
