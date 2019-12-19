@@ -412,7 +412,7 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
   '(
     ;; Frequent
     ;; ────────
-;;; ("assert"       .     jmt-principal-keyword); Of a statement. (but unfaced by Java mode)
+    ("assert"       .     jmt-principal-keyword); Of a statement.
 ;;; ("boolean"      .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("break"        .     jmt-principal-keyword); Of a statement.
     ("else"         .     jmt-principal-keyword); Of a statement clause.
@@ -781,7 +781,7 @@ is not buffer local."
 
 
    ;; ═══════
-   ;; Keyword  [K]
+   ;; Keyword  [K, T↓]
    ;; ═══════
 
    (cons; Reface each Java keyword as defined in `jmt-keyword-face-alist`.
@@ -803,6 +803,19 @@ is not buffer local."
               (throw 'to-reface t))
             (setq match-beg match-end))
           nil)))
+    '(0 jmt-f t))
+
+
+   (cons; Fontify each `assert` keyword that was misfaced by Java mode, or incorrectly left unfaced.
+    (lambda (limit)
+      (setq jmt-f (assoc "assert" jmt-keyword-face-alist))
+      (catch 'to-reface
+        (while (re-search-forward "\\<assert\\>" limit t)
+          (let ((f (get-text-property (match-beginning 0) 'face)))
+            (when (or (eq f nil); Only identifiers left unfaced or misfaced as type names have been seen.
+                      (jmt-is-Java-mode-type-face f)); [T↓]
+              (throw 'to-reface t))))
+        nil))
     '(0 jmt-f t))
 
 
