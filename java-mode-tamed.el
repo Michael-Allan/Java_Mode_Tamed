@@ -686,6 +686,7 @@ is not buffer local."
    ;; ══════════
    ;; Annotation  [A, T↓]
    ;; ══════════
+
    (list; Fontify each instance of annotation, overriding any misfontification of Java mode.
     (lambda (limit)
       (catch 'to-fontify
@@ -762,6 +763,7 @@ is not buffer local."
    ;; ═══════
    ;; Keyword  [K]
    ;; ═══════
+
    (cons; Reface each Java keyword as defined in `jmt-keyword-face-alist`.
     (let (f match-beg match-end)
       (lambda (limit)
@@ -788,6 +790,7 @@ is not buffer local."
    ;; ═════════
    ;; Type name  [↑K, T]
    ;; ═════════
+
    (list; Reface each Java type name using either `jmt-type-definition` or  `jmt-type-reference`.
     (lambda (limit)
       (catch 'to-reface
@@ -993,7 +996,8 @@ is not buffer local."
    ;; Package name occuring elsewhere
    ;; ────────────
    (cons; Reface each name segment using face `jmt-package-name`, and each apparently misfaced
-    (let (match-beg match-end); type name using face `jmt-type-reference`.
+      ;;; type name using face `jmt-type-reference`.
+    (let (match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
         (catch 'to-reface
@@ -1024,6 +1028,7 @@ is not buffer local."
    ;; ═════════
    ;; Delimiter
    ;; ═════════
+
    (cons; Face each Java delimiter that was left unfaced by Java mode.
     (let (i j match-beg match-end)
       (lambda (limit)
@@ -1305,6 +1310,7 @@ is not buffer local."
    ;; ════════════════════════════════
    ;; Method or constructor identifier  [↑A, ↑T]
    ;; ════════════════════════════════
+
    (cons; Fontify each identifier that was misfaced by Java mode, or incorrectly left unfaced.
     (let ((identifier-pattern (concat "[" jmt-name-character-set "]+"))
           face i match-beg match-end)
@@ -1427,6 +1433,7 @@ is not buffer local."
    ;; ══════════════
    ;; String literal  [↑A]
    ;; ══════════════
+
    (list; Refontify each Java string literal using face `jmt-string-delimiter`,
       ;;; `or faces jmt-annotation-string` and `jmt-annotation-string-delimiter`.
     (let (body-beg body-end f match-beg match-end)
@@ -1464,6 +1471,7 @@ is not buffer local."
    ;; ═══════════════════
    ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
    ;; ═══════════════════
+
    (cons; Reface each name using face `jmt-type-parameter-declaration`.  See optimization note. [TPN]
     (let (depth i j match-beg match-end p p-min)
       (lambda (limit)
@@ -1654,6 +1662,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
   ;; ════════════════════════════
   ;; Finish initializing the mode
   ;; ════════════════════════════
+
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
     (set 'c-literal-faces
@@ -1755,6 +1764,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
   ;; ═════════════════════
   ;; Initialize the buffer
   ;; ═════════════════════
+
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
