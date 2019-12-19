@@ -1146,15 +1146,7 @@ is not buffer local."
                        (>= (match-end 0); And that facing is uniform.
                            (next-single-property-change match-beg 'face (current-buffer) limit)))
               (setq tag-name (match-string-no-properties 3))
-              (cond ((or (string= tag-name "code")
-                         (string= tag-name "index")
-                         (string= tag-name "literal")
-                         (string= tag-name "summary"))
-                     (setq jmt-f jmt-inline-tag-name-f
-                           jmt-p jmt-inline-rendered-parameter-f
-                           jmt-q jmt-inline-tag-parameter-f)); (if any)
-
-                    ((or (string= tag-name "link")
+              (cond ((or (string= tag-name "link")
                          (string= tag-name "linkplain"))
                      (setq jmt-f jmt-inline-tag-name-f
                            jmt-p jmt-inline-tag-parameter-f
@@ -1164,6 +1156,14 @@ is not buffer local."
                      (setq jmt-f jmt-value-tag-name-f
                            jmt-p jmt-inline-tag-parameter-f; (if any)
                            jmt-q jmt-inline-tag-parameter-f))
+
+                    ((or (string= tag-name "code")
+                         (string= tag-name "index")
+                         (string= tag-name "literal")
+                         (string= tag-name "summary"))
+                     (setq jmt-f jmt-inline-tag-name-f
+                           jmt-p jmt-inline-rendered-parameter-f
+                           jmt-q jmt-inline-tag-parameter-f)); (if any)
 
                     (t; All the rest.
                      (setq jmt-f jmt-inline-tag-name-f
