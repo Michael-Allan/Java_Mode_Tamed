@@ -1,4 +1,9 @@
-;; The definition of `java-mode-tamed` - a tamer, more controllable Java mode.  -*- lexical-binding: t; -*-
+;; Java mode tamed.  -*- lexical-binding: t; -*-
+;;
+;; This is the definition of Java mode tamed - a tamer, more controllable Java mode.  Java mode tamed
+;; is a major mode that gives the user more control over the basic Java mode that comes bundled with
+;; Emacs, especially in regard to its syntax highlighting.
+;;
 ;;
 ;; USAGE
 ;; ─────
@@ -15,7 +20,7 @@
 ;;
 ;; CUSTOMIZATION
 ;; ─────────────
-;;   For the customizeable faces, see their `defface` definitions further below.
+;;   For the faces that may be customized, see the `defface` definitions further below.
 ;;
 ;;
 ;; TEXT PROPERTIES
