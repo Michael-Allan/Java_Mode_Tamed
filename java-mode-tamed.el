@@ -276,8 +276,8 @@ The face for the proper identifier of a Javadoc inline tag."
 (defface jmt-inline-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for a parameter of a Javadoc inline tag, or attribute of an HTML tag.
-See also subfaces ‘jmt-Javadoc-link-label’ and ‘jmt-inline-rendered-parameter’.
-And for block tags, see ‘jmt-block-tag-parameter’."
+See also subface ‘jmt-inline-rendered-parameter’. And for block tags,
+see ‘jmt-block-tag-parameter’."
   :group 'java-mode-tamed)
 
 (defconst jmt-inline-tag-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-inline-tag-parameter))
@@ -346,15 +346,6 @@ e.g. as opposed to annotation form."
       (string= s "abstract")
       (string= s "protected")
       (string= s "srictfp")))
-
-
-
-(defface jmt-Javadoc-link-label; [NDF, RF]
-  `((t . (:inherit jmt-inline-rendered-parameter))) "\
-The face for the rendered label of a Javadoc `link` or `linkplain` tag."
-  :group 'java-mode-tamed)
-
-(defconst jmt-Javadoc-link-label-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-link-label))
 
 
 
@@ -1167,7 +1158,7 @@ is not buffer local."
                          (string= tag-name "linkplain"))
                      (setq jmt-f jmt-inline-tag-name-f
                            jmt-p jmt-inline-tag-parameter-f
-                           jmt-q jmt-Javadoc-link-label-f))
+                           jmt-q jmt-inline-rendered-parameter-f))
 
                     ((string= tag-name "value")
                      (setq jmt-f jmt-value-tag-name-f
