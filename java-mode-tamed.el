@@ -358,7 +358,7 @@ The face for the rendered label of a Javadoc `link` or `linkplain` tag."
 
 
 
-(defface jmt-Javadoc-outer-delimiter; [LF, RF]
+(defface jmt-Javadoc-outer-delimiter; [CI]
   `((t . (:inherit font-lock-doc-face))) "\
 The face for the outermost delimiters `/**` and `*/` that between them
 contain a Javadoc comment, and for the left-marginal asterisks `*`
@@ -1108,7 +1108,7 @@ is not buffer local."
                            (not (eq 'font-lock-doc-face (get-text-property (1- p) 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-Javadoc-outer-delimiter t)); [QTF]
+    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF, QTF]
 
 
    (cons; Reface each Javadoc left-marginal delimiter `*` using face `jmt-Javadoc-outer-delimiter`.
@@ -1118,7 +1118,7 @@ is not buffer local."
           (when (eq 'font-lock-doc-face (get-text-property (match-beginning 1) 'face))
             (throw 'to-reface t)))
         nil))
-    '(1 'jmt-Javadoc-outer-delimiter t)); [QTF]
+    '(1 'jmt-Javadoc-outer-delimiter prepend)); [PDF, QTF]
 
 
    (cons; Reface each Javadoc outermost delimiter `*/` using face `jmt-Javadoc-outer-delimiter`.
@@ -1132,7 +1132,7 @@ is not buffer local."
                            (not (eq 'font-lock-doc-face (get-text-property p 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-Javadoc-outer-delimiter t)); [QTF]
+    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF, QTF]
 
 
    ;; Inline tag
@@ -1669,7 +1669,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
                    jmt-annotation-string-delimiter
-                   jmt-Javadoc-outer-delimiter
                    jmt-string-delimiter)))
 
     ;; Apply monkey patches
@@ -1815,8 +1814,8 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   BUG  This code is incorrect.
 ;;
 ;;   CI · Conservative inheritance.  This face inherits from `font-lock-doc-face` only to preserve
-;;        (in default of user action) the original text facing.  Otherwise it need not, because never
-;;        is it used as a replacement face; always it is prepended to the original face. [PDF, RF]
+;;        the original appearance of the fontified text in default of user action to change it,
+;;        and not because it is a replacement face; in fact, it is a prepended face. [PDF, RF]
 ;;
 ;;  ←CW · Backward across commentary and whitespace.
 ;;
@@ -1852,8 +1851,10 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   L2U  Level-two highlighting is untamed.  ‘L2U’ marks code that enforces the fact and code
 ;;        that depends on it.
 ;;
-;;   LF · `c-literal-faces`: Any replacement face [RF] for a face listed in `c-literal-faces`
-;;        must itself be appended to that list.
+;;   LF · `c-literal-faces`: Any replacement face of a face listed in `c-literal-faces` must itself
+;;        be appended to that list.  This applies only to replacement faces, not to prepended faces;
+;;        all tests against `c-literal-faces` are done using `c-got-face-at`, which knows how to deal
+;;        with prepended faces. [PDF, RF]
 ;;
 ;;   MC · Method call.  See `MethodInvocation` at
 ;;        `https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12`.
@@ -1887,8 +1888,10 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   P ·· Section *Package name* itself.
 ;;
 ;;   PDF  Prepending to the documentation face.  In order to duplicate the behaviour of Java mode
-;;        (see `jmt-is-Java-mode-tag-faced`), the face of a Javadoc tag must not simply override
-;;        the `font-lock-doc-face` of the surrounding Javadoc comment, but rather prepend to it.
+;;        (e.g. see `jmt-is-Java-mode-tag-faced`), a special face applied within a Javadoc comment
+;;        (e.g. to a Javadoc tag) must not simply override the `font-lock-doc-face` of the surrounding
+;;        comment, but rather prepend to it.  E.g. see `prepend` at
+;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html`.
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
