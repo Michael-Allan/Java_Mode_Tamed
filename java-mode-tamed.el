@@ -600,7 +600,8 @@ posed to a type reference.  Customize it to better distinguish between the two."
 (defface jmt-param-tag-parameter
   `((t . (:inherit jmt-block-tag-parameter))) "\
 The face for the parameter-name parameter of a Javadoc `param` tag.
-See also subface ‘jmt-type-param-tag-parameter’."
+An exception applies to type parameters; for those, see instead
+‘jmt-type-param-tag-parameter’."
   :group 'java-mode-tamed)
 
 
@@ -1647,9 +1648,13 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 
 
-(defface jmt-type-param-tag-parameter
-  `((t . (:inherit jmt-param-tag-parameter))) "\
+(defface jmt-type-param-tag-parameter; [NDF, RF]
+  `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for the identifier of a type parameter in a Javadoc `param` tag."
+  ;; Java mode has misfaces them as HTML tags (they have the same delimiters).  Therefore this face
+  ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
+  ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
+  ;; would be to repair Java mode’s error in order to elimate this complication. [BUG]
   :group 'java-mode-tamed)
 
 
