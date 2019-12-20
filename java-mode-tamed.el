@@ -1,6 +1,6 @@
-;; Java mode tamed.  -*- lexical-binding: t; -*-
+;; Java Mode Tamed.  -*- lexical-binding: t; -*-
 ;;
-;; This is the definition of Java mode tamed - a tamer, more controllable Java mode.  Java mode tamed
+;; This is the definition of Java Mode Tamed - a tamer, more controllable Java mode.  Java Mode Tamed
 ;; is a major mode that gives the user more control over the basic Java mode that comes bundled with
 ;; Emacs, especially in regard to its syntax highlighting.
 ;;
@@ -27,7 +27,7 @@
 ;; ───────────────
 ;;   jmt-stabilized
 ;;       Marks Java type names and type parameter identifiers whose facing is stabilized
-;;       by Java mode tamed.  Blocks the underlying code (of Java mode) from overriding the
+;;       by Java Mode Tamed.  Blocks the underlying code (of Java mode) from overriding the
 ;;       `face` properties of these by its own mechanisms, outside of Font Lock that is. [SF]
 ;;
 ;;
@@ -186,7 +186,7 @@ RANGE is a cons cell."
         ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L16]
         ;;; Reproduce there by inserting a space before identifier `T`, then undoing the insertion.
         ;;; Note that the error report interrupts JIT Lock.  This causes a visible flash of misfaced text
-        ;;; when running under Java mode tamed.
+        ;;; when running under Java Mode Tamed.
 
 
 
@@ -566,7 +566,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
      (while; Searching the list, fontifier by fontifier.
          (progn
            (if (equal (car k) '(eval list "\\<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face))
-               ;; Dud fontifier: works under Java mode, fails under Java mode tamed unless
+               ;; Dud fontifier: works under Java mode, fails under Java Mode Tamed unless
                ;; changed in two places `"\\_<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face t`.
                (progn;                    1 ↑                                           2 ↑
                  ;; Moreover its pattern does not cover the complete, valid form of annotation.
@@ -1725,7 +1725,7 @@ The face for the proper identifier `value` of a Javadoc value tag."
 
 (define-derived-mode java-mode-tamed java-mode
   "Java" "\
-Java mode tamed - A tamer, more controllable Java mode.
+Java Mode Tamed - A tamer, more controllable Java mode.
       Home page URL ‘http://reluk.ca/project/Java/Emacs/’
 User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el’"
   :group 'java-mode-tamed
