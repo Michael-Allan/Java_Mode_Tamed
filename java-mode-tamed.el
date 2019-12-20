@@ -408,6 +408,18 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
 
 
 
+(defun jmt-keyword-face (keyword beg end)
+  "Returns the face (symbol) proper to the given Java keyword (string),
+given to be present in the buffer from position BEG (inclusive number)
+to END (exclusive number).  Leaves point indeterminate."
+  (let ((f (assoc keyword jmt-keyword-face-alist)))
+    (if (not f) 'jmt-principal-keyword; Returning either a default face,
+      (setq f (cdr f))                ; or, from `jmt-keyword-face-alist`,
+      (if (not (functionp f)) f       ; a face either directly named
+        (funcall f beg end)))))       ; or given by a named function.
+
+
+
 (defconst jmt-keyword-face-alist
   '(
     ;; Frequent
@@ -470,11 +482,10 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
     ("transient"    .     jmt-qualifier-keyword)
     ("volatile"     .     jmt-qualifier-keyword)
     ) "\
-A list of cons cells of Java keywords (string @ car) each with the symbol
-of its proper face (@ cdr).  If the symbol instead points to a function,
-then the function has the form of ‘jmt-keyword-face-class’ and returns
-a face symbol.  The list excludes all keywords that Java mode
-does not face with ‘font-lock-keyword-face’.")
+A list of cons cells of Java keywords (string @ car) each with the name
+(symbol @ cdr) of either its proper face, or a function in the form
+of ‘jmt-keyword-face-class’ that returns a face symbol.  The list excludes
+keywords that Java mode does not face with ‘font-lock-keyword-face’.")
 
 
 
@@ -785,20 +796,15 @@ is not buffer local."
    ;; ═══════
 
    (cons; Reface each Java keyword as defined in `jmt-keyword-face-alist`.
-    (let (f match-beg match-end)
+    (let (match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
         (catch 'to-reface
           (while (< match-beg limit)
             (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
             (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
-              (setq f (assoc (buffer-substring-no-properties match-beg match-end)
-                             jmt-keyword-face-alist))
-              (set 'jmt-f
-                   (if (not f) 'jmt-principal-keyword    ; Setting either a default face,
-                     (setq f (cdr f))                    ; or, from `jmt-keyword-face-alist`,
-                     (if (not (functionp f)) f           ; a face either directly named
-                       (funcall f match-beg match-end)))); or given by a named function.
+              (set 'jmt-f (jmt-keyword-face
+                           (buffer-substring-no-properties match-beg match-end) match-beg match-end))
               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
               (throw 'to-reface t))
             (setq match-beg match-end))
@@ -807,15 +813,17 @@ is not buffer local."
 
 
    (cons; Fontify each `assert` keyword that was misfaced by Java mode, or incorrectly left unfaced.
-    (lambda (limit)
-      (setq jmt-f (assoc "assert" jmt-keyword-face-alist))
-      (catch 'to-reface
-        (while (re-search-forward "\\<assert\\>" limit t)
-          (let ((f (get-text-property (match-beginning 0) 'face)))
+    (let (f match-beg)
+      (lambda (limit)
+        (catch 'to-reface
+          (while (re-search-forward "\\<assert\\>" limit t)
+            (setq match-beg (match-beginning 0)
+                  f (get-text-property match-beg 'face))
             (when (or (eq f nil); Only identifiers left unfaced or misfaced as type names have been seen.
                       (jmt-is-Java-mode-type-face f)); [T↓]
-              (throw 'to-reface t))))
-        nil))
+              (set 'jmt-f (jmt-keyword-face "assert" match-beg (match-end 0)))
+              (throw 'to-reface t)))
+          nil)))
     '(0 jmt-f t))
 
 
@@ -1313,31 +1321,31 @@ is not buffer local."
            (cond
             ((string= tag-name "param")
              (when (looking-at (concat "\\s-+<\\s-*\\([" jmt-name-character-set "]+\\).*$"))
-               (setq jmt-f 'jmt-type-param-tag-parameter)
+               (set 'jmt-f 'jmt-type-param-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t))
              (when (looking-at (concat "\\s-+\\([" jmt-name-character-set "]+\\).*$"))
-               (setq jmt-f 'jmt-param-tag-parameter)
+               (set 'jmt-f 'jmt-param-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((string= tag-name "see")
              (when (looking-at "\\s-+\\([^<\n].*\\)$"); Excepting an HTML tag.
-               (setq jmt-f 'jmt-block-tag-parameter)
+               (set 'jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((or (string= tag-name "throws")
                  (string= tag-name "exception"))
              (when (looking-at (concat "\\s-+\\([" jmt-name-character-set "]+\\).*$"))
-               (setq jmt-f 'jmt-throws-tag-parameter)
+               (set 'jmt-f 'jmt-throws-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((or (string= tag-name "uses")
                  (string= tag-name "provides"))
              (when (looking-at "\\s-+\\([^[:space:]\n]+\\).*$")
-               (setq jmt-f 'jmt-block-tag-parameter)
+               (set 'jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
@@ -1345,20 +1353,20 @@ is not buffer local."
                  (string= tag-name "author")
                  (string= tag-name "version"))
              (when (looking-at "\\s-+\\([^[:space:]\n].+\\)$")
-               (setq jmt-f 'jmt-block-tag-parameter)
+               (set 'jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((string= tag-name "serial")
              (when (looking-at "\\s-+\\(\\(?:ex\\|in\\)clude\\)\\s-*$")
-               (setq jmt-f 'jmt-block-tag-parameter)
+               (set 'jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((string= tag-name "serialField")
              (when (looking-at (concat "\\s-+\\([" jmt-name-character-set
                                        "]+\\s-+[" jmt-name-character-set "]+\\).*$"))
-               (setq jmt-f 'jmt-block-tag-parameter)
+               (set 'jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t))))
            nil))
