@@ -819,8 +819,10 @@ is not buffer local."
           (while (re-search-forward "\\<assert\\>" limit t)
             (setq match-beg (match-beginning 0)
                   f (get-text-property match-beg 'face))
-            (when (or (eq f nil); Only identifiers left unfaced or misfaced as type names have been seen.
-                      (jmt-is-Java-mode-type-face f)); [T↓]
+            (when (or (eq f nil) (jmt-is-Java-mode-type-face f)); [T↓]
+                ;; Only identifiers left unfaced or misfaced as type names have been seen.  Unfaced is
+                ;; the more common.  For an instance of misfacing, see `assert stators.getClass()`. [AM]
+                ;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
               (set 'jmt-f (jmt-keyword-face "assert" match-beg (match-end 0)))
               (throw 'to-reface t)))
           nil)))
@@ -1487,7 +1489,7 @@ is not buffer local."
                    (when (bobp) (throw 'is-method-call nil))
                    (when (char-equal (char-before) ?.); Always the misfaced identifier directly
                      ;; follows a ‘.’, which excludes the possibility of it being a definition.
-                     ;; See for instance the sequence `assert stators.getClass()`.
+                     ;; See for instance the sequence `assert stators.getClass()`. [AM]
                      ;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
                      (goto-char match-end)
                      (throw 'to-fontify 'default))))
@@ -1882,6 +1884,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   A ·· Section *Annotation* of `jmt-specific-fontifiers-3`.
 ;;
 ;;  ↑A ·· Code that must execute after section *Annotation*.
+;;
+;;   AM · This marks two misfacings that likely are related.  See the `assert` keyword section
+;;        at `http://reluk.ca/project/Java/Emacs/action_plan.brec`.
 ;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
