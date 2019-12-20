@@ -1836,6 +1836,13 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
   ;; Initialize the buffer
   ;; ═════════════════════
 
+  ;; Cache the decoration level in `jmt--is-level-3`, q.v.
+  ;; ──────────────────────────
+  (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
+    (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
+
+  ;; Tell Java mode of crucial changes
+  ;; ─────────────────────────────────
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
@@ -1852,9 +1859,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
              'jmt-type-definition
              'jmt-type-parameter-declaration
              'jmt-type-reference)))
-  (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
-    (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
+  ;; Tell Font Lock how to fontify this buffer
+  ;; ─────────────────────────────────────────
   (make-local-variable 'font-lock-extra-managed-props); With ‘the same value’ it ‘previously had’.
   (push 'jmt-stabilized font-lock-extra-managed-props)
 
