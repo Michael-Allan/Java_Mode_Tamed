@@ -1,8 +1,7 @@
-;; Java Mode Tamed.  -*- lexical-binding: t; -*-
+;; Java Mode Tamed  -*- lexical-binding: t; -*-
 ;;
-;; This is the definition of Java Mode Tamed - a tamer, more controllable Java mode.  Java Mode Tamed
-;; is a major mode that gives the user more control over the basic Java mode that comes bundled with
-;; Emacs, especially in regard to its syntax highlighting.
+;; This is the definition of Java Mode Tamed, a derived major mode designed to give the user more control
+;; over the Java mode that comes bundled with Emacs, especially in regard to syntax highlighting.
 ;;
 ;;
 ;; USAGE
@@ -1727,8 +1726,11 @@ The face for the proper identifier `value` of a Javadoc value tag."
 
 (define-derived-mode java-mode-tamed java-mode
   "Java" "\
-Java Mode Tamed - A tamer, more controllable Java mode.
-      Home page URL ‘http://reluk.ca/project/Java/Emacs/’
+This is Java Mode Tamed, a derived major mode designed to give the user
+more control over the Java mode that comes bundled with Emacs, especially
+in regard to syntax highlighting.
+
+        Home page URL ‘http://reluk.ca/project/Java/Emacs/’
 User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el’"
   :group 'java-mode-tamed
 
