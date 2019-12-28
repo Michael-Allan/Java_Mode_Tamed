@@ -19,7 +19,8 @@
 ;;
 ;; CUSTOMIZATION
 ;; ─────────────
-;;   For the faces that may be customized, see the `defface` definitions further below.
+;;   For a list of faces that may be customized, use `M-x customize-group <RET> java-mode-tamed <RET>`.
+;;   Or search through the `defface` definitions further below.
 ;;
 ;;
 ;; TEXT PROPERTIES
@@ -59,8 +60,22 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
+(defgroup delimiter-faces nil "\
+Faces for Java separators and other delimiters."
+  :group 'java-mode-tamed
+  :prefix "jmt-")
+
+
+
+(defgroup javadoc-faces nil "\
+Faces for Java documentation comments."
+  :group 'java-mode-tamed
+  :prefix "jmt-")
+
+
+
 (defgroup java-mode-tamed nil "\
-A tamer, more controllable Java mode"
+Customizable items of Java Mode Tamed."
   :group 'languages :group 'faces
   :prefix "jmt-"
   :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
@@ -70,7 +85,7 @@ A tamer, more controllable Java mode"
 (defface jmt-angle-bracket
   `((t . (:inherit jmt-bracket))) "\
 The face for an angle bracket, ‘<’ or ‘>’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -80,14 +95,14 @@ The face for the ‘@’, ‘(’ and ‘)’ delimiters of annotation.
 Customize it to better distinguish the delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
 (defface jmt-annotation-mark; [RF]
   `((t . (:inherit jmt-annotation-delimiter))) "\
 The face for the ‘@’ symbol denoting annotation."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -114,7 +129,7 @@ with your other annotation faces."
 The face for a string delimiter in an annotation qualifier.  It defaults
 to ‘jmt-string-delimiter’; customize it if the default fits poorly with your
 other annotation faces."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -130,7 +145,7 @@ of the preceding type name."
 (defface jmt-block-tag-name; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag-name))) "\
 The face for the proper identifier of a Javadoc block tag."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-block-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-block-tag-name))
 
@@ -140,7 +155,7 @@ The face for the proper identifier of a Javadoc block tag."
   `((t . (:inherit font-lock-doc-face))) "\
 The face for a non-descriptive parameter of a Javadoc block tag.
 See also subfaces ‘jmt-param-tag-parameter’ and ‘jmt-throws-tag-parameter’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 
 
@@ -148,7 +163,7 @@ See also subfaces ‘jmt-param-tag-parameter’ and ‘jmt-throws-tag-parameter�
   `((t . (:inherit jmt-principal-keyword))) "\
 The face for the keyword of a formal Java declaration in the preamble
 of a compilation unit."
-  :group 'java-mode-tamed)
+  :group 'keyword-faces)
 
 
 
@@ -156,7 +171,7 @@ of a compilation unit."
   `((t . (:inherit jmt-delimiter))) "\
 The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’,
 ‘jmt-round-bracket’ and ‘jmt-square-bracket’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -192,7 +207,7 @@ RANGE is a cons cell."
 (defface jmt-curly-bracket
   `((t . (:inherit jmt-bracket))) "\
 The face for a curly bracket, ‘{’ or ‘}’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -203,7 +218,7 @@ more prominent or less prominent, for example.  See also subfaces ‘jmt-bracket
 ‘jmt-separator’.  And for delimiters that *are* already faced by Java mode,
 see ‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’, ‘jmt-string-delimiter’
 and ‘font-lock-comment-delimiter-face’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -215,7 +230,7 @@ and ‘font-lock-comment-delimiter-face’."
   `((t . (:inherit jmt-principal-keyword))) "\
 The face for the keyword of an operator or other element
 of a formal Java expression."
-  :group 'java-mode-tamed)
+  :group 'keyword-faces)
 
 
 
@@ -234,7 +249,7 @@ by the underlying (Java-mode) code."
   `((t . (:inherit jmt-HTML-tag-name))) "\
 The face for the tag name in the end tag of an HTML element
 in a Javadoc comment."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-HTML-end-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-HTML-end-tag-name))
 
@@ -244,7 +259,7 @@ in a Javadoc comment."
   `((t . (:inherit jmt-HTML-tag-name))) "\
 The face for the tag name in the start tag of an HTML element
 in a Javadoc comment."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-HTML-start-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-HTML-start-tag-name))
 
@@ -254,7 +269,7 @@ in a Javadoc comment."
   `((t . (:inherit jmt-Javadoc-tag-name))) "\
 The face for the tag name of an HTML element in a Javadoc comment.
 See also subfaces ‘jmt-HTML-start-tag-name’ and ‘jmt-HTML-end-tag-name’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 
 
@@ -262,7 +277,7 @@ See also subfaces ‘jmt-HTML-start-tag-name’ and ‘jmt-HTML-end-tag-name’.
   `((t . (:inherit jmt-inline-tag-parameter))) "\
 The face for a rendered parameter of a Javadoc inline tag; one that appears
 more-or-less literally in the resulting Javadocs, that is."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-inline-rendered-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-inline-rendered-parameter))
 
@@ -271,7 +286,7 @@ more-or-less literally in the resulting Javadocs, that is."
 (defface jmt-inline-tag-name; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag-name))) "\
 The face for the proper identifier of a Javadoc inline tag."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-inline-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-inline-tag-name))
 
@@ -282,7 +297,7 @@ The face for the proper identifier of a Javadoc inline tag."
 The face for a parameter of a Javadoc inline tag, or attribute of an HTML tag.
 See also subface ‘jmt-inline-rendered-parameter’. And for block tags,
 see ‘jmt-block-tag-parameter’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-inline-tag-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-inline-tag-parameter))
 
@@ -360,7 +375,7 @@ contain a Javadoc comment, and for the left-marginal asterisks `*`
 that may lead any of its lines.  Customize it to better distinguish
 the delimiters from the content they delimit; making them more prominent
 or less prominent, for example."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces :group 'javadoc-faces)
 
 
 
@@ -371,7 +386,7 @@ It inherits from ‘font-lock-constant-face’; customize it to distinguish
 Javadoc tags from other constructs that use ‘font-lock-constant-face’.
 See also subfaces ‘jmt-Javadoc-tag-delimiter’, ‘jmt-Javadoc-tag-name’
 and  ‘jmt-inline-tag-parameter’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 
 
@@ -382,7 +397,7 @@ and the ‘<’, ‘</’, ‘/>’ and ‘>’ delimiters of an HTML tag.
 Customize it to better distinguish the delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also subface ‘jmt-Javadoc-tag-mark’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-Javadoc-tag-delimiter-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-delimiter))
 
@@ -391,7 +406,7 @@ See also subface ‘jmt-Javadoc-tag-mark’."
 (defface jmt-Javadoc-tag-mark; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag-delimiter))) "\
 The face for the ‘@’ symbol denoting a Javadoc tag."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-Javadoc-tag-mark-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-mark))
 
@@ -401,7 +416,7 @@ The face for the ‘@’ symbol denoting a Javadoc tag."
   `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
 ‘jmt-block-tag-name’, ‘jmt-inline-tag-name’ and ‘jmt-HTML-tag-name’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-Javadoc-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-name))
 
@@ -612,7 +627,7 @@ posed to a type reference.  Customize it to better distinguish between the two."
 The face for the parameter-name parameter of a Javadoc `param` tag.
 An exception applies to type parameters; for those, see instead
 ‘jmt-type-param-tag-parameter’."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 
 
@@ -671,7 +686,7 @@ for the function’s return type, making it a *generic* return type.  May move p
 The face for the principal keyword of a definition.
 Cf. ‘jmt-qualifier-keyword’.  See also subfaces
 ‘jmt-boilerplate-keyword’ and ‘jmt-expression-keyword’."
-  :group 'java-mode-tamed)
+  :group 'keyword-faces)
 
 
 
@@ -683,21 +698,21 @@ Cf. ‘jmt-qualifier-keyword’.  See also subfaces
   `((t . (:inherit font-lock-keyword-face))) "\
 The face for a secondary keyword in a definition.
 Cf. ‘jmt-principal-keyword’."
-  :group 'java-mode-tamed)
+  :group 'keyword-faces)
 
 
 
 (defface jmt-round-bracket
   `((t . (:inherit jmt-bracket))) "\
 The face for a round bracket, ‘(’ or ‘)’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
 (defface jmt-separator
   `((t . (:inherit jmt-delimiter))) "\
 The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot ‘.’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -1613,14 +1628,14 @@ is not buffer local."
           nil)))
     '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QFS, SF]
   "\
-Elements of ‘jmt-new-fontifiers-3’ which are specific to ‘java-mode-tamed’.")
+Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
 
 
 
 (defface jmt-square-bracket
   `((t . (:inherit jmt-bracket))) "\
 The face for a square bracket, ‘[’ or ‘]’."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -1630,7 +1645,7 @@ The face for a string (\") or character (\\=') delimiter.
 Customize it to better distinguish the delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
-  :group 'java-mode-tamed)
+  :group 'delimiter-faces)
 
 
 
@@ -1643,10 +1658,10 @@ The face for the type-reference parameter of a Javadoc `throws` tag."
 
 (defface jmt--type; [MDF, RF, UF]
   `((t . (:inherit jmt-type-reference))) "\
-A signalling face set via ‘jmt--c/put-type-face’.  Do not customize it;
+A signalling face set via ‘jmt--c/put-type-face’.  Do not customize this face;
 it is for internal use only.  Rather leave it to inherit the attributes
 of ‘jmt-type-reference’."
-  :group 'java-mode-tamed)
+  :group 'restricted)
 
 
 
@@ -1677,7 +1692,7 @@ The face for the identifier of a type parameter in a Javadoc `param` tag."
   ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
   ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
   ;; would be to repair Java mode’s error in order to elimate this complication. [BUG]
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 
 
@@ -1693,7 +1708,7 @@ and ‘jmt-type-parameter-declaration’."
 (defun jmt-untamed-face (face)
   "Returns FACE itself if untamed, else the untamed ancestral face
 from which ultimately it inherits.  Necessarily every face defined
-by ‘java-mode-tamed’ (tamed face) ultimately inherits from a face
+by Java Mode Tamed (tamed face) ultimately inherits from a face
 defined elsewhere (untamed ancestral face)."
   (catch 'untamed-face
     (while (string-prefix-p "jmt-" (symbol-name face))
@@ -1707,9 +1722,23 @@ defined elsewhere (untamed ancestral face)."
 (defface jmt-value-tag-name; [NDF, RF]
   `((t . (:inherit jmt-inline-tag-name))) "\
 The face for the proper identifier `value` of a Javadoc value tag."
-  :group 'java-mode-tamed)
+  :group 'javadoc-faces)
 
 (defconst jmt-value-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-value-tag-name))
+
+
+
+(defgroup keyword-faces nil "\
+Faces for Java keywords."
+  :group 'java-mode-tamed
+  :prefix "jmt-")
+
+
+
+(defgroup restricted nil "\
+Normally these items should not be customized."
+  :group 'java-mode-tamed
+  :prefix "jmt--")
 
 
 
