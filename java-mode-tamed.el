@@ -1,7 +1,7 @@
 ;; Java Mode Tamed  -*- lexical-binding: t; -*-
 ;;
 ;; This is the definition of Java Mode Tamed, a derived major mode designed to give the user more control
-;; over the Java mode that comes bundled with Emacs, especially in regard to syntax highlighting.
+;; over the Java mode that comes bundled with Emacs, particularly in regard to syntax highlighting.
 ;;
 ;;
 ;; USAGE
@@ -26,9 +26,9 @@
 ;; TEXT PROPERTIES
 ;; ───────────────
 ;;   jmt-stabilized
-;;       Marks Java type names and type parameter identifiers whose facing is stabilized
-;;       by Java Mode Tamed.  Blocks the underlying code (of Java mode) from overriding the
-;;       `face` properties of these by its own mechanisms, outside of Font Lock that is. [SF]
+;;       Marks Java type names and type parameter identifiers in the buffer whose facing is stabilized
+;;       by Java Mode Tamed.  Effectively blocks the underlying code (of Java mode) from overriding it
+;;       by mechanisms of its own, outside of Font Lock that is. [SF]
 ;;
 ;;
 ;; NOTES  (see at bottom)
@@ -1756,7 +1756,7 @@ Normally these items should not be customized."
 (define-derived-mode java-mode-tamed java-mode
   "Java" "\
 This is Java Mode Tamed, a derived major mode designed to give the user
-more control over the Java mode that comes bundled with Emacs, especially
+more control over the Java mode that comes bundled with Emacs, particularly
 in regard to syntax highlighting.
 
         Home page URL ‘http://reluk.ca/project/Java/Emacs/’
