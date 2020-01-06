@@ -6,10 +6,13 @@
 ;;
 ;; USAGE
 ;; ─────
-;;   In your initialization file:
+;;   1. Put a copy of this file on your load path.
+;;      https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
 ;;
-;;      (require 'java-mode-tamed)
-;;      (add-to-list 'auto-mode-alist '("\\.java\\'" . java-mode-tamed))
+;;   2. Add the following to your initialization file.
+;;
+;;       (autoload 'java-mode-tamed "java-mode-tamed" nil t)
+;;       (set 'auto-mode-alist (cons (cons "\\.java\\'" 'java-mode-tamed) auto-mode-alist))
 ;;
 ;;   Working example:
 ;;
@@ -2063,4 +2066,4 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;; Local Variables:
 ;; byte-compile-warnings: (not make-local)
 ;; End:
-                                       ;;; Copyright © 2019 Michael Allan and contributors.  Licence MIT.
+                                  ;;; Copyright © 2019-2020 Michael Allan and contributors.  Licence MIT.
