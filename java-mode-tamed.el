@@ -42,9 +42,6 @@
   (require 'cc-mode)
   (require 'cl-lib))
 
-(defvar c-maybe-decl-faces); [FV]
-(defvar jmt-value-tag-name-f)
-
 
 
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -52,9 +49,18 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
+(defvar jmt-keyword-face-alist); [FV]
+
+
+
 (defun jmt-make-Javadoc-tag-facing (f)
   "Makes a face property for a Javadoc tag using F (face symbol) as a base."
   (list f 'font-lock-doc-face)); [PDF]
+
+
+
+(defvar jmt-name-character-set); [FV]
+(defvar jmt-value-tag-name-f)
 
 
 
@@ -189,6 +195,7 @@ RANGE is a cons cell."
   ;; outside of Font Lock, which puts the two in an endless tug of war.
   (let ((beg (car range))
         (end (cdr range)))
+    (defvar jmt--is-level-3); [FV]
     (condition-case _x
         (if (and jmt--is-level-3
                  (eq major-mode 'java-mode-tamed))
@@ -572,6 +579,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
 (defun jmt-new-fontifiers-3 ()
   "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
+  (defvar jmt-specific-fontifiers-3); [FV]
   (nconc
 
    ;; Underlying Java-mode fontifiers, lightly modified
@@ -1879,6 +1887,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
   ;; Tell Java mode of crucial changes
   ;; ─────────────────────────────────
+  (defvar c-maybe-decl-faces); [FV]
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
