@@ -87,6 +87,11 @@ Faces for Java documentation comments."
 
 
 
+(declare-function java-font-lock-keywords-2 "cc-fonts" ()); [FD]
+(declare-function java-font-lock-keywords-3 "cc-fonts" ())
+
+
+
 (defgroup java-mode-tamed nil "\
 Customizable items of Java Mode Tamed."
   :group 'languages :group 'faces
@@ -1957,6 +1962,8 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        of a function defined by the macro `defun`.
 ;;        https://www.gnu.org/software/emacs/manual/html_node/emacs/Defuns.html
 ;;
+;;   FD · Suppressing compiler warnings, ‘the following functions might not be defined at runtime…’.
+;;
 ;;   FLC  `font-lock-constant-face`: the Java-mode code refers to `font-lock-constant-face` indirectly
 ;;        by way of variables `c-constant-face-name`, `c-doc-markup-face-name`, `c-label-face-name`
 ;;        and `c-reference-face-name`.
@@ -2057,7 +2064,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;        For a source-launch file that has no `.java` extension, if its shebang uses `-S` instead of
 ;;        `--split-string`, then it would have to omit the space that typically follows.  If it had the
-;;        following shebang, for instance, then automode would fail:
+;;        following shebang, for instance, then auto-mode would fail:
 ;;
 ;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 14
 ;;
