@@ -353,7 +353,7 @@ been set on a Javadoc tag by the underlying (Java-mode) code."
 (defun jmt-is-Java-mode-type-face (f)
   "Answers whether F (face symbol) is a type face which might have been set
 by the underlying (Java-mode) code."
-  (or (eq f 'jmt--type); This face set by Java mode via `jmt--c/put-type-face`;
+  (or (eq f 'jmt--type); This face is set by Java mode via `jmt--c/put-type-face`;
       (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
 
 
@@ -674,7 +674,7 @@ function must return t on success, nil on failure."; [NW]
     (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
   (let ((original-was-compiled (byte-code-function-p (symbol-function function-symbol))))
     (eval-buffer); Redefining the function to the patched version.
-;;; (delete-region point-min point-max); Removing the definition, in case it speeds later patching.
+;;; (delete-region point-min point-max); Removing the definition, in hope it speeds later patching.
 ;;;;;; Or might the deletion time exceed the time saved?
     (widen)
     (when original-was-compiled; Then recompile the redefined function.
@@ -2048,9 +2048,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
-;;   SF · Stuck face.  The use of text property `jmt-stabilized` may cause certain faces
-;;        to become stuck on occaision.  A viable workaround in the event would be to delete
-;;        and re-type the affected text, which tends to be short in length.
+;;   SF · Stuck face.  The use of text property `jmt-stabilized` may cause certain faces to become stuck
+;;        on occaision.  In the event of this, a workaround is to delete and re-type the affected text,
+;;        which tends to be short in length.
 ;;
 ;;   SI · Static import declaration.
 ;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-7.html#jls-7.5.3
