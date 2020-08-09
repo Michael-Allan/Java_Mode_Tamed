@@ -654,8 +654,9 @@ An exception applies to type parameters; for those, see instead
 (defun jmt--patch (source-file source-base-name function-symbol patch-function)
   "Called from within a temporary buffer, this function monkey patches
 the function FUNCTION-SYMBOL, originally from file SOURCE-FILE (a string,
-which has the given BASE-NAME), using the named PATCH-FUNCTION.  The patch
-function must return t on success, nil on failure."; [NW]
+which has the given BASE-NAME), using the named PATCH-FUNCTION.  PATCH-FUNCTION
+must return t on success, nil on failure.  Syntactically the configuration
+of the temporary buffer must be equivalent to that of Emacs Lisp mode."; [ELM]
   (unless (functionp function-symbol)
     (signal 'jmt-x `("No such function loaded" ,function-symbol)))
   (let ((load-file (symbol-file function-symbol)))
@@ -664,11 +665,11 @@ function must return t on success, nil on failure."; [NW]
                         ,function-symbol ,load-file ,source-file))))
   (goto-char (point-min))
   (unless (re-search-forward
-           (concat "^(defun\\s-+" (symbol-name function-symbol) "\\s-*(") nil t)
+           (concat "^(defun[[:space:]\n]+" (symbol-name function-symbol) "[[:space:]\n]*(") nil t)
     (signal 'jmt-x `("Function definition not found in source file"
                       ,function-symbol ,source-file)))
-  (narrow-to-region (match-beginning 0) (progn (end-of-defun) (point))); [EDM]
-    ;;; Narrowing the temporary patch buffer to the function definition alone.
+  (let ((beg (match-beginning 0))); Narrow the temporary buffer to the function definition alone:
+    (narrow-to-region beg (scan-lists beg 1 0)))
   (goto-char (point-min))
   (unless (funcall patch-function); Patching the definition.
     (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
@@ -1810,48 +1811,50 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                   source-base-name "cc-fonts")
             (unless source-file
               (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
-            (with-temp-buffer; [NW]
-              (insert-file-contents source-file)
+            (with-temp-buffer; [ELM]
+              (setq-local parse-sexp-ignore-comments t)
+              (with-syntax-table emacs-lisp-mode-syntax-table
+                (insert-file-contents source-file)
 
-              (jmt--patch
-               source-file source-base-name 'c-fontify-recorded-types-and-refs
-               (lambda ()
-                 (when (re-search-forward
-                        (concat "(c-put-font-lock-face (car elem) (cdr elem)\\s-*"; [NW]
-                                "'font-lock-type-face)")
-                        nil t)
-                   (replace-match "(jmt--c/put-type-face elem)" t t)
-                   t)))
+                (jmt--patch
+                 source-file source-base-name 'c-fontify-recorded-types-and-refs
+                 (lambda ()
+                   (when (re-search-forward
+                          (concat "(c-put-font-lock-face (car elem) (cdr elem)[[:space:]\n]*"
+                                  "'font-lock-type-face)")
+                          nil t)
+                     (replace-match "(jmt--c/put-type-face elem)" t t)
+                     t)))
 
-              (jmt--patch
-               source-file source-base-name 'c-font-lock-<>-arglists
-               (lambda ()
-                 (let (is-patched)
-                   (while (search-forward "(eq id-face" nil t)
-                     (replace-match "(jmt-faces-are-equivalent id-face" t t)
-                     (setq is-patched t))
-                   is-patched)))
+                (jmt--patch
+                 source-file source-base-name 'c-font-lock-<>-arglists
+                 (lambda ()
+                   (let (is-patched)
+                     (while (search-forward "(eq id-face" nil t)
+                       (replace-match "(jmt-faces-are-equivalent id-face" t t)
+                       (setq is-patched t))
+                     is-patched)))
 
-              (jmt--patch
-               source-file source-base-name 'c-font-lock-declarations
-               (lambda ()
-                 (when (re-search-forward
-                        (concat "(\\(eq\\) (get-text-property (point) 'face)\\s-*"; [NW]
-                                "'font-lock-keyword-face)")
-                        nil t)
-                   (replace-match "jmt-faces-are-equivalent" t t nil 1)
-                   t))))
+                (jmt--patch
+                 source-file source-base-name 'c-font-lock-declarations
+                 (lambda ()
+                   (when (re-search-forward
+                          (concat "(\\(eq\\) (get-text-property (point) 'face)[[:space:]\n]*"
+                                  "'font-lock-keyword-face)")
+                          nil t)
+                     (replace-match "jmt-faces-are-equivalent" t t nil 1)
+                     t)))))
 
-          ;;; (jmt--patch
-          ;;;  source-file source-base-name 'c-font-lock-labels
-          ;;;  (lambda ()
-          ;;;    (when (re-search-forward
-          ;;;           (concat "(\\(eq\\) (get-text-property (1- (point)) 'face)\\s-*"; [NW]
-          ;;;                   "c-label-face-name)"); [FLC]
-          ;;;           nil t)
-          ;;;      (replace-match "jmt-faces-are-equivalent" t t nil 1)
-          ;;;      t)))
-          ;;;;;; ‘This function is only used on decoration level 2’, ∴ no patch is needed. [L2U]
+            ;;; (jmt--patch
+            ;;;  source-file source-base-name 'c-font-lock-labels
+            ;;;  (lambda ()
+            ;;;    (when (re-search-forward
+            ;;;           (concat "(\\(eq\\) (get-text-property (1- (point)) 'face)[[:space:]\n]*"
+            ;;;                   "c-label-face-name)"); [FLC]
+            ;;;           nil t)
+            ;;;      (replace-match "jmt-faces-are-equivalent" t t nil 1)
+            ;;;      t)))))
+            ;;;;;; ‘This function is only used on decoration level 2’, ∴ no patch is needed. [L2U]
 
             ;; `cc-mode` functions
             ;; ───────────────────
@@ -1859,16 +1862,19 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                   source-base-name "cc-mode")
             (unless source-file
               (signal 'jmt-x `("No such source file on load path: `cc-mode.el`")))
-            (with-temp-buffer
-              (insert-file-contents source-file)
+            (with-temp-buffer; [ELM]
+              (setq-local parse-sexp-ignore-comments t)
+              (with-syntax-table emacs-lisp-mode-syntax-table
+                (insert-file-contents source-file)
 
-              (jmt--patch
-               source-file source-base-name 'c-before-change
-               (lambda (); Java mode uses the following list of faces for a `memq` test.
-                 (when (search-forward "'(font-lock-comment-face font-lock-string-face)" nil t)
-                   (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
-                   (insert " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
-                   t)))))
+                (jmt--patch
+                 source-file source-base-name 'c-before-change
+                 (lambda (); Java mode uses the following list of faces for a `memq` test.
+                   (when (search-forward "'(font-lock-comment-face font-lock-string-face)" nil t)
+                     (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
+                     (insert
+                      " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
+                     t))))))
 
           ;; Javadoc block tag fontifier
           ;; ───────────────────────────
@@ -1957,10 +1963,8 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   CW→  Forward across commentary and whitespace.
 ;;
-;;   EDM  Emacs ‘defun’, that is; a misnomer apt to cause confusion.  ‘defin’ would be better;
-;;        though (to compound the confusion) it happens to mean the same thing in the context
-;;        of a function defined by the macro `defun`.
-;;        https://www.gnu.org/software/emacs/manual/html_node/emacs/Defuns.html
+;;   ELM  The syntax-related code that directly follows the opening of the temporary buffer effects a
+;;        fast simulation of Emacs Lisp mode, faster presumeably than would a call to `emacs-lisp-mode`.
 ;;
 ;;   FD · Suppressing compiler warnings, ‘the following functions might not be defined at runtime…’.
 ;;
@@ -2017,9 +2021,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el?id=fd1b34bfba#n1490]
 ;;           A trace in the source of both references indicates that a ‘decl-spot’ is not something
 ;;        that would appear in a Javadoc comment.
-;;
-;;   NW · Newline characters have whitespace syntax in this (temporary) buffer, though in a proper
-;;        Java or Emacs Lisp buffer, they do not.
 ;;
 ;;   P↓ · Code that must execute before section *Package name*  of `jmt-specific-fontifiers-3`.
 ;;
