@@ -330,8 +330,7 @@ been set on a Javadoc tag by the underlying (Java-mode) code."
 (defun jmt-is-Java-mode-type-face (f)
   "Answers whether F (face symbol) is a type face which might have been set
 by the underlying (Java-mode) code."
-  (or (eq f 'jmt--type); This face is set by Java mode via `jmt--c/put-type-face`;
-      (eq f 'font-lock-type-face))); this (if it occurs at all) via other means.
+  (eq f 'font-lock-type-face)); Java mode alone sets this face.
 
 
 
@@ -1658,17 +1657,6 @@ The face for the type-reference parameter of a Javadoc `throws` tag."
 
 
 
-(defface jmt--type; [MDF, RF]
-  `((t . (:inherit jmt-type-reference))) "\
-A fallback face set via ‘jmt--c/put-type-face’.  Do not customize this face;
-it is for internal use only.  Rather leave it to inherit the attributes
-of ‘jmt-type-reference’.  Any type facing of Java Mode Tamed that gets undone
-by the underlying code of Java mode will fall back to this face, least likely
-to disturb the display."
-  :group 'restricted)
-
-
-
 (defface jmt-type-definition; [MDF, RF]
   `((t . (:inherit font-lock-type-face))) "\
 The face for the identifier of a class or interface in a type definition.
@@ -1803,17 +1791,11 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                 (jmt--patch
                  source-file source-base-name 'c-fontify-recorded-types-and-refs
                  (lambda ()
-                   (when (re-search-forward
-                          (concat "(c-put-font-lock-face (car elem) (cdr elem)[[:space:]\n]*"
-                                  "'font-lock-type-face)")
-                          nil t)
-                     (replace-match "(jmt--c/try-putting-face (car elem) (cdr elem) 'jmt--type)" t t)
-                       ;;; Before `jmt--type` even appears, `jmt-specific-fontifiers-3` will replace it
-                       ;;; with `jmt-type-definition`, `jmt-type-parameter-declaration` or
-                       ;;; `jmt-type-reference`.
-                     (when (re-search-forward "(c-put-font-lock-face " nil t)
+                   (let (is-patched)
+                     (while (search-forward "(c-put-font-lock-face " nil t)
                        (replace-match "(jmt--c/try-putting-face " t t)
-                       t))))
+                       (setq is-patched t))
+                     is-patched)))
 
                 (jmt--patch
                  source-file source-base-name 'c-font-lock-<>-arglists
@@ -1918,7 +1900,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
              'jmt-package-name-declared
              'jmt-principal-keyword
              'jmt-qualifier-keyword
-             'jmt--type
              'jmt-type-definition
              'jmt-type-parameter-declaration
              'jmt-type-reference)))
