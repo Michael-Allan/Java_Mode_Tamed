@@ -53,10 +53,6 @@
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
-(defvar jmt-keyword-face-alist); [FV]
-
-
-
 (defun jmt-make-Javadoc-tag-facing (f)
   "Makes a face property for a Javadoc tag using F (face symbol) as a base."
   (list f 'font-lock-doc-face)); [PDF]
@@ -193,33 +189,24 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 
 
-(defun jmt--c/put-type-face (range)
-  "Called from a monkey patch applied to the underlying Java-mode code,
-this function overrides Java mode’s application of ‘font-lock-type-face’
-in order to stabilize the facing of type names and type parameter identifiers.
-RANGE is a cons cell."
-  ;; Without such an override, the faces applied by `jmt-specific-fontifiers-3` via Font Lock
-  ;; to type names and type parameter identifiers would alternately appear and disappear,
-  ;; because Java mode applies `font-lock-type-face` using a mechanism of its own,
-  ;; outside of Font Lock, which puts the two in an endless tug of war.
-  (let ((beg (car range))
-        (end (cdr range)))
-    (defvar jmt--is-level-3); [FV]
-    (condition-case _x
-        (if (and jmt--is-level-3
-                 (eq major-mode 'java-mode-tamed))
-            (unless (get-text-property beg 'jmt-stabilized); [SF]
-              (c-put-font-lock-face beg end 'jmt--type)); Normally `jmt-specific-fontifiers-3`
-                  ;;; will override this facing before it appears, replacing it with `jmt-type-defin-
-                  ;;; ition`, `jmt-type-parameter-declaration` or `jmt-type-reference`.  Occaisionally
-                  ;;; the replacement may fail to occur, occur late, or prove to be unstable. [UF]
-          (c-put-font-lock-face beg end 'font-lock-type-face))
-      (args-out-of-range nil)))); Java mode has tried to put a face beyond the accessible region.
-        ;;; Suppress the resulting error report.  Seen e.g. at `public class KittedPolyStatorSR<T,S,R>`.
-        ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L16]
-        ;;; Reproduce there by inserting a space before identifier `T`, then undoing the insertion.
-        ;;; Note that the error report interrupts JIT Lock.  This causes a visible flash of misfaced text
-        ;;; when running under Java Mode Tamed.
+(defun jmt--c/try-putting-face (beg end face)
+  "Calls ‘c-put-font-lock-face’ on condition that either a) BEG and END delimit
+a region under fontification by Font Lock, or b) the present buffer is untamed."
+  ;; Called from within a monkey-patched version of the underlying Java-mode code, this function prevents
+  ;; an endless tug of war between Java mode and Java Mode Tamed, which otherwise would destabilize tamed
+  ;; faces, causing them alternately to appear and disappear.
+  (defvar jmt--is-level-3); [FV]
+  (defvar jmt--present-fontification-beg)
+  (defvar jmt--present-fontification-end)
+  (if (and jmt--is-level-3
+           (eq major-mode 'java-mode-tamed))
+      (unless (or
+           ;;; (get-text-property beg 'jmt-stabilized); [SF]
+           ;;;;;; Property `jmt-stabilized` might no longer be needed, given the following guards.
+               (> end jmt--present-fontification-end)
+               (< beg jmt--present-fontification-beg))
+        (c-put-font-lock-face beg end face))
+    (c-put-font-lock-face beg end face)))
 
 
 
@@ -445,6 +432,7 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
   "Returns the face (symbol) proper to the given Java keyword (string),
 given to be present in the buffer from position BEG (inclusive number)
 to END (exclusive number).  Leaves point indeterminate."
+  (defvar jmt-keyword-face-alist); [FV]
   (let ((f (assoc keyword jmt-keyword-face-alist)))
     (if (not f) 'jmt-principal-keyword; Returning either a default face,
       (setq f (cdr f))                ; or, from `jmt-keyword-face-alist`,
@@ -699,6 +687,12 @@ for the function’s return type, making it a *generic* return type.  May move p
     (forward-comment most-negative-fixnum); [←CW]
     (not (eq (char-before) ?.)))); (not `char-equal`, in case nil)
       ;;; Here a `.` would indicate a method call, as opposed to a definition.
+
+
+
+(defvar jmt--present-fontification-beg 0)
+(defvar jmt--present-fontification-end 0); Non-zero only when Font Lock is fontifying via
+  ;;; the default `font-lock-fontify-region-function`.
 
 
 
@@ -1031,9 +1025,7 @@ is not buffer local."
                (setq last-seg-was-found t))
              (setq face (get-text-property match-beg 'face))
              (when (or (eq face nil); Java mode leaves unfaced all but the last segment.
-                       (eq face 'font-lock-constant-face)); The refacing of this final segment
-                 ;;; is unstable when (edge case) no trailing ‘;’ appears on the same line.
-                 ;;; It might be stabilized by generalizing the mechanism of `jmt-stabilized`. [BUG]
+                       (eq face 'font-lock-constant-face))
                (set-match-data (list match-beg (point) match-beg match-end (current-buffer)))
                (throw 'to-reface t)))
            nil))
@@ -1677,11 +1669,13 @@ The face for the type-reference parameter of a Javadoc `throws` tag."
 
 
 
-(defface jmt--type; [MDF, RF, UF]
+(defface jmt--type; [MDF, RF]
   `((t . (:inherit jmt-type-reference))) "\
-A signalling face set via ‘jmt--c/put-type-face’.  Do not customize this face;
+A fallback face set via ‘jmt--c/put-type-face’.  Do not customize this face;
 it is for internal use only.  Rather leave it to inherit the attributes
-of ‘jmt-type-reference’."
+of ‘jmt-type-reference’.  Any type facing of Java Mode Tamed that gets undone
+by the underlying code of Java mode will fall back to this face, least likely
+to disturb the display."
   :group 'restricted)
 
 
@@ -1709,7 +1703,7 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 (defface jmt-type-param-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for the identifier of a type parameter in a Javadoc `param` tag."
-  ;; Java mode has misfaces them as HTML tags (they have the same delimiters).  Therefore this face
+  ;; Java mode has misfaced them as HTML tags (they have the same delimiters).  Therefore this face
   ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
   ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
   ;; would be to repair Java mode’s error in order to elimate this complication. [BUG]
@@ -1717,7 +1711,7 @@ The face for the identifier of a type parameter in a Javadoc `param` tag."
 
 
 
-(defface jmt-type-reference; [MDF, RF, UF]
+(defface jmt-type-reference; [MDF, RF]
   `((t . (:inherit font-lock-type-face))) "\
 The face for the identifier of a class, interface or type parameter
 where it appears as a type reference.  See also faces ‘jmt-type-definition’
@@ -1790,6 +1784,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
+    (cl-assert parse-sexp-ignore-comments)
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
@@ -1823,8 +1818,13 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                           (concat "(c-put-font-lock-face (car elem) (cdr elem)[[:space:]\n]*"
                                   "'font-lock-type-face)")
                           nil t)
-                     (replace-match "(jmt--c/put-type-face elem)" t t)
-                     t)))
+                     (replace-match "(jmt--c/try-putting-face (car elem) (cdr elem) 'jmt--type)" t t)
+                       ;;; Before `jmt--type` even appears, `jmt-specific-fontifiers-3` will replace it
+                       ;;; with `jmt-type-definition`, `jmt-type-parameter-declaration` or
+                       ;;; `jmt-type-reference`.
+                     (when (re-search-forward "(c-put-font-lock-face " nil t)
+                       (replace-match "(jmt--c/try-putting-face " t t)
+                       t))))
 
                 (jmt--patch
                  source-file source-base-name 'c-font-lock-<>-arglists
@@ -1874,6 +1874,21 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
                      (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
                      (insert
                       " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
+                     t)))
+
+                (jmt--patch
+                 source-file source-base-name 'c-font-lock-fontify-region
+                 (lambda ()
+                   (when (re-search-forward
+                          (concat "(funcall (default-value 'font-lock-fontify-region-function)[[:space:]\n]*"
+                                  "new-beg new-end verbose)")
+                          nil t)
+                     (replace-match (concat; Wrapping the `funcall` to update relevant state variables.
+                                     "(set 'jmt--present-fontification-beg new-beg)"
+                                     "(set 'jmt--present-fontification-end new-end)"
+                                     "\\&"; `(funcall … new-end verbose)`
+                                     "(set 'jmt--present-fontification-end 0)")
+                                    t)
                      t))))))
 
           ;; Javadoc block tag fontifier
@@ -1902,12 +1917,11 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
   ;; Tell Java mode of crucial changes
   ;; ─────────────────────────────────
-  (defvar c-maybe-decl-faces); [FV]
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
-           ;;   Quoting each of these only because `c-maybe-decl-faces` “must be evaluated
-           ;; ↙  (with ‘eval’) at runtime to get the actual list of faces”. [QTF]
+           ;;   Quoted individually only because `c-maybe-decl-faces` “must be evaluated (with ‘eval’)
+           ;; ↙  at runtime to get the actual list of faces”; e.g. `(eval c-maybe-decl-faces)`. [QTF]
            '('jmt-annotation-package-name
              'jmt-boilerplate-keyword
              'jmt-expression-keyword
@@ -2096,11 +2110,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;        parameter lists, while it would reduce the number of tests, might not yield the time savings
 ;;        one would expect; the anchoring matcher would have to extend across multiple lines and the
 ;;        addition to `font-lock-extend-region-functions` that this entails would burden all fontifiers.
-;;
-;;   UF · Unstable faces `jmt--type` and `jmt-type-reference`.  Certain applications of these faces
-;;        may be mutually unstable, alternating at times between one and the other.  This was seen,
-;;        for instance, in the facing of the identifier in the sequence `new Precounter` here:
-;;        https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/top/android/ForestCache.java#L493
 
 
 ;; - - - - - - - - - -
