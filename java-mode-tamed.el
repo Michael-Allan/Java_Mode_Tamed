@@ -30,14 +30,6 @@
 ;;   Or search through the `defface` definitions further below.
 ;;
 ;;
-;; TEXT PROPERTIES
-;; ───────────────
-;;   jmt-stabilized
-;;       Marks Java type names and type parameter identifiers in the buffer whose facing is stabilized
-;;       by Java Mode Tamed.  Effectively blocks the underlying code (of Java mode) from overriding it
-;;       by mechanisms of its own, outside of Font Lock that is. [SF]
-;;
-;;
 ;; NOTES  (see at bottom)
 ;; ─────
 
@@ -201,8 +193,6 @@ a region under fontification by Font Lock, or b) the present buffer is untamed."
   (if (and jmt--is-level-3
            (eq major-mode 'java-mode-tamed))
       (unless (or
-           ;;; (get-text-property beg 'jmt-stabilized); [SF]
-           ;;;;;; Property `jmt-stabilized` might no longer be needed, given the following guards.
                (> end jmt--present-fontification-end)
                (< beg jmt--present-fontification-beg))
         (c-put-font-lock-face beg end face))
@@ -904,8 +894,7 @@ is not buffer local."
                   (let ((p (point)))
                     (and (< (skip-chars-backward jmt-name-character-set) 0)
                          (jmt-is-type-definitive-keyword (buffer-substring-no-properties (point) p))))
-                (set 'jmt-f '(face jmt-type-definition jmt-stabilized t)); [SF]
-                  ;;; The stabilizer is for a minority of cases which have no discerned pattern.
+                (set 'jmt-f 'jmt-type-definition)
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t))
 
@@ -1639,7 +1628,7 @@ is not buffer local."
                 (throw 'to-reface t)))
             (goto-char match-end))
           nil)))
-    '(0 '(face jmt-type-parameter-declaration jmt-stabilized t) t))); [QFS, SF]
+    '(0 'jmt-type-parameter-declaration t))); [QFS]
   "\
 Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
 
@@ -1680,7 +1669,7 @@ to disturb the display."
 
 
 
-(defface jmt-type-definition; [MDF, RF, SF]
+(defface jmt-type-definition; [MDF, RF]
   `((t . (:inherit font-lock-type-face))) "\
 The face for the identifier of a class or interface in a type definition.
 Customize it to highlight the identifier where initially it is defined (like
@@ -1690,7 +1679,7 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 
 
-(defface jmt-type-parameter-declaration; [TP, MDF, RF, SF]
+(defface jmt-type-parameter-declaration; [TP, MDF, RF]
   `((t . (:inherit jmt-type-definition))) "\
 The face for the identifier of a type parameter in a type parameter declaration.
 Customize it to highlight the identifier where initially it is declared (like
@@ -1936,9 +1925,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 
   ;; Tell Font Lock how to fontify this buffer
   ;; ─────────────────────────────────────────
-  (make-local-variable 'font-lock-extra-managed-props); With ‘the same value’ it ‘previously had’.
-  (push 'jmt-stabilized font-lock-extra-managed-props)
-
   (jmt-set-for-buffer 'font-lock-defaults
        '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
           java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
@@ -2062,10 +2048,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;   RF · Replacement face: a tamed face used by `java-mode-tamed` to override and replace a face
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
-;;
-;;   SF · Stuck face.  The use of text property `jmt-stabilized` may cause certain faces to become stuck
-;;        on occaision.  In the event of this, a workaround is to delete and re-type the affected text,
-;;        which tends to be short in length.
 ;;
 ;;   SI · Static import declaration.
 ;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-7.html#jls-7.5.3
