@@ -4,30 +4,9 @@
 ;; over the Java mode that comes bundled with Emacs, particularly in regard to syntax highlighting.
 ;;
 ;;
-;; USAGE
-;; ─────
-;;   1. Put a copy of this file on your load path.
-;;      https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
-;;
-;;   2. Add the following to your initialization file.
-;;
-;;        (autoload 'java-mode-tamed "java-mode-tamed" nil t)
-;;        (set 'auto-mode-alist (cons (cons "\\.java\\'" 'java-mode-tamed) auto-mode-alist))
-;;        (set 'interpreter-mode-alist
-;;             (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed) interpreter-mode-alist))
-;;
-;;      The `interpreter-mode-alist` entry is for source-launch files encoded with a shebang. [SLS]
-;;
-;;   Working example:
-;;
-;;       http://reluk.ca/.emacs.d/lisp/initialization.el
-;;       http://reluk.ca/.Xresources
-;;
-;;
-;; CUSTOMIZATION
-;; ─────────────
-;;   For a list of faces that may be customized, use `M-x customize-group <RET> java-mode-tamed <RET>`.
-;;   Or search through the `defface` definitions further below.
+;; USER INSTRUCTIONS
+;; ─────────────────
+;;   See `./user_instructions.brec`, or `http://reluk.ca/project/Java/Emacs/user_instructions.brec`.
 ;;
 ;;
 ;; NOTES  (see at bottom)
@@ -1752,7 +1731,7 @@ more control over the Java mode that comes bundled with Emacs, particularly
 in regard to syntax highlighting.
 
         Home page URL ‘http://reluk.ca/project/Java/Emacs/’
-User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el’"
+User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el’"
   :group 'java-mode-tamed
 
   ;; ════════════════════════════
@@ -2035,26 +2014,6 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/java-mode-tamed.el�
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy. [BUG]
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
-;;
-;;   SLS  Source-launch files encoded with a shebang.
-;;        https://docs.oracle.com/en/java/javase/14/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
-;;        http://openjdk.java.net/jeps/330#Shebang_files
-;;
-;;        For a source-launch file that has no `.java` extension, if its shebang uses `-S` instead of
-;;        `--split-string`, then it would have to omit the space that typically follows.  If it had the
-;;        following shebang, for instance, then auto-mode would fail:
-;;
-;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 14
-;;
-;;        With the above shebang, an `interpreter-mode-alist` entry would have only `-S` to match against
-;;        — nothing to indicate a Java file.  To avoid this, the shebang would have to appear as:
-;;
-;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 14
-;;
-;;        Yet, while such a shebang seems to work (GNU coreutils 8.3), omitting the space in this manner
-;;        is undocumented.  Therefore it might be better to avoid `-S` in favour of the long form,
-;;        `--split-string`, which conventionally uses ‘=’ as a separator instead of a space.
-;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 ;;
 ;;   T↓ · Code that must execute before section *Type name*  of `jmt-specific-fontifiers-3`.
 ;;
