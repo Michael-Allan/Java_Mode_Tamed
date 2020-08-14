@@ -1,4 +1,4 @@
-;; Java Mode Tamed  -*- lexical-binding: t; -*-
+;; Java Mode Tamed  │ -*- lexical-binding: t; -*-
 ;;
 ;; This is the definition of Java Mode Tamed, a derived major mode designed to give the user more control
 ;; over the Java mode that comes bundled with Emacs, particularly in regard to syntax highlighting.
@@ -6,7 +6,7 @@
 ;;
 ;; USER INSTRUCTIONS
 ;; ─────────────────
-;;   See `./user_instructions.brec`, or `http://reluk.ca/project/Java/Emacs/user_instructions.brec`.
+;;   See `./user_instructions.brec` or `http://reluk.ca/project/Java/Emacs/user_instructions.brec`.
 ;;
 ;;
 ;; NOTES  (see at bottom)

@@ -26,8 +26,6 @@ Using Java Mode Tamed
 
         working example
             : see http://reluk.ca/.emacs.d/lisp/initialization.el
-            : see http://reluk.ca/.Xresources
-            : see http://reluk.ca/project/Breccia/Emacs/screen_shot.png
 
 
 
@@ -38,6 +36,10 @@ Using Java Mode Tamed
           java-mode-tamed <RET>`.
         - Or search through the `defface` definitions of `java-mode-tamed.el`.
             : re `java-mode-tamed.el` see ./java-mode-tamed.el
+
+        working example
+            : see http://reluk.ca/.Xresources
+            : see http://reluk.ca/project/Java/Emacs/screen_shot_after_customization.png
 
 
 
