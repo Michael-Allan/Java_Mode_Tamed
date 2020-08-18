@@ -535,6 +535,16 @@ The set of characters from which a Java identifier may be formed.")
 
 
 
+(defface jmt-named-literal; [MDF, RF]
+  `((t . (:inherit font-lock-constant-face))) "\
+The face for literal of type boolean or null; namely `true`, `false` or `null`.
+It inherits from ‘font-lock-constant-face’; customize it to distinguish named
+literals from other constructs that use ‘font-lock-constant-face’, or to subdue
+the facing if you prefer to have these literals not stand out."
+  :group 'java-mode-tamed)
+
+
+
 (defun jmt-new-fontifiers-2 ()
   "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
 See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
@@ -1493,6 +1503,28 @@ is not buffer local."
 
 
 
+   ;; ═════════════
+   ;; Named literal
+   ;; ═════════════
+
+   (cons; Reface each literal of type boolean or null.
+    (let (m match-beg match-end)
+      (lambda (limit)
+        (setq match-beg (point)); Presumptively.
+        (catch 'to-reface
+          (while (< match-beg limit)
+            (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+            (when (eq 'font-lock-constant-face (get-text-property match-beg 'face))
+              (setq m (buffer-substring-no-properties match-beg match-end))
+              (when (or (string= "true" m) (string= "false" m) (string= "null" m))
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'to-reface t)))
+            (setq match-beg match-end))
+          nil)))
+    '(0 'jmt-named-literal t)); [QTF]
+
+
+
    ;; ══════════════
    ;; String literal  [↑A]
    ;; ══════════════
@@ -1875,6 +1907,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
            '('jmt-annotation-package-name
              'jmt-boilerplate-keyword
              'jmt-expression-keyword
+             'jmt-named-literal
              'jmt-package-name
              'jmt-package-name-declared
              'jmt-principal-keyword
