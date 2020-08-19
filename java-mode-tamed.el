@@ -1712,7 +1712,7 @@ The face for a type variable in a Javadoc `param` tag."
   "Returns FACE itself if untamed, else the untamed ancestral face
 from which ultimately it inherits.  Necessarily every face defined
 by Java Mode Tamed (tamed face) ultimately inherits from a face
-defined elsewhere (untamed ancestral face)."
+defined elsewhere, namely its untamed ancestral face."
   (catch 'untamed-face
     (while (string-prefix-p "jmt-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil))
