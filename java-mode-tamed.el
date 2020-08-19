@@ -612,7 +612,7 @@ posed to a type reference.  Customize it to better distinguish between the two."
   `((t . (:inherit jmt-block-tag-parameter))) "\
 The face for the parameter-name parameter of a Javadoc `param` tag.
 An exception applies to type parameters; for those, see instead
-‘jmt-type-param-tag-parameter’."
+‘jmt-type-variable-tag-parameter’."
   :group 'javadoc-faces)
 
 
@@ -656,7 +656,7 @@ of the temporary buffer must be equivalent to that of Emacs Lisp mode."; [ELM]
 
 (defun jmt-preceding->-marks-generic-return-type ()
   "Answers whether the ‘>’ character before point could be a delimiter within a
-function definition, namely the trailing delimiter of a list of type parameters
+function definition, namely the trailing delimiter of a list of type variables
 for the function’s return type, making it a *generic* return type.  May move point."
   (when
       (condition-case _x
@@ -1327,7 +1327,7 @@ is not buffer local."
            (cond
             ((string= tag-name "param")
              (when (looking-at (concat "\\s-+<\\s-*\\([" jmt-name-character-set "]+\\).*$"))
-               (set 'jmt-f 'jmt-type-param-tag-parameter)
+               (set 'jmt-f 'jmt-type-variable-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t))
              (when (looking-at (concat "\\s-+\\([" jmt-name-character-set "]+\\).*$"))
@@ -1563,11 +1563,11 @@ is not buffer local."
 
 
 
-   ;; ═══════════════════
-   ;; Type parameter name in a type parameter declaration  [↑A, ↑T]
-   ;; ═══════════════════
+   ;; ═════════════
+   ;; Type variable in a type parameter declaration  [↑A, ↑T]
+   ;; ═════════════
 
-   (cons; Reface each name using face `jmt-type-parameter-declaration`.  See optimization note. [TPN]
+   (cons; Reface each variable using face `jmt-type-variable-declaration`.  See optimization note. [TV]
     (let (depth i j match-beg match-end p p-min)
       (lambda (limit)
         (catch 'to-reface
@@ -1585,7 +1585,7 @@ is not buffer local."
                         nil; Quitting the `while` loop.
                       (goto-char (previous-single-property-change p 'face))
                       t))); Continuing the loop.
-              (setq p (1- p)); Before what should be the delimiter of a type parameter list. [TPL]
+              (setq p (1- p)); Before what should be the delimiter of a type variable list. [TVL]
               (when
                   (and
                    (>= p p-min)
@@ -1600,7 +1600,7 @@ is not buffer local."
                    (catch 'is-proven; And the matched name occurs at the top level of that list (depth
                      ;; of angle brackets 1).  And the list directly follows either (a) the identifier
                      ;; of a type definition, indicating the definition of a generic class or inter-
-                     ;; face, or (b) neither a type name, type parameter nor `.` delimiter (of a method
+                     ;; face, or (b) neither a type name, type variable nor `.` delimiter (of a method
                      ;; call), indicating the definition of a generic method or constructor. [MC]
                      (setq depth 1); Nested depth of name in brackets, presumed to be 1 as required.
                      (while; Ensure `p` has emerged from all brackets,
@@ -1613,11 +1613,11 @@ is not buffer local."
                                     (when (bobp) (throw 'is-proven t))
                                       ;;; Apparently a generic method or constructor definition,
                                       ;;; though outside of any class body and so misplaced.
-                                    (setq p (1- (point)); Into direct predecessor of parameter list.
+                                    (setq p (1- (point)); Into direct predecessor of variable list.
                                           i (char-after p))
                                     (when (or (char-equal i ?.); `.` delimiter of a method call.
                                               (char-equal i ?<)); `p` had *not* emerged, and so the
-                                                ;;; parameter name is *not* at top level, after all.
+                                                ;;; type variable is *not* at top level, after all.
                                       (throw 'is-proven nil))
                                     (setq j (get-text-property p 'face))
                                     (throw 'is-proven; As the type parameter declaration of:
@@ -1638,7 +1638,7 @@ is not buffer local."
                 (throw 'to-reface t)))
             (goto-char match-end))
           nil)))
-    '(0 'jmt-type-parameter-declaration t))); [QFS]
+    '(0 'jmt-type-variable-declaration t))); [QFS]
   "\
 Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
 
@@ -1678,33 +1678,33 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 
 
-(defface jmt-type-parameter-declaration; [TP, MDF, RF]
-  `((t . (:inherit jmt-type-definition))) "\
-The face for the identifier of a type parameter in a type parameter declaration.
-Customize it to highlight the identifier where initially it is declared (like
-‘font-lock-variable-name-face’ does for variable identifiers), as opposed
-to merely referenced after the fact.  See also face ‘jmt-type-reference’."
+(defface jmt-type-reference; [MDF, RF]
+  `((t . (:inherit font-lock-type-face))) "\
+The face for the identifier of a class, interface or type parameter
+(viz. type variable) where it appears as a type reference.  See also
+faces ‘jmt-type-definition’ and ‘jmt-type-variable-declaration’."
   :group 'java-mode-tamed)
 
 
 
-(defface jmt-type-param-tag-parameter; [NDF, RF]
+(defface jmt-type-variable-declaration; [TP, MDF, RF]
+  `((t . (:inherit jmt-type-definition))) "\
+The face for a type variable in a type parameter declaration.
+Customize it to highlight the variable where initially it is declared
+(as ‘font-lock-variable-name-face’ does for non-type variables), rather than
+merely referenced after the fact.  See also face ‘jmt-type-reference’."
+  :group 'java-mode-tamed)
+
+
+
+(defface jmt-type-variable-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
-The face for the identifier of a type parameter in a Javadoc `param` tag."
-  ;; Java mode has misfaced them as HTML tags (they have the same delimiters).  Therefore this face
+The face for a type variable in a Javadoc `param` tag."
+  ;; Java mode has misfaced it as an HTML tag (the two have the same delimiters).  Therefore this face
   ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
   ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
   ;; would be to repair Java mode’s error in order to elimate this complication. [BUG]
   :group 'javadoc-faces)
-
-
-
-(defface jmt-type-reference; [MDF, RF]
-  `((t . (:inherit font-lock-type-face))) "\
-The face for the identifier of a class, interface or type parameter
-where it appears as a type reference.  See also faces ‘jmt-type-definition’
-and ‘jmt-type-parameter-declaration’."
-  :group 'java-mode-tamed)
 
 
 
@@ -1913,7 +1913,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
              'jmt-principal-keyword
              'jmt-qualifier-keyword
              'jmt-type-definition
-             'jmt-type-parameter-declaration
+             'jmt-type-variable-declaration
              'jmt-type-reference)))
 
   ;; Tell Font Lock how to fontify this buffer
@@ -2056,15 +2056,15 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 ;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
 ;;
-;;   TPL  Type parameter list, aka `TypeParameters`.
-;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.2
-;;
-;;   TPN  Type parameter name in a type parameter declaration.  One might think it slow to seek every
-;;        type reference, as this fontifier does, and test each against the form of a type parameter.
+;;   TV · Type variable in a type parameter declaration.  One might think it slow to seek every
+;;        type reference, as this fontifier does, and test each against the form of a type variable.
 ;;        Yet anchoring the search instead on the relatively infrequent characters that delimit type
-;;        parameter lists, while it would reduce the number of tests, might not yield the time savings
+;;        variable lists, while it would reduce the number of tests, might not yield the time savings
 ;;        one would expect; the anchoring matcher would have to extend across multiple lines and the
 ;;        addition to `font-lock-extend-region-functions` that this entails would burden all fontifiers.
+;;
+;;   TVL  Type variable list, aka `TypeParameters`.
+;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.2
 
 
 ;; - - - - - - - - - -
