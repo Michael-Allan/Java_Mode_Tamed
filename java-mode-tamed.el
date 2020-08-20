@@ -717,6 +717,39 @@ is not buffer local."
 
 
 
+(defface jmt-shebang
+  `((t . (:inherit font-lock-comment-delimiter-face))) "\
+The face for a shebang ‘#!’."
+  :group 'shebang-faces)
+
+
+
+(defface jmt-shebang-body
+  `((t . (:inherit font-lock-comment-face))) "\
+The face for the body of a shebang line, exclusive of the shebang itself
+and any trailing comment."
+  :group 'shebang-faces)
+
+
+
+(defface jmt-shebang-comment
+  `((t . (:inherit font-lock-comment-face))) "\
+The face for the body of a trailing comment in a shebang line,
+in case of an `env` interpreter."
+  :group 'shebang-faces
+  :link '(url-link "https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html"))
+
+
+
+(defface jmt-shebang-comment-delimiter
+  `((t . (:inherit font-lock-comment-delimiter-face))) "\
+The face for the delimiter ‘\\c’ of a trailing comment in a shebang line,
+in case of an `env` interpreter."
+  :group 'shebang-faces
+  :link '(url-link "https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html"))
+
+
+
 (defconst jmt-specific-fontifiers-3
   (list
 
@@ -1525,6 +1558,20 @@ is not buffer local."
 
 
 
+   ;; ════════════
+   ;; Shebang line, as per `http://openjdk.java.net/jeps/330#Shebang_files`
+   ;; ════════════
+
+   (list; Fontify any shebang line in a source-launch file.
+    "\\`\\(#!\\)\\(.+?\\)\\(?:\\(\\\\c\\)\\(.*\\)\\)?$"
+      ;;;  ·      └─────┘  └───────────────────────┘
+      ;;;  #!      body          comment [CSL]
+
+    '(1 'jmt-shebang t) '(2 'jmt-shebang-body t) '(3 'jmt-shebang-comment-delimiter t t); [QTF]
+    '(4 'jmt-shebang-comment t t))
+
+
+
    ;; ══════════════
    ;; String literal  [↑A]
    ;; ══════════════
@@ -1745,6 +1792,14 @@ Normally these items should not be customized."
 
 
 
+(defgroup shebang-faces nil "\
+Faces for a shebang line atop a source-launch file."
+  :group 'java-mode-tamed
+  :prefix "jmt-"
+  :link '(url-link "http://openjdk.java.net/jeps/330#Shebang_files"))
+
+
+
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
@@ -1951,6 +2006,9 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 ;;   CI · Conservative inheritance.  This face inherits from `font-lock-doc-face` only to preserve
 ;;        the original appearance of the fontified text in default of user action to change it,
 ;;        and not because it is a replacement face; in fact, it is a prepended face. [PDF, RF]
+;;
+;;   CSL  A comment in a shebang line is supported by the `env` interpreter.
+;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 ;;
 ;;  ←CW · Backward across commentary and whitespace.
 ;;
