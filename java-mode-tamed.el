@@ -1785,13 +1785,6 @@ Faces for Java keywords."
 
 
 
-(defgroup restricted nil "\
-Normally these items should not be customized."
-  :group 'java-mode-tamed
-  :prefix "jmt--")
-
-
-
 (defgroup shebang-faces nil "\
 Faces for a shebang line atop a source-launch file."
   :group 'java-mode-tamed
