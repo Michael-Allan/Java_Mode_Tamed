@@ -1827,6 +1827,7 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
+    (cl-assert (not (char-equal ?\s (char-syntax ?\n)))); Newlines have no whitespace syntax.
     (cl-assert parse-sexp-ignore-comments)
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
