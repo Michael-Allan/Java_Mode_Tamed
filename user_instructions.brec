@@ -50,21 +50,21 @@ Using Java Mode Tamed
             : see https://docs.oracle.com/en/java/javase/14/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
             : see http://openjdk.java.net/jeps/330#Shebang_files
 
-            - For a source-launch file that has no `.java` extension, if its shebang uses `-S` instead of
-              `--split-string`, then it would have to omit the space that typically follows.  If it had
-              the following shebang, for instance, then auto-mode would fail:
+            - For a source-launch file that has no `.java` extension, if its shebang line uses `-S`
+              instead of `--split-string`, then it would have to omit the space that typically follows.
+              If it had the following shebang line, for instance, then auto-mode would fail:
 
                    #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 14
 
-            - With the above shebang, an `interpreter-mode-alist` entry would have only `-S` to match
-              against, which does not suffice to indicate a Java file.  To avoid this, the shebang would
+            - With the above, an `interpreter-mode-alist` entry would have only `-S` to match against,
+              which does not suffice to indicate a Java file.  To avoid this, the shebang line would
               have to appear as:
 
                    #!/usr/bin/env -S${JDK_HOME}/bin/java --source 14
 
-            - Yet, while such a shebang seems to work (GNU coreutils 8.3), omitting the space in this
-              manner is undocumented.  Therefore it might be better to avoid `-S` in favour of the long
-              form, `--split-string`, which conventionally uses ‘=’ as a separator instead of a space.
+            - Yet, while the above seems to work (GNU coreutils 8.3), omitting the space in this manner
+              is undocumented.  Therefore it might be better to avoid `-S` in favour of the long form,
+              `--split-string`, which conventionally uses ‘=’ as a separator instead of a space.
                 : see https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 
 
