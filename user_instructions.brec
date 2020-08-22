@@ -4,12 +4,11 @@ Using Java Mode Tamed
     ━━━━━━━━━━━━━━
      Installation
     ──────────────
-        1. Put a copy of `java-mode-tamed.el` on your load path.
+        1+ Put a copy of `java-mode-tamed.el` on your load path.
             : re `java-mode-tamed.el` see ./java-mode-tamed.el
             : re `load path` see
               https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
-
-        2. Add the following to your initialization file.
+        2+ Add the following to your initialization file.
 
               (autoload 'java-mode-tamed "java-mode-tamed" nil t)
               (set 'auto-mode-alist (cons (cons "\\.java\\'" 'java-mode-tamed) auto-mode-alist))
@@ -23,7 +22,6 @@ Using Java Mode Tamed
               https://www.gnu.org/software/emacs/manual/html_node/emacs/Init-File.html
             - The `interpreter-mode-alist` entry is for source-launch files encoded with a shebang.
                 : re `source-launch files encoded with a shebang` see @ `^^ Note$`
-
         working example
             : see http://reluk.ca/.emacs.d/lisp/initialization.el
 
@@ -36,7 +34,6 @@ Using Java Mode Tamed
           java-mode-tamed <RET>`.
         - Or search through the `defface` definitions of `java-mode-tamed.el`.
             : re `java-mode-tamed.el` see ./java-mode-tamed.el
-
         working example
             : see http://reluk.ca/.Xresources
             : see http://reluk.ca/project/Java/Emacs/screen_shot_after_customization.png
