@@ -1600,6 +1600,16 @@ in case of an `env` interpreter."
                 ;; Elsewhere
                 ;; ─────────
                 (set 'jmt-f 'jmt-string-delimiter)
+                (when (>= (- match-end match-beg) 7); Then hypothesize a text block: [TB]
+                  (let* ((body-beg? (+ match-beg 3)); Allowing for the longer delimiters.
+                         (body-end? (- match-end 3))
+                         (beg-delimiter (buffer-substring-no-properties match-beg body-beg?))
+                         (end-delimiter (buffer-substring-no-properties match-end body-end?))
+                         (expected "\"\"\"")); In fact `beg-delimiter` would have to end in a newline
+                          ;;; optionally preceded by whitespace, hence the 7 in the guard above.
+                    (when (and (string= beg-delimiter expected) (string= end-delimiter expected))
+                      (setq body-beg body-beg?; Hypothesis verified.
+                            body-end body-end?))))
                 (set-match-data (list match-beg match-end match-beg body-beg nil nil
                                       body-end match-end (current-buffer))))
               (goto-char match-end)
@@ -1700,9 +1710,9 @@ The face for a square bracket, ‘[’ or ‘]’."
 
 (defface jmt-string-delimiter; [BC, LF, RF]
   `((t . (:inherit font-lock-string-face))) "\
-The face for a string (\") or character (\\=') delimiter.
-Customize it to better distinguish the delimiters from the content
-they delimit; making them more prominent or less prominent, for example.
+The face for the delimiter of a string literal (\" or \"\"\") or character
+literal (\\=').  Customize it to better distinguish these delimiters from
+the content they delimit; making them less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
   :group 'delimiter-faces)
 
@@ -2105,6 +2115,8 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 ;;   T ·· Section *Type name* itself, or code that must execute in unison with it.
 ;;
 ;;  ↑T ·· Code that must execute after section *Type name*.
+;;
+;;   TB · Text blocks, a preview language feature at time of writing.  https://openjdk.java.net/jeps/378
 ;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
 ;;
