@@ -1,21 +1,50 @@
-;; Java Mode Tamed  │ -*- lexical-binding: t; -*-
+;;; java-mode-tamed.el --- Better control of Java fontification  -*- lexical-binding: t; -*-
+
+;; Copyright © 2019-2020 Michael Allan.
+
+;; Author: Michael Allan <mike@reluk.ca>
+;; Version: 0-snapshot
+;; Package-Requires: (cl-lib)
+;; Keywords: c, languages
+;; URL: http://reluk.ca/project/Java/Emacs/
+
+;; This file is not part of GNU Emacs.
+
+;;; Commentary:
+
+;; This package introduces a derived major mode (Java Mode Tamed) that allows better control
+;; of the Java mode built into Emacs, particularly in regard to syntax highlighting.
+;; For more information, see `http://reluk.ca/project/Java/Emacs/`.
 ;;
-;; This is the definition of Java Mode Tamed, a derived major mode designed to give the user more control
-;; over the Java mode that comes bundled with Emacs, particularly in regard to syntax highlighting.
+;; If you install this package using a package manager, then already Java Mode Tamed should activate
+;; for any loaded file that has either a `.java` extension or `java` shebang.  Alternatively you may
+;; want to install it manually:
 ;;
+;;   1. Put a copy of the present file on your load path.
+;;      https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
 ;;
-;; USER INSTRUCTIONS
-;; ─────────────────
-;;   See `./user_instructions.brec` or `http://reluk.ca/project/Java/Emacs/user_instructions.brec`.
+;;   2. Optionally compile that copy.  E.g. load it into an Emacs buffer and type
+;;      `M-x emacs-lisp-byte-compile`.
 ;;
+;;   3. Add the following code to your initialization file.
+;;      https://www.gnu.org/software/emacs/manual/html_node/emacs/Init-File.html
 ;;
-;; NOTES  (see at bottom)
-;; ─────
+;;         (autoload 'java-mode-tamed "java-mode-tamed" nil t)
+;;         (set 'auto-mode-alist (cons (cons "\\.java\\'" 'java-mode-tamed) auto-mode-alist))
+;;         (set 'interpreter-mode-alist
+;;              (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed)
+;;                    interpreter-mode-alist))
+;;
+;;      The `interpreter-mode-alist` entry is for source-launch files encoded with a shebang. [SLS]
+;;
+;; For a working example of manual installation, see the relevant lines
+;; of `http://reluk.ca/.emacs.d/lisp/initialization.el`, and follow the reference there.
+
+;;; Code:
 
 
-(eval-when-compile
-  (require 'cc-mode)
-  (require 'cl-lib))
+(eval-when-compile (require 'cl-lib)); For macro `cl-assert`.
+(require 'cc-mode)
 
 
 
@@ -51,11 +80,6 @@ Faces for Java separators and other delimiters."
 Faces for Java documentation comments."
   :group 'java-mode-tamed
   :prefix "jmt-")
-
-
-
-(declare-function java-font-lock-keywords-2 "cc-fonts" ()); [FD]
-(declare-function java-font-lock-keywords-3 "cc-fonts" ())
 
 
 
@@ -209,7 +233,7 @@ of a formal Java expression."
 
 
 
-(defvar jmt-f nil); [GVF]
+(defvar jmt-f); [GVF]
 
 
 
@@ -587,7 +611,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
 
 
-(defvar jmt-p nil); [GVF]
+(defvar jmt-p); [GVF]
 
 
 
@@ -683,7 +707,7 @@ Cf. ‘jmt-qualifier-keyword’.  See also subfaces
 
 
 
-(defvar jmt-q nil); [GVF]
+(defvar jmt-q); [GVF]
 
 
 
@@ -1808,20 +1832,26 @@ Faces for a shebang line atop a source-launch file."
 
 (unless jmt--early-initialization-was-begun
   (set 'jmt--early-initialization-was-begun t)
-  (require 'cc-mode)
   (set 'c-default-style (cons '(java-mode-tamed . "java") c-default-style)))
     ;;; Though it appears to have no effect.
 
 
 
-(define-derived-mode java-mode-tamed java-mode
-  "Java" "\
-This is Java Mode Tamed, a derived major mode designed to give the user
-more control over the Java mode that comes bundled with Emacs, particularly
-in regard to syntax highlighting.
+(set 'jmt-f nil); Ensuring it is bound for sake of the following guard.
+;;;###autoload
+(unless (boundp 'jmt-f); To execute once only on `package-initialize`, not again on file load. [GDA]
+  ;; Here appending versus consing in order not to override any pattern previously added by the user:
+  (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'java-mode-tamed) t)
+  (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed) t))
 
-        Home page URL ‘http://reluk.ca/project/Java/Emacs/’
-User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el’"
+
+
+;;;###autoload
+(define-derived-mode java-mode-tamed java-mode
+  "JMT" "\
+Java Mode Tamed is a derived major mode that allows better control of the
+Java mode built into Emacs, particularly in regard to syntax highlighting.
+For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   :group 'java-mode-tamed
 
   ;; ════════════════════════════
@@ -2021,14 +2051,15 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 ;;   ELM  The syntax-related code that directly follows the opening of the temporary buffer effects a
 ;;        fast simulation of Emacs Lisp mode, faster presumeably than would a call to `emacs-lisp-mode`.
 ;;
-;;   FD · Suppressing compiler warnings, ‘the following functions might not be defined at runtime…’.
-;;
 ;;   FLC  `font-lock-constant-face`: the Java-mode code refers to `font-lock-constant-face` indirectly
 ;;        by way of variables `c-constant-face-name`, `c-doc-markup-face-name`, `c-label-face-name`
 ;;        and `c-reference-face-name`.
 ;;
 ;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
 ;;        or ‘assignment to free variable’.
+;;
+;;   GDA  Guarded definition of autoloads.  It would be simpler to move the autoload definitions to
+;;        a separate file, except that multi-file packages are more difficult to maintain.
 ;;
 ;;   GVF  A global variable for the use of fontifiers, e.g. from within forms they quote and pass
 ;;        to Font Lock to be evaluated outside of their lexical scope.
@@ -2110,6 +2141,27 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy. [BUG]
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
 ;;
+;;   SLS  Source-launch files encoded with a shebang.
+;;        https://docs.oracle.com/en/java/javase/14/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
+;;        http://openjdk.java.net/jeps/330#Shebang_files
+;;
+;;        For a source-launch file that has no `.java` extension, if its shebang uses `-S` instead of
+;;        `--split-string`, then it would have to omit the space that typically follows.  If it had the
+;;        following shebang line, for instance, then auto-mode would fail:
+;;
+;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 14
+;;
+;;        With the above shebang, an `interpreter-mode-alist` entry would have only `-S`
+;;        to match against, which does not suffice to indicate a Java file.  To avoid this,
+;;        the shebang line would have to appear as:
+;;
+;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 14
+;;
+;;        Yet, while the above seems to work (GNU coreutils 8.3), omitting the space in this manner
+;;        is undocumented.  Therefore it might be better to avoid `-S` in favour of the long form,
+;;        `--split-string`, which conventionally uses ‘=’ as a separator instead of a space.
+;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
+;;
 ;;   T↓ · Code that must execute before section *Type name*  of `jmt-specific-fontifiers-3`.
 ;;
 ;;   T ·· Section *Type name* itself, or code that must execute in unison with it.
@@ -2135,4 +2187,4 @@ User instructions URL ‘http://reluk.ca/project/Java/Emacs/user_instructions.el
 ;; Local Variables:
 ;; byte-compile-warnings: (not make-local)
 ;; End:
-                                  ;;; Copyright © 2019-2020 Michael Allan and contributors.  Licence MIT.
+;;; java-mode-tamed.el ends here
