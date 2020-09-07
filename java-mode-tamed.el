@@ -1837,9 +1837,10 @@ Faces for a shebang line atop a source-launch file."
 
 
 
-(set 'jmt-f nil); Ensuring it is bound for sake of the following guard.
+(defvar jmt--autoload-guard); Bound from here to end of file load, void at all other times.
+
 ;;;###autoload
-(unless (boundp 'jmt-f); To execute once only on `package-initialize`, not again on file load. [GDA]
+(unless (boundp 'jmt--autoload-guard); To execute only on `package-initialize`, not on file load. [GDA]
   ;; Here one wishes to *append* versus consing not to override any pattern previously added by the user.
   ;; One does not, however, expect a package to demur in installing itself.  (And indeed the built-in
   ;; autoloads of CC Mode would clobber us here if we did.)  Rather let the package *manager* mend its
@@ -2063,7 +2064,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        or ‘assignment to free variable’.
 ;;
 ;;   GDA  Guarded definition of autoloads.  It would be simpler to move the autoload definitions to
-;;        a separate file, except that multi-file packages are more difficult to maintain.
+;;        a separate, non-executing file, except that multi-file packages are difficult to maintain.
 ;;
 ;;   GVF  A global variable for the use of fontifiers, e.g. from within forms they quote and pass
 ;;        to Font Lock to be evaluated outside of their lexical scope.
