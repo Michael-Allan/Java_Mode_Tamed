@@ -1840,9 +1840,13 @@ Faces for a shebang line atop a source-launch file."
 (set 'jmt-f nil); Ensuring it is bound for sake of the following guard.
 ;;;###autoload
 (unless (boundp 'jmt-f); To execute once only on `package-initialize`, not again on file load. [GDA]
-  ;; Here appending versus consing in order not to override any pattern previously added by the user:
-  (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'java-mode-tamed) t)
-  (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed) t))
+  ;; Here one wishes to *append* versus consing not to override any pattern previously added by the user.
+  ;; One does not, however, expect a package to demur in installing itself.  (And indeed the built-in
+  ;; autoloads of CC Mode would clobber us here if we did.)  Rather let the package *manager* mend its
+  ;; own bugs, and the user meantime find recourse in the means that Emacs provides.
+  ;; https://stackoverflow.com/a/35949889/2402790
+  (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'java-mode-tamed))
+  (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed)))
 
 
 
