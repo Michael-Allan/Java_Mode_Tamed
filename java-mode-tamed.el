@@ -1828,6 +1828,8 @@ Faces for a shebang line atop a source-launch file."
 
 
 ;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
+;;  P a c k a g e   p r o v i s i o n
+;; ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 
 (unless jmt--early-initialization-was-begun
@@ -1841,7 +1843,7 @@ Faces for a shebang line atop a source-launch file."
 
 ;;;###autoload
 (unless (boundp 'jmt--autoload-guard); To execute only on `package-initialize`, not on file load. [GDA]
-  ;; Here one wishes to *append* versus consing not to override any pattern previously added by the user.
+  ;; Here one wishes to *append* versus cons not to override any pattern previously added by the user.
   ;; One does not, however, expect a package to demur in installing itself.  (And indeed the built-in
   ;; autoloads of CC Mode would clobber us here if we did.)  Rather let the package *manager* mend its
   ;; own bugs, and the user meantime find recourse in the means that Emacs provides.
