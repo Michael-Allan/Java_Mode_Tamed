@@ -1548,10 +1548,14 @@ in case of an `env` interpreter."
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
                    (when (bobp) (throw 'is-method-call nil))
-                   (when (char-equal (char-before) ?.); Always the misfaced identifier directly
-                     ;; follows a ‘.’, which excludes the possibility of it being a definition.
-                     ;; See for instance the sequence `assert stators.getClass()`. [AM]
-                     ;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
+                   (when; When the possibility of the method identifier being proper to a definition
+                       ;; as opposed to a call is excluded because it directly follows either: [AM]
+                       (or (char-equal (char-before) ?.)
+                             ;;; (a) The character ‘.’, as in the sequence `assert stators.getClass()` at
+                             ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
+                           (eq (get-text-property (1- (point)) 'face) 'jmt-principal-keyword))
+                             ;;; (b) A principal keyword, as in the sequence `assert verify(blocks)` at
+                             ;;; `https://github.com/oracle/graal/blob/968c592cc6c1b3e6ee6b23b086adbc3c5007e6be/compiler/src/org.graalvm.compiler.core.common/src/org/graalvm/compiler/core/common/cfg/DominatorOptimizationProblem.java#L52`.
                      (goto-char match-end)
                      (throw 'to-fontify 'default))))
                (goto-char match-end))); Whence the next leg of the search begins.
@@ -2032,7 +2036,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;  ↑A ·· Code that must execute after section *Annotation*.
 ;;
-;;   AM · This marks two misfacings that likely are related.  See the `assert` keyword section
+;;   AM · This marks misfacings that likely are related.  See the *assert keyword* section
 ;;        at `http://reluk.ca/project/Java/Emacs/action_plan.brec`.
 ;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
