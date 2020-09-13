@@ -1,45 +1,62 @@
-;;; java-mode-tamed.el --- Better control of Java fontification  -*- lexical-binding: t; -*-
-
+;;; jmt-mode.el --- Java Mode Tamed  -*- lexical-binding: t; -*-
+;;
 ;; Copyright © 2019-2020 Michael Allan.
-
+;;
 ;; Author: Michael Allan <mike@reluk.ca>
 ;; Version: 0-snapshot
-;; Package-Requires: (cl-lib)
+;; Package-Requires: (cl-lib (emacs "24.4"))
 ;; Keywords: c, languages
 ;; URL: http://reluk.ca/project/Java/Emacs/
-
+;;
 ;; This file is not part of GNU Emacs.
-
+;;
+;; This file is released under an MIT licence.  A copy of the licence normally accompanies it.
+;; If not, then see `http://reluk.ca/project/Java/Emacs/LICENCE.txt`.
+;;
 ;;; Commentary:
-
-;; This package introduces a derived major mode (Java Mode Tamed) that allows better control
-;; of the Java mode built into Emacs, particularly in regard to syntax highlighting.
-;; For more information, see `http://reluk.ca/project/Java/Emacs/`.
 ;;
-;; If you install this package using a package manager, then already Java Mode Tamed should activate
-;; for any loaded file that has either a `.java` extension or `java` shebang.  Alternatively you may
-;; want to install it manually:
+;;   This package introduces a derived major mode (`jmt-mode`) that affords better control
+;;   of the Java mode built into Emacs, particularly in regard to syntax highlighting.
+;;   For more information, see `http://reluk.ca/project/Java/Emacs/`.
 ;;
-;;   1. Put a copy of the present file on your load path.
-;;      https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
+;; Installation
 ;;
-;;   2. Optionally compile that copy.  E.g. load it into an Emacs buffer and type
-;;      `M-x emacs-lisp-byte-compile`.
+;;   If you install this package using a package manager, then already `jmt-mode` should activate
+;;   for any loaded file that has either a `.java` extension or `java` shebang.  Alternatively
+;;   you may want to install the mode manually:
 ;;
-;;   3. Add the following code to your initialization file.
-;;      https://www.gnu.org/software/emacs/manual/html_node/emacs/Init-File.html
+;;       1. Put a copy of the present file on your load path.
+;;          https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
 ;;
-;;         (autoload 'java-mode-tamed "java-mode-tamed" nil t)
-;;         (set 'auto-mode-alist (cons (cons "\\.java\\'" 'java-mode-tamed) auto-mode-alist))
-;;         (set 'interpreter-mode-alist
-;;              (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed)
-;;                    interpreter-mode-alist))
+;;       2. Optionally compile that copy.  E.g. load it into an Emacs buffer and type
+;;          `M-x emacs-lisp-byte-compile`.
 ;;
-;;      The `interpreter-mode-alist` entry is for source-launch files encoded with a shebang. [SLS]
+;;       3. Add the following code to your initialization file.
+;;          https://www.gnu.org/software/emacs/manual/html_node/emacs/Init-File.html
 ;;
-;; For a working example of manual installation, see the relevant lines
-;; of `http://reluk.ca/.emacs.d/lisp/initialization.el`, and follow the reference there.
-
+;;             (autoload 'jmt-mode "jmt-mode" nil t)
+;;             (set 'auto-mode-alist (cons (cons "\\.java\\'" 'jmt-mode) auto-mode-alist))
+;;             (set 'interpreter-mode-alist
+;;                  (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode)
+;;                        interpreter-mode-alist))
+;;
+;;          The `interpreter-mode-alist` entry is for source-launch files encoded with a shebang. [SLS]
+;;
+;;   For a working example of manual installation, see the relevant lines
+;;   of `http://reluk.ca/.emacs.d/lisp/initialization.el`, and follow the reference there.
+;;
+;; Changes to Emacs
+;;
+;;   This package applies monkey patches to the runtime session that redefine certain functions
+;;   of the built-in package CC Mode.  The patches are designed to leave the behaviour of Emacs
+;;   unchanged in all buffers except those running `jmt-mode`.  The patched functions are:
+;;
+;;       c-before-change
+;;       c-fontify-recorded-types-and-refs
+;;       c-font-lock-<>-arglists
+;;       c-font-lock-declarations
+;;       c-font-lock-fontify-region
+;;
 ;;; Code:
 
 
@@ -54,7 +71,7 @@
 
 
 (defun jmt-make-Javadoc-tag-facing (f)
-  "Makes a face property for a Javadoc tag using F (face symbol) as a base."
+  "Make a face property for a Javadoc tag using F (face symbol) as a base."
   (list f 'font-lock-doc-face)); [PDF]
 
 
@@ -71,22 +88,23 @@
 
 (defgroup delimiter-faces nil "\
 Faces for Java separators and other delimiters."
-  :group 'java-mode-tamed
+  :group 'jmt
   :prefix "jmt-")
 
 
 
 (defgroup javadoc-faces nil "\
 Faces for Java documentation comments."
-  :group 'java-mode-tamed
+  :group 'jmt
   :prefix "jmt-")
 
 
 
-(defgroup java-mode-tamed nil "\
+(defgroup jmt nil "\
 Customizable items of Java Mode Tamed."
   :group 'languages :group 'faces
   :prefix "jmt-"
+  :tag "JMT"
   :link '(url-link "http://reluk.ca/project/Java/Emacs/"))
 
 
@@ -120,7 +138,7 @@ The face for the ‘@’ symbol denoting annotation."
 The face for each segment of a package name in an annotation type reference.
 It defaults to ‘jmt-package-name’; customize it if the default fits poorly
 with your other annotation faces."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -129,7 +147,7 @@ with your other annotation faces."
 The face for a string in an annotation qualifier.  It defaults
 to ‘font-lock-string-face’; customize it if the default fits poorly
 with your other annotation faces."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -147,7 +165,7 @@ other annotation faces."
 The face for the element assignments of annotation.  Customize it
 e.g. to give the assignments less prominence than the ‘c-annotation-face’
 of the preceding type name."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -185,8 +203,9 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 
 (defun jmt--c/try-putting-face (beg end face)
-  "Calls ‘c-put-font-lock-face’ on condition that either a) BEG and END delimit
-a region under fontification by Font Lock, or b) the present buffer is untamed."
+  "Call ‘c-put-font-lock-face’ with the given arguments on condition that
+either a) BEG and END delimit a region under fontification by Font Lock,
+or b) the present buffer is untamed."
   ;; Called from within a monkey-patched version of the underlying Java-mode code, this function prevents
   ;; an endless tug of war between Java mode and Java Mode Tamed, which otherwise would destabilize tamed
   ;; faces, causing them alternately to appear and disappear.
@@ -194,7 +213,7 @@ a region under fontification by Font Lock, or b) the present buffer is untamed."
   (defvar jmt--present-fontification-beg)
   (defvar jmt--present-fontification-end)
   (if (and jmt--is-level-3
-           (eq major-mode 'java-mode-tamed))
+           (eq major-mode 'jmt-mode))
       (unless (or
                (> end jmt--present-fontification-end)
                (< beg jmt--present-fontification-beg))
@@ -238,7 +257,7 @@ of a formal Java expression."
 
 
 (defun jmt-faces-are-equivalent (f1 f2)
-  "Answers whether F1 and F2 (face symbols) should be treated as equivalent
+  "Answer whether F1 and F2 (face symbols) should be treated as equivalent
 by the underlying (Java-mode) code."
   (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
@@ -303,7 +322,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-annotation-ish-before (p)
-  "Answers whether the position before P (integer) might be within annotation."
+  "Answer whether the position before P (integer) might be within annotation."
   (let ((f (get-text-property (1- p) 'face)))
     (or (eq 'c-annotation-face (jmt-untamed-face f))
         (eq 'jmt-annotation-string f)
@@ -314,14 +333,14 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-annotation-terminal-face (f)
-  "Answers whether F (face symbol) is a face that might be set
+  "Answer whether F (face symbol) is a face that might be set
 on the last character of annotation."
   (eq 'c-annotation-face (jmt-untamed-face f)))
 
 
 
 (defun jmt-is-Java-mode-tag-faced (v)
-  "Answers whether property value V (face symbol or list) is one which might have
+  "Answer whether property value V (face symbol or list) is one which might have
 been set on a Javadoc tag by the underlying (Java-mode) code."
   (and (consp v); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
        (eq 'font-lock-constant-face (car v))
@@ -331,7 +350,7 @@ been set on a Javadoc tag by the underlying (Java-mode) code."
 
 
 (defun jmt-is-Java-mode-type-face (f)
-  "Answers whether F (face symbol) is a type face which might have been set
+  "Answer whether F (face symbol) is a type face which might have been set
 by the underlying (Java-mode) code."
   (eq f 'font-lock-type-face)); Java mode alone sets this face.
 
@@ -344,7 +363,7 @@ by the underlying (Java-mode) code."
 
 
 (defun jmt-is-type-definitive-keyword (s)
-  "Answers whether string S is the principal keyword of a type definition."
+  "Answer whether string S is the principal keyword of a type definition."
   (or (string= s "class")
       (string= s "interface")
       (string= s "enum")))
@@ -352,7 +371,7 @@ by the underlying (Java-mode) code."
 
 
 (defun jmt-is-type-modifier-keyword (s)
-  "Answers whether string S is a type definition modifier in keyword form,
+  "Answer whether string S is a type definition modifier in keyword form,
 e.g. as opposed to annotation form."
   ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
   ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
@@ -421,7 +440,7 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
 
 
 (defun jmt-keyword-face (keyword beg end)
-  "Returns the face (symbol) proper to the given Java keyword (string),
+  "Return the face (symbol) proper to the given Java KEYWORD (string),
 given to be present in the buffer from position BEG (inclusive number)
 to END (exclusive number).  Leaves point indeterminate."
   (defvar jmt-keyword-face-alist); [FV]
@@ -493,17 +512,16 @@ to END (exclusive number).  Leaves point indeterminate."
     ("strictfp"     .     jmt-qualifier-keyword)
     ("switch"       .     jmt-principal-keyword); Of a statement.
     ("transient"    .     jmt-qualifier-keyword)
-    ("volatile"     .     jmt-qualifier-keyword)
-    ) "\
-A list of cons cells of Java keywords (string @ car) each with the name
-(symbol @ cdr) of either its proper face, or a function in the form
+    ("volatile"     .     jmt-qualifier-keyword)) "\
+A list of cons cells of Java keywords `(string @ car)` each with the name
+`(symbol @ cdr)` of either its proper face, or a function in the form
 of ‘jmt-keyword-face-class’ that returns a face symbol.  The list excludes
 keywords that Java mode does not face with ‘font-lock-keyword-face’.")
 
 
 
 (defun jmt-keyword-face-class (beg _end)
-  "Returns the face (symbol) to give to the `class` keyword present
+  "Return the face (symbol) to give to the `class` keyword present
 in the buffer from position BEG (inclusive number) to _END (exclusive number).
 Leaves point indeterminate."
   (goto-char beg)
@@ -516,7 +534,7 @@ Leaves point indeterminate."
 
 
 (defun jmt-keyword-face-static (beg end)
-  "Returns the face (symbol) to give to the `static` keyword present
+  "Return the face (symbol) to give to the `static` keyword present
 in the buffer from position BEG (inclusive number) to _END (exclusive number).
 Leaves point indeterminate."
   (goto-char beg)
@@ -530,7 +548,7 @@ Leaves point indeterminate."
 
 
 (defun jmt-keyword-face-sync (_beg end)
-  "Returns the face (symbol) to give to the `synchronized` keyword present
+  "Return the face (symbol) to give to the `synchronized` keyword present
 in the buffer from position _BEG (inclusive number) to END (exclusive number).
 Leaves point indeterminate."
   (goto-char end)
@@ -547,8 +565,8 @@ Leaves point indeterminate."
 
 
 (defun jmt-message (format-string &rest arguments)
-  "Calls function ‘message’ without translation of embedded \\=`\\=`\\=`
-and \\=`\\='\\=` quotes."
+  "Call function ‘message’ with the given arguments, but without translating
+embedded \\=`\\=`\\=` and \\=`\\='\\=` quotes."
   (message "%s" (apply 'format format-string arguments)))
 
 
@@ -565,7 +583,7 @@ The face for literal of type boolean or null; namely `true`, `false` or `null`.
 It inherits from ‘font-lock-constant-face’; customize it to distinguish named
 literals from other constructs that use ‘font-lock-constant-face’, or to subdue
 the facing if you prefer to have these literals not stand out."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -601,7 +619,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
                    k (cdr k)))
            (and (not was-found-annotation) k)))
      (unless was-found-annotation
-       (jmt-message "(java-mode-tamed): Failed to remove unwanted Java-mode fontifier: `%s` = nil"
+       (jmt-message "(jmt-mode): Failed to remove unwanted Java-mode fontifier: `%s` = nil"
                     (symbol-name 'was-found-annotation)))
      kk)
 
@@ -620,7 +638,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 The face for each segment of a package name in a type reference.  It inherits
 from ‘font-lock-constant-face’; customize it to distinguish package names from
 other constructs that use ‘font-lock-constant-face’."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -628,7 +646,7 @@ other constructs that use ‘font-lock-constant-face’."
   `((t . (:inherit jmt-package-name))) "\
 The face for each segment of a package name in a package declaration, as op-
 posed to a type reference.  Customize it to better distinguish between the two."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -643,8 +661,8 @@ An exception applies to type parameters; for those, see instead
 
 (defun jmt--patch (source-file source-base-name function-symbol patch-function)
   "Called from within a temporary buffer, this function monkey patches
-the function FUNCTION-SYMBOL, originally from file SOURCE-FILE (a string,
-which has the given BASE-NAME), using the named PATCH-FUNCTION.  PATCH-FUNCTION
+the function FUNCTION-SYMBOL, originally from file SOURCE-FILE (a string, which
+has the given SOURCE-BASE-NAME), using the named PATCH-FUNCTION.  PATCH-FUNCTION
 must return t on success, nil on failure.  Syntactically the configuration
 of the temporary buffer must be equivalent to that of Emacs Lisp mode."; [ELM]
   (unless (functionp function-symbol)
@@ -673,13 +691,13 @@ of the temporary buffer must be equivalent to that of Emacs Lisp mode."; [ELM]
        1.3 nil            ; though early timing tests (with a single patch) showed no such effect.
        (lambda ()
          (unless (byte-compile function-symbol)
-           (jmt-message "(java-mode-tamed): Failed to recompile monkey-patched function `%s`"
+           (jmt-message "(jmt-mode): Failed to recompile monkey-patched function `%s`"
                          (symbol-name function-symbol))))))))
 
 
 
 (defun jmt-preceding->-marks-generic-return-type ()
-  "Answers whether the ‘>’ character before point could be a delimiter within a
+  "Answer whether the ‘>’ character before point could be a delimiter within a
 function definition, namely the trailing delimiter of a list of type variables
 for the function’s return type, making it a *generic* return type.  May move point."
   (when
@@ -734,7 +752,7 @@ The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot
 
 
 (defun jmt-set-for-buffer (variable value)
-  "Sets VARIABLE (a symbol) to VALUE.  Signals an error if the setting
+  "Set VARIABLE (a symbol) to VALUE.  Signal an error if the setting
 is not buffer local."
   (set variable value)
   (cl-assert (local-variable-p variable)))
@@ -1749,7 +1767,7 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 (defface jmt-throws-tag-parameter
   `((t . (:inherit jmt-block-tag-parameter))) "\
 The face for the type-reference parameter of a Javadoc `throws` tag."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -1759,7 +1777,7 @@ The face for the identifier of a class or interface in a type definition.
 Customize it to highlight the identifier where initially it is defined (like
 ‘font-lock-variable-name-face’ does for variable identifiers), as opposed
 to merely referenced after the fact.  See also face ‘jmt-type-reference’."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -1768,7 +1786,7 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 The face for the identifier of a class, interface or type parameter
 (viz. type variable) where it appears as a type reference.  See also
 faces ‘jmt-type-definition’ and ‘jmt-type-variable-declaration’."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -1778,7 +1796,7 @@ The face for a type variable in a type parameter declaration.
 Customize it to highlight the variable where initially it is declared
 (as ‘font-lock-variable-name-face’ does for non-type variables), rather than
 merely referenced after the fact.  See also face ‘jmt-type-reference’."
-  :group 'java-mode-tamed)
+  :group 'jmt)
 
 
 
@@ -1794,7 +1812,7 @@ The face for a type variable in a Javadoc `param` tag."
 
 
 (defun jmt-untamed-face (face)
-  "Returns FACE itself if untamed, else the untamed ancestral face
+  "Return FACE itself if untamed, else the untamed ancestral face
 from which ultimately it inherits.  Necessarily every face defined
 by Java Mode Tamed (tamed face) ultimately inherits from a face
 defined elsewhere, namely its untamed ancestral face."
@@ -1818,14 +1836,14 @@ The face for the proper identifier `value` of a Javadoc value tag."
 
 (defgroup keyword-faces nil "\
 Faces for Java keywords."
-  :group 'java-mode-tamed
+  :group 'jmt
   :prefix "jmt-")
 
 
 
 (defgroup shebang-faces nil "\
 Faces for a shebang line atop a source-launch file."
-  :group 'java-mode-tamed
+  :group 'jmt
   :prefix "jmt-"
   :link '(url-link "http://openjdk.java.net/jeps/330#Shebang_files"))
 
@@ -1838,7 +1856,7 @@ Faces for a shebang line atop a source-launch file."
 
 (unless jmt--early-initialization-was-begun
   (set 'jmt--early-initialization-was-begun t)
-  (set 'c-default-style (cons '(java-mode-tamed . "java") c-default-style)))
+  (set 'c-default-style (cons '(jmt-mode . "java") c-default-style)))
     ;;; Though it appears to have no effect.
 
 
@@ -1852,18 +1870,18 @@ Faces for a shebang line atop a source-launch file."
   ;; autoloads of CC Mode would clobber us here if we did.)  Rather let the package *manager* mend its
   ;; own bugs, and the user meantime find recourse in the means that Emacs provides.
   ;; https://stackoverflow.com/a/35949889/2402790
-  (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'java-mode-tamed))
-  (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'java-mode-tamed)))
+  (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'jmt-mode))
+  (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode)))
 
 
 
 ;;;###autoload
-(define-derived-mode java-mode-tamed java-mode
+(define-derived-mode jmt-mode java-mode
   "JMT" "\
-Java Mode Tamed is a derived major mode that allows better control of the
-Java mode built into Emacs, particularly in regard to syntax highlighting.
+A derived major mode that affords better control of the Java mode
+built into Emacs, particularly in regard to syntax highlighting.
 For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
-  :group 'java-mode-tamed
+  :group 'jmt
 
   ;; ════════════════════════════
   ;; Finish initializing the mode
@@ -1886,8 +1904,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
     (define-error 'jmt-x "Broken monkey patch")
     (condition-case x
         (progn
-          (let (source-file source-base-name)
-
+          (let (source-file source-base-name); Adding or removing a patched function below?
+                                           ;;; Sync with § *Changes to Emacs* at top.
             ;; `cc-fonts` functions
             ;; ────────────────────
             (setq source-file (locate-library "cc-fonts.el" t)
@@ -1980,12 +1998,12 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                  (pattern-end "\\(@[a-z]+\\)"))
             (if (not (string-suffix-p pattern-end pattern))
                 (jmt-message
-                 "(java-mode-tamed): Patch failed to apply, `javadoc-font-lock-doc-comments`")
+                 "(jmt-mode): Patch failed to apply, `javadoc-font-lock-doc-comments`")
               (setq pattern (substring pattern 0 (- (length pattern-end)))
                     pattern (concat pattern "\\(@[a-zA-Z]+\\)")); Allowing for e.g. `serialData`. [JBL]
               (setcar fontifier pattern))))
 
-      (jmt-x (display-warning 'java-mode-tamed (error-message-string x) :error))))
+      (jmt-x (display-warning 'jmt-mode (error-message-string x) :error))))
 
 
   ;; ═════════════════════
@@ -2026,7 +2044,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
 
 
-(provide 'java-mode-tamed)
+(provide 'jmt-mode)
 
 
 
@@ -2142,7 +2160,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        ‘Simply using faces directly is enough.’
 ;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el?id=fd1b34bfba]
 ;;
-;;   RF · Replacement face: a tamed face used by `java-mode-tamed` to override and replace a face
+;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
@@ -2198,4 +2216,4 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;; Local Variables:
 ;; byte-compile-warnings: (not make-local)
 ;; End:
-;;; java-mode-tamed.el ends here
+;;; jmt-mode.el ends here

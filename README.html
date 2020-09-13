@@ -3,9 +3,9 @@
 <h1 lang='en-CA'>Java Mode Tamed</h1>
 <section lang='en-CA'> <!-- Introduction -->
     <p>
-        Here is package Java Mode Tamed for Emacs.  This package introduces a derived major mode that
-        allows better control of the Java mode built into Emacs, particularly in regard to syntax
-        highlighting.  For this, it defines customizeable faces to highlight these features of Java:
+        Project Java Mode Tamed implements a derived major mode for Emacs (`jmt-mode`) that affords
+        better control of the built-in Java mode, particularly in regard to syntax highlighting.
+        For this, it defines customizeable faces to highlight the following features of Java.
         </p>
     <ul>
         <li>Annotation details</li>
@@ -22,17 +22,17 @@
 <section lang='en-CA' id='Installation'>
     <h2>Installation</h2>
     <p>
-        If you install this package using a package manager, then already Java Mode Tamed should activate
-        for any loaded file that has either a `.java` extension or `java` shebang.  Alternatively, see
-        `<a href='java-mode-tamed.el'>java-mode-tamed.el</a>` for instructions to install it manually.
+        If you install package `jmt-mode` using a package manager, then already it should activate
+        for any loaded file that has either a `.java` extension or `java` shebang.  Alternatively,
+        see `<a href='jmt-mode.el'>jmt-mode.el</a>` for instructions on installing the mode manually.
         </p>
     </section>
 <section lang='en-CA' id='Customization'>
     <h2>Customization</h2>
     <p>
-        To view a list of the customizeable faces, use `M-x customize-group &lt;RET> java-mode-tamed
-        &lt;RET>` — your buffer must be in Java Mode Tamed for this to work.  Or look through
-        the `defface` definitions in `java-mode-tamed.el`.
+        To view a list of the customizeable faces, enter a `jmt-mode` buffer (or otherwise
+        load `jmt-mode`) and type `M-x customize-group &lt;RET> jmt &lt;RET>`.
+        Or look through the `defface` definitions in `jmt-mode.el`.
         </p>
     <p>
         For reference, a working example of customization is available:
