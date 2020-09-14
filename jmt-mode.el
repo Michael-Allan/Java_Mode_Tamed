@@ -4,7 +4,7 @@
 ;;
 ;; Author: Michael Allan <mike@reluk.ca>
 ;; Version: 0-snapshot
-;; Package-Requires: (cl-lib (emacs "24.4"))
+;; Package-Requires: ((emacs "24.4"))
 ;; Keywords: c, languages
 ;; URL: http://reluk.ca/project/Java/Emacs/
 ;;
@@ -60,7 +60,7 @@
 ;;; Code:
 
 
-(eval-when-compile (require 'cl-lib)); For macro `cl-assert`.
+(eval-when-compile (require 'cl-lib)); Built into Emacs 24.3+, required for macro `cl-assert`.
 (require 'cc-mode)
 
 
@@ -71,7 +71,7 @@
 
 
 (defun jmt-make-Javadoc-tag-facing (f)
-  "Make a face property for a Javadoc tag using F (face symbol) as a base."
+  "Make a face property for a Javadoc tag using face F (symbol) as a base."
   (list f 'font-lock-doc-face)); [PDF]
 
 
@@ -202,10 +202,11 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 
 
-(defun jmt--c/try-putting-face (beg end face)
-  "Call ‘c-put-font-lock-face’ with the given arguments on condition that
-either a) BEG and END delimit a region under fontification by Font Lock,
-or b) the present buffer is untamed."
+(defun jmt--c-try-putting-face (beg end face)
+  "Call `‘c-put-font-lock-face’ BEG END FACE` if the call appears to be valid.
+Either a) the present buffer must be untamed, or b) BEG and END must delimit
+a region under fontification by Font Lock, or the call is judged invalid
+and this function does nothing."
   ;; Called from within a monkey-patched version of the underlying Java-mode code, this function prevents
   ;; an endless tug of war between Java mode and Java Mode Tamed, which otherwise would destabilize tamed
   ;; faces, causing them alternately to appear and disappear.
@@ -257,8 +258,7 @@ of a formal Java expression."
 
 
 (defun jmt-faces-are-equivalent (f1 f2)
-  "Answer whether F1 and F2 (face symbols) should be treated as equivalent
-by the underlying (Java-mode) code."
+  "Answer whether Java mode should treat face symbols F1 and F2 as equivalent."
   (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
 
@@ -333,26 +333,23 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-annotation-terminal-face (f)
-  "Answer whether F (face symbol) is a face that might be set
-on the last character of annotation."
+  "Answer whether face F (symbol) might occur on the last character of annotation."
   (eq 'c-annotation-face (jmt-untamed-face f)))
 
 
 
-(defun jmt-is-Java-mode-tag-faced (v)
-  "Answer whether property value V (face symbol or list) is one which might have
-been set on a Javadoc tag by the underlying (Java-mode) code."
-  (and (consp v); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
-       (eq 'font-lock-constant-face (car v))
-       (eq 'font-lock-doc-face (car (setq v (cdr v))))
-       (eq nil (cdr v))))
+(defun jmt-is-Java-mode-tag-faced (p)
+  "Answer whether face property P (symbol or list) might occur on a Javadoc tag."
+  (and (consp p); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
+       (eq 'font-lock-constant-face (car p))
+       (eq 'font-lock-doc-face (car (setq p (cdr p))))
+       (null (cdr p))))
 
 
 
 (defun jmt-is-Java-mode-type-face (f)
-  "Answer whether F (face symbol) is a type face which might have been set
-by the underlying (Java-mode) code."
-  (eq f 'font-lock-type-face)); Java mode alone sets this face.
+  "Answer whether face F (symbol) is a type face that Java mode might have set."
+  (eq f 'font-lock-type-face)); Java mode sets this face alone.
 
 
 
@@ -371,8 +368,8 @@ by the underlying (Java-mode) code."
 
 
 (defun jmt-is-type-modifier-keyword (s)
-  "Answer whether string S is a type definition modifier in keyword form,
-e.g. as opposed to annotation form."
+  "Answer whether string S is a type definition modifier in keyword form."
+  ;; Keyword form as opposed e.g. to annotation form, that is."
   ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
   ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
   (or (string= s "public")
@@ -440,9 +437,9 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
 
 
 (defun jmt-keyword-face (keyword beg end)
-  "Return the face (symbol) proper to the given Java KEYWORD (string),
-given to be present in the buffer from position BEG (inclusive number)
-to END (exclusive number).  Leaves point indeterminate."
+  "Return the face (symbol) proper to the given Java KEYWORD (string).
+The buffer position of the keyword is given by the numbers BEG (inclusive)
+and END (exclusive).  Point is left indeterminate."
   (defvar jmt-keyword-face-alist); [FV]
   (let ((f (assoc keyword jmt-keyword-face-alist)))
     (if (not f) 'jmt-principal-keyword; Returning either a default face,
@@ -513,17 +510,18 @@ to END (exclusive number).  Leaves point indeterminate."
     ("switch"       .     jmt-principal-keyword); Of a statement.
     ("transient"    .     jmt-qualifier-keyword)
     ("volatile"     .     jmt-qualifier-keyword)) "\
-A list of cons cells of Java keywords `(string @ car)` each with the name
-`(symbol @ cdr)` of either its proper face, or a function in the form
-of ‘jmt-keyword-face-class’ that returns a face symbol.  The list excludes
-keywords that Java mode does not face with ‘font-lock-keyword-face’.")
+An alist relating Java keywords to their proper facing.
+The car of each entry is a Java keyword (string), while the cdr is either
+its proper face (symbol) or a function in the form of ‘jmt-keyword-face-class’
+that returns a face symbol.  The list excludes the keywords that Java mode
+does not face with ‘font-lock-keyword-face’.")
 
 
 
 (defun jmt-keyword-face-class (beg _end)
-  "Return the face (symbol) to give to the `class` keyword present
-in the buffer from position BEG (inclusive number) to _END (exclusive number).
-Leaves point indeterminate."
+  "Return the face (symbol) proper to a `class` keyword.
+The buffer position of the keyword is given by the numbers BEG (inclusive)
+and END (exclusive).  Point is left indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
   (if (eq ?. (char-before)); [NCE]
@@ -534,9 +532,9 @@ Leaves point indeterminate."
 
 
 (defun jmt-keyword-face-static (beg end)
-  "Return the face (symbol) to give to the `static` keyword present
-in the buffer from position BEG (inclusive number) to _END (exclusive number).
-Leaves point indeterminate."
+  "Return the face (symbol) proper to a `static` keyword.
+The buffer position of the keyword is given by the numbers BEG (inclusive)
+and END (exclusive).  Point is left indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
   (setq end (point)); The presumed end of the preceding keyword.
@@ -548,9 +546,9 @@ Leaves point indeterminate."
 
 
 (defun jmt-keyword-face-sync (_beg end)
-  "Return the face (symbol) to give to the `synchronized` keyword present
-in the buffer from position _BEG (inclusive number) to END (exclusive number).
-Leaves point indeterminate."
+  "Return the face (symbol) proper to a `synchronized` keyword.
+The buffer position of the keyword is given by the numbers BEG (inclusive)
+and END (exclusive).  Point is left indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
   (if (eq ?\( (char-after)); [NCE]
@@ -565,9 +563,9 @@ Leaves point indeterminate."
 
 
 (defun jmt-message (format-string &rest arguments)
-  "Call function ‘message’ with the given arguments, but without translating
-embedded \\=`\\=`\\=` and \\=`\\='\\=` quotes."
-  (message "%s" (apply 'format format-string arguments)))
+  "Call `‘message’ FORMAT-STRING ARGUMENTS` without translating embedded quotes.
+Any quote characters \\=`\\=`\\=` or \\=`\\='\\=` in the FORMAT-STRING are output as is."
+  (message "%s" (apply #'format format-string arguments)))
 
 
 
@@ -588,14 +586,14 @@ the facing if you prefer to have these literals not stand out."
 
 
 (defun jmt-new-fontifiers-2 ()
-  "Builds a ‘font-lock-keywords’ list for fast, untamed highlighting.
+  "Build a ‘font-lock-keywords’ list for fast, untamed highlighting.
 See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlighting."
   (java-font-lock-keywords-2)); [L2U]
 
 
 
 (defun jmt-new-fontifiers-3 ()
-  "Builds a ‘font-lock-keywords’ list for accurate, tamed highlighting."
+  "Build a ‘font-lock-keywords’ list for accurate, tamed highlighting."
   (defvar jmt-specific-fontifiers-3); [FV]
   (nconc
 
@@ -660,11 +658,12 @@ An exception applies to type parameters; for those, see instead
 
 
 (defun jmt--patch (source-file source-base-name function-symbol patch-function)
-  "Called from within a temporary buffer, this function monkey patches
-the function FUNCTION-SYMBOL, originally from file SOURCE-FILE (a string, which
-has the given SOURCE-BASE-NAME), using the named PATCH-FUNCTION.  PATCH-FUNCTION
-must return t on success, nil on failure.  Syntactically the configuration
-of the temporary buffer must be equivalent to that of Emacs Lisp mode."; [ELM]
+  "Apply a monkey patch to function FUNCTION-SYMBOL.
+You must call `jmt--patch` from a temporary buffer syntactically equivalent
+to a buffer in Emacs Lisp mode.  It monkey patches the function denoted
+by FUNCTION-SYMBOL, originally defined in file SOURCE-FILE (a string that has
+the given SOURCE-BASE-NAME).  For this, it uses the named PATCH-FUNCTION,
+which must return t on success and nil on failure."; [ELM]
   (unless (functionp function-symbol)
     (signal 'jmt-x `("No such function loaded" ,function-symbol)))
   (let ((load-file (symbol-file function-symbol)))
@@ -697,9 +696,8 @@ of the temporary buffer must be equivalent to that of Emacs Lisp mode."; [ELM]
 
 
 (defun jmt-preceding->-marks-generic-return-type ()
-  "Answer whether the ‘>’ character before point could be a delimiter within a
-function definition, namely the trailing delimiter of a list of type variables
-for the function’s return type, making it a *generic* return type.  May move point."
+  "Answer whether the ‘>’ before point might terminate a generic return type.
+Point is left indeterminate."
   (when
       (condition-case _x
           (progn (forward-sexp -1) t); Move backward to the front of the leading delimiter.
@@ -752,8 +750,8 @@ The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot
 
 
 (defun jmt-set-for-buffer (variable value)
-  "Set VARIABLE (a symbol) to VALUE.  Signal an error if the setting
-is not buffer local."
+  "Set buffer-local VARIABLE (a symbol) to VALUE.
+Signal an error if VARIABLE is not buffer local."
   (set variable value)
   (cl-assert (local-variable-p variable)))
 
@@ -830,7 +828,7 @@ in case of an `env` interpreter."
                               (throw 'is-annotation nil))
                             (forward-char); Past the ‘.’.
                             t); Continuing the loop, so skipping past this segment of the name.
-                        (unless (or (eq face nil); The most common case.  Else a misfontification:
+                        (unless (or (null face); The most common case.  Else a misfontification:
                                     (eq face 'font-lock-function-name-face); This one occurs in the case,
                                       ;;; for instance, of an empty `()` annotation qualifier.
                                     (jmt-is-Java-mode-type-face face)); [T↓]
@@ -901,7 +899,7 @@ in case of an `env` interpreter."
           (while (re-search-forward "\\<assert\\>" limit t)
             (setq match-beg (match-beginning 0)
                   f (get-text-property match-beg 'face))
-            (when (or (eq f nil) (jmt-is-Java-mode-type-face f)); [T↓]
+            (when (or (null f) (jmt-is-Java-mode-type-face f)); [T↓]
                 ;; Only identifiers left unfaced or misfaced as type names have been seen.  Unfaced is
                 ;; the more common.  For an instance of misfacing, see `assert stators.getClass()`. [AM]
                 ;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
@@ -1076,7 +1074,7 @@ in case of an `env` interpreter."
                  (forward-char); To the (would be) loop invariant.
                (setq last-seg-was-found t))
              (setq face (get-text-property match-beg 'face))
-             (when (or (eq face nil); Java mode leaves unfaced all but the last segment.
+             (when (or (null face); Java mode leaves unfaced all but the last segment.
                        (eq face 'font-lock-constant-face))
                (set-match-data (list match-beg (point) match-beg match-end (current-buffer)))
                (throw 'to-reface t)))
@@ -1470,7 +1468,7 @@ in case of an `env` interpreter."
              (setq match-beg (match-beginning 0); Presumptively.
                    match-end (match-end 0)
                    face (get-text-property match-beg 'face))
-             (when (or (eq face nil) (eq face 'font-lock-function-name-face); Unfaced or misfaced.
+             (when (or (null face) (eq face 'font-lock-function-name-face); Unfaced or misfaced.
                        (eq face 'jmt-type-reference)); [↑T]
                  ;;; Vanguard, redundant but for sake of speed.  See the other face guards below.
                (forward-comment most-positive-fixnum); [CW→]
@@ -1481,7 +1479,7 @@ in case of an `env` interpreter."
                  (catch 'is-constructor-definition; One that needs fontifying, that is.  Or some
                    ;; cases of method definition in need; this section will fontify those, too,
                    ;; just because it happens to precede the method definition section, below.
-                   (unless (or (eq face nil) (eq face 'jmt-type-reference)); [↑T]
+                   (unless (or (null face) (eq face 'jmt-type-reference)); [↑T]
                      (throw 'is-constructor-definition nil)); Only identifiers left unfaced
                      ;;; or misfaced as type references have been seen.  See for instance
                      ;;; the sequences `public @Warning("non-API") ApplicationX()` at
@@ -1537,7 +1535,7 @@ in case of an `env` interpreter."
                  ;; Method definition
                  ;; ─────────────────
                  (catch 'is-method-definition; One that needs fontifying, that is.
-                   (unless (eq face nil)) (throw 'is-method-definition nil); Definitions
+                   (unless (null face)) (throw 'is-method-definition nil); Definitions
                      ;;; unfaced have been seen, but misfaced have not.  See for instance
                      ;;; the sequence `public @Override @Warning("non-API") void onCreate()`.
                      ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
@@ -1812,10 +1810,9 @@ The face for a type variable in a Javadoc `param` tag."
 
 
 (defun jmt-untamed-face (face)
-  "Return FACE itself if untamed, else the untamed ancestral face
-from which ultimately it inherits.  Necessarily every face defined
-by Java Mode Tamed (tamed face) ultimately inherits from a face
-defined elsewhere, namely its untamed ancestral face."
+  "Return FACE itself if untamed, else its nearest untamed ancestor.
+Every face defined by Java Mode Tamed (tamed face) ultimately inherits
+from an untamed ancestral face defined elsewhere."
   (catch 'untamed-face
     (while (string-prefix-p "jmt-" (symbol-name face))
       (setq face (face-attribute face :inherit nil nil))
@@ -1922,7 +1919,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                  (lambda ()
                    (let (is-patched)
                      (while (search-forward "(c-put-font-lock-face " nil t)
-                       (replace-match "(jmt--c/try-putting-face " t t)
+                       (replace-match "(jmt--c-try-putting-face " t t)
                        (setq is-patched t))
                      is-patched)))
 
