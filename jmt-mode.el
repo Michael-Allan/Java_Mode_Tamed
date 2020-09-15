@@ -1853,8 +1853,8 @@ Faces for a shebang line atop a source-launch file."
 
 (unless jmt--early-initialization-was-begun
   (set 'jmt--early-initialization-was-begun t)
-  (set 'c-default-style (cons '(jmt-mode . "java") c-default-style)))
-    ;;; Though it appears to have no effect.
+  (set 'c-default-style (cons '(jmt-mode . "java") c-default-style))); Setting the default style
+    ;;; (of indentation etc.) to `java` style, the same as the underlying Java mode.
 
 
 
