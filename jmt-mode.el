@@ -359,8 +359,8 @@ see ‘jmt-block-tag-parameter’."
 
 
 
-(defun jmt-is-type-definitive-keyword (s)
-  "Answer whether string S is the principal keyword of a type definition."
+(defun jmt-is-type-declarative-keyword (s)
+  "Answer whether string S is the principal keyword of a type declaration."
   (or (string= s "class")
       (string= s "interface")
       (string= s "enum")))
@@ -368,7 +368,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-type-modifier-keyword (s)
-  "Answer whether string S is a type definition modifier in keyword form."
+  "Answer whether string S is a type declaration modifier in keyword form."
   ;; Keyword form as opposed e.g. to annotation form, that is."
   ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
   ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
@@ -493,16 +493,16 @@ and END (exclusive).  Point is left indeterminate."
 ;;; ("_"            .       jmt-misused-keyword); (reserved, yet unfaced by Java mode)
 ;;; ("byte"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("const"        .     jmt-qualifier-keyword); (but reserved)
-    ("enum"         .     jmt-principal-keyword); Of a type definition.
+    ("enum"         .     jmt-principal-keyword); Of a type declaration.
     ("default"      .     jmt-principal-keyword); Of a statement clause.
     ("do"           .     jmt-principal-keyword); Of a statement.
 ;;; ("double"       .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("extends"      .     jmt-qualifier-keyword)
     ("finally"      .     jmt-principal-keyword); Of a statement clause.
-    ("goto"         .     jmt-principal-keyword); (but reserved)
+    ("goto"         .     jmt-principal-keyword); Of a statement (but reserved)
     ("implements"   .     jmt-qualifier-keyword)
     ("instanceof"   .    jmt-expression-keyword)
-    ("interface"    .     jmt-principal-keyword); Of a type definition.
+    ("interface"    .     jmt-principal-keyword); Of a type declaration.
     ("native"       .     jmt-qualifier-keyword)
     ("package"      .   jmt-boilerplate-keyword)
 ;;; ("short"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
@@ -527,7 +527,7 @@ and END (exclusive).  Point is left indeterminate."
   (if (eq ?. (char-before)); [NCE]
       'jmt-expression-keyword
         ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-ClassLiteral
-    'jmt-principal-keyword)); Of a type definition.
+    'jmt-principal-keyword)); Of a type declaration.
 
 
 
@@ -704,7 +704,7 @@ Point is left indeterminate."
         (scan-error nil))
     (forward-comment most-negative-fixnum); [←CW]
     (not (eq (char-before) ?.)))); (not `char-equal`, in case nil)
-      ;;; Here a `.` would indicate a method call, as opposed to a definition.
+      ;;; Here a `.` would indicate a call to the method, as opposed to its declaration.
 
 
 
@@ -716,7 +716,7 @@ Point is left indeterminate."
 
 (defface jmt-principal-keyword; [MDF, RF]
   `((t . (:inherit font-lock-keyword-face))) "\
-The face for the principal keyword of a definition.
+The face for the principal keyword of a declaration, statement or clause.
 Cf. ‘jmt-qualifier-keyword’.  See also subfaces
 ‘jmt-boilerplate-keyword’ and ‘jmt-expression-keyword’."
   :group 'keyword-faces)
@@ -729,7 +729,7 @@ Cf. ‘jmt-qualifier-keyword’.  See also subfaces
 
 (defface jmt-qualifier-keyword; [MDF, RF]
   `((t . (:inherit font-lock-keyword-face))) "\
-The face for a secondary keyword in a definition.
+The face for a secondary keyword in a declaration.
 Cf. ‘jmt-principal-keyword’."
   :group 'keyword-faces)
 
@@ -940,7 +940,7 @@ in case of an `env` interpreter."
     '(1 'default t))
 
 
-   (list; Reface each Java type name using either `jmt-type-definition` or  `jmt-type-reference`.
+   (list; Reface each Java type name using either `jmt-type-declaration` or  `jmt-type-reference`.
     (lambda (limit)
       (catch 'to-reface
         (while (< (point) limit)
@@ -954,8 +954,8 @@ in case of an `env` interpreter."
               (when; A keyword `class`, `enum` or `interface` directly precedes the type name.
                   (let ((p (point)))
                     (and (< (skip-chars-backward jmt-name-character-set) 0)
-                         (jmt-is-type-definitive-keyword (buffer-substring-no-properties (point) p))))
-                (set 'jmt-f 'jmt-type-definition)
+                         (jmt-is-type-declarative-keyword (buffer-substring-no-properties (point) p))))
+                (set 'jmt-f 'jmt-type-declaration)
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t))
 
@@ -970,15 +970,15 @@ in case of an `env` interpreter."
     '(0 jmt-f t t))
 
 
-   (cons; Face each name of a type definition that was incorrectly left unfaced by Java mode.
+   (cons; Face each name of a type declaration that was left unfaced by Java mode.
     (lambda (limit)
       (catch 'to-face
         (while (< (point) limit)
           (let* ((p (point))
                  (match-end (next-single-property-change p 'face (current-buffer) limit)))
-            (when; A type definitive keyword (`class`, `enum` or `interface`) is found.
+            (when; A type declarative keyword (`class`, `enum` or `interface`) is found.
                 (and (eq 'jmt-principal-keyword (get-text-property p 'face)); [↑K]
-                     (jmt-is-type-definitive-keyword
+                     (jmt-is-type-declarative-keyword
                       (buffer-substring-no-properties (point) match-end)))
               (goto-char match-end)
               (forward-comment most-positive-fixnum); [CW→]
@@ -988,12 +988,12 @@ in case of an `env` interpreter."
                            (> (skip-chars-forward jmt-name-character-set limit) 0); A name follows.
                            (not (get-text-property match-beg 'face))); The name is unfaced.
                   (setq match-end (point))
-                  (goto-char p); Back to the type definitive keyword.
+                  (goto-char p); Back to the type declarative keyword.
                   (forward-comment most-negative-fixnum); [←CW]
-                  (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this definition
+                  (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
                     (backward-char); as that of an annotation type.  Move back past the ‘@’.
                     (forward-comment most-negative-fixnum)); [←CW]
-                  (catch 'is-modifier; Thrown as nil on encountering *not* a type definition modifier.
+                  (catch 'is-modifier; Thrown as nil on encountering *not* a type declaration modifier.
                     (while t; Now point should (invariant) be directly after such a modifier.  So test:
                       (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
                         (condition-case _x                ; tation parameters, presumeably.
@@ -1032,7 +1032,7 @@ in case of an `env` interpreter."
                         (forward-comment most-negative-fixnum))))))); [←CW]
             (goto-char match-end)))
         nil))
-    '(0 'jmt-type-definition t)); [QTF]
+    '(0 'jmt-type-declaration t)); [QTF]
 
 
 
@@ -1474,13 +1474,13 @@ in case of an `env` interpreter."
                (forward-comment most-positive-fixnum); [CW→]
                (when (eq ?\( (char-after)); [NCE]
 
-                 ;; Constructor definition  (assumption: point is directly before the ‘(’)
-                 ;; ──────────────────────
-                 (catch 'is-constructor-definition; One that needs fontifying, that is.  Or some
-                   ;; cases of method definition in need; this section will fontify those, too,
-                   ;; just because it happens to precede the method definition section, below.
+                 ;; Constructor declaration  (assumption: point is directly before the ‘(’)
+                 ;; ───────────────────────
+                 (catch 'is-constructor-declaration; One that needs fontifying, that is.  Or some
+                   ;; cases of method declaration in need; this section will fontify those, too,
+                   ;; just because it happens to precede the method declaration section, below.
                    (unless (or (null face) (eq face 'jmt-type-reference)); [↑T]
-                     (throw 'is-constructor-definition nil)); Only identifiers left unfaced
+                     (throw 'is-constructor-declaration nil)); Only identifiers left unfaced
                      ;;; or misfaced as type references have been seen.  See for instance
                      ;;; the sequences `public @Warning("non-API") ApplicationX()` at
                      ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L23`,
@@ -1518,13 +1518,13 @@ in case of an `env` interpreter."
                    ;; ·····················
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
-                   (when (bobp) (throw 'is-constructor-definition nil))
+                   (when (bobp) (throw 'is-constructor-declaration nil))
                    (when (char-equal (char-before) ?>)
                      (if (jmt-preceding->-marks-generic-return-type)
                          (goto-char match-end)
                          (throw 'to-fontify 'font-lock-function-name-face)
-                       (throw 'is-constructor-definition nil)))
-                   ;; A constructor modifier here before point would also indicate a definition.
+                       (throw 'is-constructor-declaration nil)))
+                   ;; A constructor modifier here before point would also indicate a declaration.
                    ;; However, the earlier test of ‘final’ (above) has eliminated the only case
                    ;; in which Java mode is known to fail when a keyword modifier appears here.
                    ;; That leaves only the case of an *annotation* modifier to remedy.
@@ -1532,16 +1532,16 @@ in case of an `env` interpreter."
                      (goto-char match-end)
                      (throw 'to-fontify 'font-lock-function-name-face)))
 
-                 ;; Method definition
-                 ;; ─────────────────
-                 (catch 'is-method-definition; One that needs fontifying, that is.
-                   (unless (null face)) (throw 'is-method-definition nil); Definitions
+                 ;; Method declaration
+                 ;; ──────────────────
+                 (catch 'is-method-declaration; One that needs fontifying, that is.
+                   (unless (null face)) (throw 'is-method-declaration nil); Definitions
                      ;;; unfaced have been seen, but misfaced have not.  See for instance
                      ;;; the sequence `public @Override @Warning("non-API") void onCreate()`.
                      ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
-                   (when (bobp) (throw 'is-method-definition nil))
+                   (when (bobp) (throw 'is-method-declaration nil))
                    (setq i (char-before))
                    (when (char-equal i ?\]); Return type declared as an array.
                      (goto-char match-end)
@@ -1550,7 +1550,7 @@ in case of an `env` interpreter."
                      (if (jmt-preceding->-marks-generic-return-type)
                          (goto-char match-end)
                          (throw 'to-fontify 'font-lock-function-name-face)
-                       (throw 'is-method-definition nil)))
+                       (throw 'is-method-declaration nil)))
                    (when (eq (get-text-property (1- (point)) 'face) 'jmt-type-reference); [↑T]
                      ;; The return type is declared simply by a type name.
                      (goto-char match-end)
@@ -1560,11 +1560,11 @@ in case of an `env` interpreter."
                  ;; ───────────
                  (catch 'is-method-call; One that needs refacing, that is.
                    (unless (eq face 'font-lock-function-name-face) (throw 'is-method-call nil))
-                     ;;; Only calls misfaced as definitions have been seen.
+                     ;;; Only calls misfaced as declarations have been seen.
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
                    (when (bobp) (throw 'is-method-call nil))
-                   (when; When the possibility of the method identifier being proper to a definition
+                   (when; When the possibility of the method identifier being proper to a declaration
                        ;; as opposed to a call is excluded because it directly follows either: [AM]
                        (or (char-equal (char-before) ?.)
                              ;;; (a) The character ‘.’, as in the sequence `assert stators.getClass()` at
@@ -1700,9 +1700,9 @@ in case of an `env` interpreter."
                      ;;; Leaving `i` set to that delimiter character.
                    (catch 'is-proven; And the matched name occurs at the top level of that list (depth
                      ;; of angle brackets 1).  And the list directly follows either (a) the identifier
-                     ;; of a type definition, indicating the definition of a generic class or inter-
+                     ;; of a type declaration, indicating the declaration of a generic class or inter-
                      ;; face, or (b) neither a type name, type variable nor `.` delimiter (of a method
-                     ;; call), indicating the definition of a generic method or constructor. [MC]
+                     ;; call), indicating the declaration of a generic method or constructor. [MC]
                      (setq depth 1); Nested depth of name in brackets, presumed to be 1 as required.
                      (while; Ensure `p` has emerged from all brackets,
                          (progn; moving it leftward as necessary.
@@ -1712,7 +1712,7 @@ in case of an `env` interpreter."
                                     (goto-char p)
                                     (forward-comment most-negative-fixnum); [←CW]
                                     (when (bobp) (throw 'is-proven t))
-                                      ;;; Apparently a generic method or constructor definition,
+                                      ;;; Apparently a generic method or constructor declaration,
                                       ;;; though outside of any class body and so misplaced.
                                     (setq p (1- (point)); Into direct predecessor of variable list.
                                           i (char-after p))
@@ -1722,11 +1722,11 @@ in case of an `env` interpreter."
                                       (throw 'is-proven nil))
                                     (setq j (get-text-property p 'face))
                                     (throw 'is-proven; As the type parameter declaration of:
-                                           (or (eq 'jmt-type-definition j); [↑T]
-                                                 ;;; (a) a generic class or interface definition;
+                                           (or (eq 'jmt-type-declaration j); [↑T]
+                                                 ;;; (a) a generic class or interface declaration;
                                                (not (eq 'font-lock-type-face
                                                      (jmt-untamed-face j)))))))
-                                                 ;;; (b) a generic method or constructor definition.
+                                                 ;;; (b) a generic method or constructor declaration.
                                  ((char-equal i ?>); Descending into another bracket pair.
                                   (setq depth (1+ depth))))
                            (if (= p p-min)
@@ -1769,9 +1769,9 @@ The face for the type-reference parameter of a Javadoc `throws` tag."
 
 
 
-(defface jmt-type-definition; [MDF, RF]
+(defface jmt-type-declaration; [MDF, RF]
   `((t . (:inherit font-lock-type-face))) "\
-The face for the identifier of a class or interface in a type definition.
+The face for the identifier of a class or interface in a type declaration.
 Customize it to highlight the identifier where initially it is defined (like
 ‘font-lock-variable-name-face’ does for variable identifiers), as opposed
 to merely referenced after the fact.  See also face ‘jmt-type-reference’."
@@ -1783,13 +1783,13 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
   `((t . (:inherit font-lock-type-face))) "\
 The face for the identifier of a class, interface or type parameter
 (viz. type variable) where it appears as a type reference.  See also
-faces ‘jmt-type-definition’ and ‘jmt-type-variable-declaration’."
+faces ‘jmt-type-declaration’ and ‘jmt-type-variable-declaration’."
   :group 'jmt)
 
 
 
 (defface jmt-type-variable-declaration; [TP, MDF, RF]
-  `((t . (:inherit jmt-type-definition))) "\
+  `((t . (:inherit jmt-type-declaration))) "\
 The face for a type variable in a type parameter declaration.
 Customize it to highlight the variable where initially it is declared
 (as ‘font-lock-variable-name-face’ does for non-type variables), rather than
@@ -2027,7 +2027,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
              'jmt-package-name-declared
              'jmt-principal-keyword
              'jmt-qualifier-keyword
-             'jmt-type-definition
+             'jmt-type-declaration
              'jmt-type-variable-declaration
              'jmt-type-reference)))
 
