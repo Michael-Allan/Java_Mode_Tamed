@@ -2210,7 +2210,4 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
 
 ;; - - - - - - - - - -
-;; Local Variables:
-;; byte-compile-warnings: (not make-local)
-;; End:
 ;;; jmt-mode.el ends here
