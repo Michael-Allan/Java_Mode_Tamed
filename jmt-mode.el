@@ -76,8 +76,13 @@
 
 
 
-(defvar jmt-name-character-set); [FV]
-(defvar jmt-value-tag-name-f)
+(defconst jmt-name-character-set "[:alnum:]_$" "\
+The set of characters from which a Java identifier may be formed.")
+  ;;; https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.8
+
+
+
+(defvar jmt-value-tag-name-f); [FV]
 
 
 
@@ -291,6 +296,11 @@ See also subfaces ‘jmt-HTML-start-tag-name’ and ‘jmt-HTML-end-tag-name’.
 
 
 
+(defconst jmt-identifier-pattern (concat "[" jmt-name-character-set "]+") "\
+The regular-expression pattern of a Java identifier.")
+
+
+
 (defface jmt-inline-rendered-parameter; [NDF, RF]
   `((t . (:inherit jmt-inline-tag-parameter))) "\
 The face for a rendered parameter of a Javadoc inline tag; one that appears
@@ -370,8 +380,8 @@ see ‘jmt-block-tag-parameter’."
 (defun jmt-is-type-modifier-keyword (s)
   "Answer whether string S is a type declaration modifier in keyword form."
   ;; Keyword form as opposed e.g. to annotation form, that is."
-  ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1
-  ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.1.1
+  ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.1
+  ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se15/html/jls-9.html#jls-9.1.1
   (or (string= s "public")
       (string= s "final")
       (string= s "static")
@@ -526,7 +536,7 @@ and END (exclusive).  Point is left indeterminate."
   (forward-comment most-negative-fixnum); [←CW]
   (if (eq ?. (char-before)); [NCE]
       'jmt-expression-keyword
-        ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-ClassLiteral
+        ;;; https://docs.oracle.com/javase/specs/jls/se15/html/jls-15.html#jls-ClassLiteral
     'jmt-principal-keyword)); Of a type declaration.
 
 
@@ -547,13 +557,13 @@ and END (exclusive).  Point is left indeterminate."
 
 (defun jmt-keyword-face-sync (_beg end)
   "Return the face (symbol) proper to a `synchronized` keyword.
-The buffer position of the keyword is given by the numbers BEG (inclusive)
+The buffer position of the keyword is given by the numbers _BEG (inclusive)
 and END (exclusive).  Point is left indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
   (if (eq ?\( (char-after)); [NCE]
       'jmt-principal-keyword; Of a statement.
-        ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-14.html#jls-14.19
+        ;;; https://docs.oracle.com/javase/specs/jls/se15/html/jls-14.html#jls-14.19
     'jmt-qualifier-keyword))
 
 
@@ -566,12 +576,6 @@ and END (exclusive).  Point is left indeterminate."
   "Call `‘message’ FORMAT-STRING ARGUMENTS` without translating embedded quotes.
 Any quote characters \\=`\\=`\\=` or \\=`\\='\\=` in the FORMAT-STRING are output as is."
   (message "%s" (apply #'format format-string arguments)))
-
-
-
-(defconst jmt-name-character-set "[:alnum:]_$" "\
-The set of characters from which a Java identifier may be formed.")
-  ;;; https://docs.oracle.com/javase/specs/jls/se13/html/jls-3.html#jls-3.8
 
 
 
@@ -970,6 +974,8 @@ in case of an `env` interpreter."
     '(0 jmt-f t t))
 
 
+   ;; Type declaration
+   ;; ────────────────
    (cons; Face each name of a type declaration that was left unfaced by Java mode.
     (lambda (limit)
       (catch 'to-face
@@ -993,7 +999,7 @@ in case of an `env` interpreter."
                   (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
                     (backward-char); as that of an annotation type.  Move back past the ‘@’.
                     (forward-comment most-negative-fixnum)); [←CW]
-                  (catch 'is-modifier; Thrown as nil on encountering *not* a type declaration modifier.
+                  (catch 'is-modifier; Thrown as nil on discovery the answer is negative.
                     (while t; Now point should (invariant) be directly after such a modifier.  So test:
                       (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
                         (condition-case _x                ; tation parameters, presumeably.
@@ -1018,7 +1024,7 @@ in case of an `env` interpreter."
                               ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`]
                               ;;;     It seems Java mode expects to find keywords *before* annotation,
                               ;;; which, although it ‘is customary’, is nevertheless ‘not required’.
-                              ;;; [https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.1]
+                              ;;; [https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.1]
                               ;;; Here therefore the missing face is applied.
 
                         ;; Annotation, the modifier is an annotation modifier, or should be
@@ -1033,6 +1039,86 @@ in case of an `env` interpreter."
             (goto-char match-end)))
         nil))
     '(0 'jmt-type-declaration t)); [QTF]
+
+
+   ;; Formal catch parameter  [FCP]
+   ;; ──────────────────────
+   (let (eol match-beg match-end); Face each type identifier and parameter identifier
+     (list                       ; left unfaced by Java mode.
+
+      ;; anchor, the whole parameter declaration, aka `CatchFormalParameter` [FCP]
+      ;; ┈┈┈┈┈┈
+      (lambda (limit); (anchoring matcher)
+        (setq match-beg (point)); Presumptively.
+        (catch 'to-face
+          (while (< match-beg limit)
+            (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+            (when (and (eq 'jmt-principal-keyword (get-text-property match-beg 'face)); [↑K]
+                       (string= "catch" (buffer-substring-no-properties match-beg match-end)))
+              (goto-char match-end)
+              (setq eol (line-end-position))
+              (forward-comment most-positive-fixnum); To the opening paranthesis ‘(’. [CW→]
+              (catch 'needs-facing; Thrown as nil on discovery the answer is negative.
+                (unless (eq ?\( (char-after)); [NCE]
+                  (throw 'needs-facing nil)); Malformed catch block.
+                (forward-char); Past the ‘(’.
+                (forward-comment most-positive-fixnum); To the start of the parameter declaration. [CW→]
+                (setq match-beg (point))
+                (up-list); To just after the closing paranthesis ‘)’.
+                (unless (eq ?\) (char-before)); On `up-list` error, ‘point is unspecified.’ [NCE]
+                  (throw 'needs-facing nil)); Malformed catch block.
+                (when (or (> (point) eol); [SL]
+                          (> (point) limit))
+                  (throw 'needs-facing nil)); Out of bounds.
+                (backward-char); Before the ‘)’.
+                (forward-comment most-negative-fixnum); To the end of the parameter declaration. [←CW]
+                (setq match-end (point))
+                (when (= 0 (skip-chars-backward jmt-name-character-set)); Start of parameter identifier.
+                  (throw 'needs-facing nil)); Malformed catch block.
+                (unless (null (get-text-property (point) 'face))
+                  ;; Already faced, in which case Java mode always faces the type identifier(s), too.
+                  (throw 'needs-facing nil))
+                (set-match-data (list match-beg match-end (point) match-end (current-buffer)))
+                (goto-char match-end)
+                (set 'jmt-p match-beg); Saving the anchor’s bounds.
+                (set 'jmt-q match-end)
+                (throw 'to-face t)))
+            (setq match-beg match-end))
+          nil))
+
+      ;; parameter identifier
+      ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+      '(1 'font-lock-variable-name-face); (regular highlighter) [QTF]
+
+      ;; type identifiers
+      ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+      (list; (anchored highlighter)
+
+       ;; ii) define matches, popping the bounds of each segment from (i)
+       (lambda (limit); (anchored matcher)
+         (catch 'to-face
+           (while (re-search-forward jmt-identifier-pattern limit t)
+             (let ((beg (match-beginning 0))
+                   (case-fold-search nil))
+               ;; Aside from the sought type identifiers, all that could match here is already faced,
+               ;; either by Java mode or the preceding highlighter (parameter identifier), with one
+               ;; exception, an edge case in which Java mode leaves a package qualifier unfaced.
+               ;; Assuming ∴ that package names begin in lower case [BUG], these guards should suffice.
+               (when (and (null (get-text-property beg 'face)); Unfaced, and the first character
+                          (string-match-p "[[:upper:]]" (string (char-after beg)))); is upper case.
+                 (throw 'to-face t))))
+           nil))
+
+       ;; i) pre-position to the start of the parameter declaration
+       '(progn; (pre-form)
+          (goto-char jmt-p); To `match-beg` effectively.
+          jmt-q); Limiting the search region (∵ returning > point) effectively to `match-end`.
+
+       ;; iv) clean up, recovering the proper position
+       '(goto-char jmt-q); (post-form) To `match-end` effectively.
+
+       ;; iii) reface each matched identifier
+       '(0 'jmt-type-reference)))); [QTF]
 
 
 
@@ -1087,9 +1173,9 @@ in case of an `env` interpreter."
    (let (match-beg match-end seg-beg seg-end); Reface each package name segment using
      (list                                   ; face `jmt-annotation-package-name`.
 
-      ;; 1. Anchor on the simple type name of each annotation type reference
-      ;; ─────────
-      (lambda (limit)
+      ;; anchor, the simple type name of each annotation type reference
+      ;; ┈┈┈┈┈┈
+      (lambda (limit); (anchoring matcher)
         (setq match-beg (point)); Presumptively.
         (catch 'is-type-ref
           (while (< match-beg limit)
@@ -1102,20 +1188,21 @@ in case of an `env` interpreter."
             (setq match-beg match-end))
           nil))
 
-       ;; 3. Reface name segments by unstacking (from 2) the bounds of each
-       ;; ───────────────────────
+      ;; name segments
+      ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈
       (list; (anchored highlighter)
-       (lambda (limit)
+
+       ;; ii) define matches, popping the bounds of each segment from (i)
+       (lambda (limit); (anchored matcher)
          (when (setq seg-beg (car jmt-f))
            (set 'jmt-f (cdr jmt-f)); Popping the bounds from the stack.
            (setq seg-end (car jmt-f))
            (set 'jmt-f (cdr jmt-f))
            (cl-assert (<= seg-end limit))
-           (set-match-data (list seg-beg (goto-char seg-end) seg-beg seg-end (current-buffer)))
+           (set-match-data (list seg-beg (goto-char seg-end) (current-buffer)))
            t))
 
-       ;; 2. Seek name segments leftward of the anchor, stacking the bounds of each  [PPN]
-       ;; ─────────────────────
+       ;; i) seek segments leftward of the anchor, stacking the bounds of each  [PPN]
        '(let (seg-beg seg-end); (pre-form)
           (set 'jmt-f nil); The stack of bounds, two per segment, initially empty.
           (goto-char jmt-p); To `match-beg` effectively.
@@ -1131,11 +1218,12 @@ in case of an `env` interpreter."
                   (when (< seg-beg seg-end)
                     (set 'jmt-f (cons seg-end jmt-f)); Pushing the bounds to the stack.
                     (set 'jmt-f (cons seg-beg jmt-f))))))
-          jmt-p); Returning > point in order to delimit the search region, in effect to `match-beg`.
+          jmt-p); Limiting the search region (∵ returning > point) effectively to `match-beg`.
 
-       ;; 4. Reposition in readiness for the next anchor search
-       ;; ─────────────
+       ;; iv) clean up, recovering the proper position
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
+
+       ;; iii) reface each matched segment
        '(0 'jmt-annotation-package-name t)))); [QTF]
 
 
@@ -1156,7 +1244,7 @@ in case of an `env` interpreter."
               (when (char-equal ?. (char-after))
                 (set 'jmt-f
                      (if (string= "Lu" (get-char-code-property (char-after match-beg) 'general-category))
-                         'jmt-type-reference; Workaround for what is probably a misfacing by Java mode.
+                         'jmt-type-reference; Workaround for a probable misfacing by Java mode.
                            ;;; It occurs e.g. with a class-qualified reference to a class member
                            ;;; whose name begins in upper case, such as `Foo.BAR` or `Foo.FooBar`;
                            ;;; here Java mode misfaces the class name (`Foo`) as a package name segment.
@@ -1458,13 +1546,12 @@ in case of an `env` interpreter."
    ;; ════════════════════════════════
 
    (cons; Fontify each identifier that was misfaced by Java mode, or incorrectly left unfaced.
-    (let ((identifier-pattern (concat "[" jmt-name-character-set "]+"))
-          face i match-beg match-end)
+    (let (face i match-beg match-end)
       (lambda (limit)
         (set
          'jmt-f
          (catch 'to-fontify
-           (while (re-search-forward identifier-pattern limit t)
+           (while (re-search-forward jmt-identifier-pattern limit t)
              (setq match-beg (match-beginning 0); Presumptively.
                    match-end (match-end 0)
                    face (get-text-property match-beg 'face))
@@ -1886,7 +1973,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
-    (cl-assert (not (char-equal ?\s (char-syntax ?\n)))); Newlines have no whitespace syntax.
+    (cl-assert (char-equal ?> (char-syntax ?\n))); Newlines have endcomment syntax.
+      ;;; (Consequently they have no whitespace syntax.)
     (cl-assert parse-sexp-ignore-comments)
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
@@ -2056,7 +2144,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
-;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-9.html#jls-9.7
+;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-9.html#jls-9.7.1
 ;;
 ;;   BC · `c-before-change`: Any replacement face [RF] for a face referenced by this function
 ;;        must be included in its monkey patch.
@@ -2070,12 +2158,22 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   CSL  A comment in a shebang line is supported by the `env` interpreter.
 ;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 ;;
-;;  ←CW · Backward across commentary and whitespace.
+;;  ←CW · Backward across commentary (which in Java mode includes newlines) and whitespace.
 ;;
-;;   CW→  Forward across commentary and whitespace.
+;;   CW→  Forward across commentary (including newlines) and whitespace.
 ;;
 ;;   ELM  The syntax-related code that directly follows the opening of the temporary buffer effects a
 ;;        fast simulation of Emacs Lisp mode, faster presumeably than would a call to `emacs-lisp-mode`.
+;;
+;;   FCP  Formal catch parameters, aka `CatchFormalParameter` in the language specification.
+;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-14.html#jls-CatchFormalParameter
+;;            In multi-type parameters, Java mode tends to leave unfaced the type and variable identi-
+;;        fiers.  https://docs.oracle.com/javase/7/docs/technotes/guides/language/catch-multiple.html
+;;            It does the same in rare cases of single-type catch parameter.  For example, it leaves
+;;        unfaced both `FooException` and `x` in this catch block:``catch( @y.A FooException x ) {}`.
+;;            The corrective fontifier implemented here becomes unstable when annotations are attached
+;;        to the parameter declaration.  The likely cause is Java mode making buffer changes outside
+;;        the region under fontification by Font Lock. [BUG]
 ;;
 ;;   FLC  `font-lock-constant-face`: the Java-mode code refers to `font-lock-constant-face` indirectly
 ;;        by way of variables `c-constant-face-name`, `c-doc-markup-face-name`, `c-label-face-name`
@@ -2111,7 +2209,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        with prepended faces. [PDF, RF]
 ;;
 ;;   MC · Method call.  See `MethodInvocation` at
-;;        `https://docs.oracle.com/javase/specs/jls/se13/html/jls-15.html#jls-15.12`.
+;;        `https://docs.oracle.com/javase/specs/jls/se15/html/jls-15.html#jls-15.12`.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
 ;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
@@ -2162,26 +2260,26 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
 ;;   SI · Static import declaration.
-;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-7.html#jls-7.5.3
+;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-7.html#jls-7.5.3
 ;;
 ;;   SL · Restricting the fontifier to a single line.  Multi-line fontifiers can be hairy. [BUG]
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
 ;;
 ;;   SLS  Source-launch files encoded with a shebang.
-;;        https://docs.oracle.com/en/java/javase/14/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
+;;        https://docs.oracle.com/en/java/javase/15/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
 ;;        http://openjdk.java.net/jeps/330#Shebang_files
 ;;
 ;;        For a source-launch file that has no `.java` extension, if its shebang uses `-S` instead of
 ;;        `--split-string`, then it would have to omit the space that typically follows.  If it had the
 ;;        following shebang line, for instance, then auto-mode would fail:
 ;;
-;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 14
+;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 15
 ;;
 ;;        With the above shebang, an `interpreter-mode-alist` entry would have only `-S`
 ;;        to match against, which does not suffice to indicate a Java file.  To avoid this,
 ;;        the shebang line would have to appear as:
 ;;
-;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 14
+;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 15
 ;;
 ;;        Yet, while the above seems to work (GNU coreutils 8.3), omitting the space in this manner
 ;;        is undocumented.  Therefore it might be better to avoid `-S` in favour of the long form,
@@ -2196,7 +2294,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   TB · Text blocks, a preview language feature at time of writing.  https://openjdk.java.net/jeps/378
 ;;
-;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se13/html/jls-4.html#jls-4.4
+;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se15/html/jls-4.html#jls-4.4
 ;;
 ;;   TV · Type variable in a type parameter declaration.  One might think it slow to seek every
 ;;        type reference, as this fontifier does, and test each against the form of a type variable.
@@ -2206,7 +2304,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        addition to `font-lock-extend-region-functions` that this entails would burden all fontifiers.
 ;;
 ;;   TVL  Type variable list, aka `TypeParameters`.
-;;        https://docs.oracle.com/javase/specs/jls/se13/html/jls-8.html#jls-8.1.2
+;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.2
 
 
 ;; - - - - - - - - - -
