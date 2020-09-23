@@ -47,7 +47,7 @@
 ;;
 ;; Changes to Emacs
 ;;
-;;   This package applies monkey patches to the runtime session that redefine certain functions
+;;   This package applies monkey patches to the runtime session that redefine and replace functions
 ;;   of the built-in package CC Mode.  The patches are designed to leave the behaviour of Emacs
 ;;   unchanged in all buffers except those running `jmt-mode`.  The patched functions are:
 ;;
@@ -485,6 +485,7 @@ and END (exclusive).  Point is left indeterminate."
 ;;; ("char"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("class"        .    jmt-keyword-face-class); (q.v.)
     ("continue"     .     jmt-principal-keyword); Of a statement.
+    ("default"      .  jmt-keyword-face-default); (q.v.)
 ;;; ("float"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("for"          .     jmt-principal-keyword); Of a statement.
     ("new"          .    jmt-expression-keyword)
@@ -504,7 +505,6 @@ and END (exclusive).  Point is left indeterminate."
 ;;; ("byte"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("const"        .     jmt-qualifier-keyword); (but reserved)
     ("enum"         .     jmt-principal-keyword); Of a type declaration.
-    ("default"      .     jmt-principal-keyword); Of a statement clause.
     ("do"           .     jmt-principal-keyword); Of a statement.
 ;;; ("double"       .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("extends"      .     jmt-qualifier-keyword)
@@ -538,6 +538,19 @@ and END (exclusive).  Point is left indeterminate."
       'jmt-expression-keyword
         ;;; https://docs.oracle.com/javase/specs/jls/se15/html/jls-15.html#jls-ClassLiteral
     'jmt-principal-keyword)); Of a type declaration.
+
+
+(defun jmt-keyword-face-default (_beg end)
+  "Return the face (symbol) proper to a `default` keyword.
+The buffer position of the keyword is given by the numbers _BEG (inclusive)
+and END (exclusive).  Point is left indeterminate."
+  (goto-char end)
+  (forward-comment most-positive-fixnum); [CW→]
+  (let ((c (char-after)))
+    (if (or (eq ?: c) (eq ?- c)); [NCE]
+        'jmt-principal-keyword; Of a `switch` statement clause.
+          ;;; https://docs.oracle.com/javase/specs/jls/se15/html/jls-14.html#jls-14.11
+      'jmt-qualifier-keyword))); Of an interface method declaration.
 
 
 
