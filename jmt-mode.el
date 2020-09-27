@@ -917,9 +917,9 @@ in case of an `env` interpreter."
             (setq match-beg (match-beginning 0)
                   f (get-text-property match-beg 'face))
             (when (or (null f) (jmt-is-Java-mode-type-face f)); [T↓]
-                ;; Only identifiers left unfaced or misfaced as type names have been seen.  Unfaced is
-                ;; the more common.  For an instance of misfacing, see `assert stators.getClass()`. [AM]
-                ;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
+                ;;; Only identifiers left unfaced or misfaced as type names have been seen.  Unfaced is
+                ;;; the more common.  For an instance of misfacing, see `assert stators.getClass()`. [AM]
+                ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
               (set 'jmt-f (jmt-keyword-face "assert" match-beg (match-end 0)))
               (throw 'to-reface t)))
           nil)))
@@ -1839,7 +1839,34 @@ in case of an `env` interpreter."
                 (throw 'to-reface t)))
             (goto-char match-end))
           nil)))
-    '(0 'jmt-type-variable-declaration t)))
+    '(0 'jmt-type-variable-declaration t))
+
+
+
+   ;; ════════
+   ;; Variable identifier in a variable declaration
+   ;; ════════
+
+   (cons; Reface each loop-variable identifier that was misfaced by Java mode.
+    (let (match-beg match-end)
+      (lambda (limit)
+        (setq match-beg (point)); Presumptively.
+        (catch 'to-reface
+          (while (< match-beg limit)
+            (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
+            (when (eq 'font-lock-function-name-face (get-text-property match-beg 'face))
+                ;;; Only an identifier misfaced as a function name has been seen.
+              (goto-char match-end)
+              (forward-comment most-positive-fixnum); [CW→]
+              (when (eobp) (throw 'to-reface nil))
+              (when (char-equal ?: (char-after)); Indicating for context an enhanced `for` loop.
+                  ;;; Only here has a misfacing been seen.  (And only where the expression on the
+                  ;;; right side is a function call, as with `foo` in `for( Foo foo: getFooList() )`.)
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'to-reface t)))
+            (setq match-beg match-end))
+          nil)))
+    '(0 'font-lock-variable-name-face t)))
   "\
 Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
 
