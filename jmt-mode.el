@@ -883,7 +883,7 @@ in case of an `env` interpreter."
 
               (setq m1-beg (point)))))
         nil))
-    '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t) '(3 'jmt-annotation-delimiter t t); [QTF]
+    '(1 'jmt-annotation-mark t) '(2 'c-annotation-face t) '(3 'jmt-annotation-delimiter t t)
     '(4 'jmt-annotation-qualifier nil t)                  '(5 'jmt-annotation-delimiter t t))
 
 
@@ -1051,7 +1051,7 @@ in case of an `env` interpreter."
                         (forward-comment most-negative-fixnum))))))); [←CW]
             (goto-char match-end)))
         nil))
-    '(0 'jmt-type-declaration t)); [QTF]
+    '(0 'jmt-type-declaration t))
 
 
    ;; Formal catch parameter  [FCP]
@@ -1101,7 +1101,7 @@ in case of an `env` interpreter."
 
       ;; parameter identifier
       ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-      '(1 'font-lock-variable-name-face); (regular highlighter) [QTF]
+      '(1 'font-lock-variable-name-face); (regular highlighter)
 
       ;; type identifiers
       ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
@@ -1131,7 +1131,7 @@ in case of an `env` interpreter."
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
 
        ;; iii) reface each matched identifier
-       '(0 'jmt-type-reference)))); [QTF]
+       '(0 'jmt-type-reference))))
 
 
 
@@ -1178,7 +1178,7 @@ in case of an `env` interpreter."
                (set-match-data (list match-beg (point) match-beg match-end (current-buffer)))
                (throw 'to-reface t)))
            nil))
-       nil nil '(1 'jmt-package-name-declared t)))); [QTF]
+       nil nil '(1 'jmt-package-name-declared t))))
 
 
    ;; Package qualifier on an annotation type reference
@@ -1237,7 +1237,7 @@ in case of an `env` interpreter."
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
 
        ;; iii) reface each matched segment
-       '(0 'jmt-annotation-package-name t)))); [QTF]
+       '(0 'jmt-annotation-package-name t))))
 
 
    ;; Package name occuring elsewhere
@@ -1351,7 +1351,7 @@ in case of an `env` interpreter."
                            (not (eq 'font-lock-doc-face (get-text-property (1- p) 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF, QTF]
+    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF]
 
 
    (cons; Reface each Javadoc left-marginal delimiter `*` using face `jmt-Javadoc-outer-delimiter`.
@@ -1361,7 +1361,7 @@ in case of an `env` interpreter."
           (when (eq 'font-lock-doc-face (get-text-property (match-beginning 1) 'face))
             (throw 'to-reface t)))
         nil))
-    '(1 'jmt-Javadoc-outer-delimiter prepend)); [PDF, QTF]
+    '(1 'jmt-Javadoc-outer-delimiter prepend)); [PDF]
 
 
    (cons; Reface each Javadoc outermost delimiter `*/` using face `jmt-Javadoc-outer-delimiter`.
@@ -1375,7 +1375,7 @@ in case of an `env` interpreter."
                            (not (eq 'font-lock-doc-face (get-text-property p 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF, QTF]
+    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF]
 
 
    ;; Inline tag
@@ -1698,7 +1698,7 @@ in case of an `env` interpreter."
                 (throw 'to-reface t)))
             (setq match-beg match-end))
           nil)))
-    '(0 'jmt-named-literal t)); [QTF]
+    '(0 'jmt-named-literal t))
 
 
 
@@ -1711,7 +1711,7 @@ in case of an `env` interpreter."
       ;;;  ·      └─────┘  └───────────────────────┘
       ;;;  #!      body          comment [CSL]
 
-    '(1 'jmt-shebang t) '(2 'jmt-shebang-body t) '(3 'jmt-shebang-comment-delimiter t t); [QTF]
+    '(1 'jmt-shebang t) '(2 'jmt-shebang-body t) '(3 'jmt-shebang-comment-delimiter t t)
     '(4 'jmt-shebang-comment t t))
 
 
@@ -1760,7 +1760,7 @@ in case of an `env` interpreter."
               (throw 'to-refontify t))
             (setq match-beg match-end))
           nil)))
-    '(1 jmt-f t) '(2 'jmt-annotation-string t t) '(3 jmt-f t)); [QTF]
+    '(1 jmt-f t) '(2 'jmt-annotation-string t t) '(3 jmt-f t))
 
 
 
@@ -1839,7 +1839,7 @@ in case of an `env` interpreter."
                 (throw 'to-reface t)))
             (goto-char match-end))
           nil)))
-    '(0 'jmt-type-variable-declaration t))); [QFS]
+    '(0 'jmt-type-variable-declaration t)))
   "\
 Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
 
@@ -2119,7 +2119,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
            ;;   Quoted individually only because `c-maybe-decl-faces` “must be evaluated (with ‘eval’)
-           ;; ↙  at runtime to get the actual list of faces”; e.g. `(eval c-maybe-decl-faces)`. [QTF]
+           ;; ↙  at runtime to get the actual list of faces”; e.g. `(eval c-maybe-decl-faces)`.
            '('jmt-annotation-package-name
              'jmt-boilerplate-keyword
              'jmt-expression-keyword
@@ -2256,17 +2256,6 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html`.
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
-;;
-;;   QFS  Quote each *facespec* formed as either a face symbol or a list, because Font lock evaluates it.
-;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
-;;
-;;   QTF  Quoting of tamed face references.  Their quoting is required for passage to evaluators,
-;;        e.g. in the case of a Font Lock *facespec*. [QFS]
-;;            That might seem obvious, but many packages define a namesake variable for each face symbol.
-;;        ‘In the vast majority of cases, this is not necessary’.
-;;        [https://www.gnu.org/software/emacs/manual/html_node/elisp/Defining-Faces.html]
-;;        ‘Simply using faces directly is enough.’
-;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el?id=fd1b34bfba]
 ;;
 ;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
