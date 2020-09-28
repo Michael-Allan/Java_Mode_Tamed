@@ -674,24 +674,23 @@ An exception applies to type parameters; for those, see instead
 
 
 
-(defun jmt--patch (source-file source-base-name function-symbol patch-function)
+(defun jmt--patch (source source-name-base function-symbol patch-function)
   "Apply a monkey patch to function FUNCTION-SYMBOL.
 You must call `jmt--patch` from a temporary buffer syntactically equivalent
-to a buffer in Emacs Lisp mode.  It monkey patches the function denoted
-by FUNCTION-SYMBOL, originally defined in file SOURCE-FILE (a string that has
-the given SOURCE-BASE-NAME).  For this, it uses the named PATCH-FUNCTION,
+to a buffer in Emacs Lisp mode.  It monkey-patches the function denoted
+by FUNCTION-SYMBOL, originally defined in file SOURCE (with SOURCE-NAME-BASE
+as its ‘file-name-base’).  For this, it uses the named PATCH-FUNCTION,
 which must return t on success and nil on failure."; [ELM]
   (unless (functionp function-symbol)
     (signal 'jmt-x `("No such function loaded" ,function-symbol)))
   (let ((load-file (symbol-file function-symbol)))
-    (unless (string= (file-name-base load-file) source-base-name)
+    (unless (string= (file-name-base load-file) source-name-base)
       (signal 'jmt-x `("Function loaded from file of base name contradictory to source file"
-                        ,function-symbol ,load-file ,source-file))))
+                        ,function-symbol ,load-file ,source))))
   (goto-char (point-min))
   (unless (re-search-forward
            (concat "^(defun[[:space:]\n]+" (symbol-name function-symbol) "[[:space:]\n]*(") nil t)
-    (signal 'jmt-x `("Function definition not found in source file"
-                      ,function-symbol ,source-file)))
+    (signal 'jmt-x `("Function definition not found in source file" ,function-symbol ,source)))
   (let ((beg (match-beginning 0))); Narrow the temporary buffer to the function definition alone:
     (narrow-to-region beg (scan-lists beg 1 0)))
   (goto-char (point-min))
@@ -2029,21 +2028,20 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
     (define-error 'jmt-x "Broken monkey patch")
     (condition-case x
         (progn
-          (let (source-file source-base-name); Adding or removing a patched function below?
-                                           ;;; Sync with § *Changes to Emacs* at top.
+          (let (source source-name-base); Adding or removing a patched function below?
+                                      ;;; Sync with § *Changes to Emacs* at top.
             ;; `cc-fonts` functions
             ;; ────────────────────
-            (setq source-file (locate-library "cc-fonts.el" t)
-                  source-base-name "cc-fonts")
-            (unless source-file
-              (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
+            (setq source (locate-library "cc-fonts.el" t)
+                  source-name-base (file-name-base source))
+            (unless source (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
             (with-temp-buffer; [ELM]
               (setq-local parse-sexp-ignore-comments t)
               (with-syntax-table emacs-lisp-mode-syntax-table
-                (insert-file-contents source-file)
+                (insert-file-contents source)
 
                 (jmt--patch
-                 source-file source-base-name 'c-fontify-recorded-types-and-refs
+                 source source-name-base #'c-fontify-recorded-types-and-refs
                  (lambda ()
                    (let (is-patched)
                      (while (search-forward "(c-put-font-lock-face " nil t)
@@ -2052,7 +2050,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      is-patched)))
 
                 (jmt--patch
-                 source-file source-base-name 'c-font-lock-<>-arglists
+                 source source-name-base #'c-font-lock-<>-arglists
                  (lambda ()
                    (let (is-patched)
                      (while (search-forward "(eq id-face" nil t)
@@ -2061,7 +2059,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      is-patched)))
 
                 (jmt--patch
-                 source-file source-base-name 'c-font-lock-declarations
+                 source source-name-base #'c-font-lock-declarations
                  (lambda ()
                    (when (re-search-forward
                           (concat "(\\(eq\\) (get-text-property (point) 'face)[[:space:]\n]*"
@@ -2071,7 +2069,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      t)))))
 
             ;;; (jmt--patch
-            ;;;  source-file source-base-name 'c-font-lock-labels
+            ;;;  source source-name-base #'c-font-lock-labels
             ;;;  (lambda ()
             ;;;    (when (re-search-forward
             ;;;           (concat "(\\(eq\\) (get-text-property (1- (point)) 'face)[[:space:]\n]*"
@@ -2083,17 +2081,16 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
             ;; `cc-mode` functions
             ;; ───────────────────
-            (setq source-file (locate-library "cc-mode.el" t)
-                  source-base-name "cc-mode")
-            (unless source-file
-              (signal 'jmt-x `("No such source file on load path: `cc-mode.el`")))
+            (setq source (locate-library "cc-mode.el" t)
+                  source-name-base (file-name-base source))
+            (unless source (signal 'jmt-x `("No such source file on load path: `cc-mode.el`")))
             (with-temp-buffer; [ELM]
               (setq-local parse-sexp-ignore-comments t)
               (with-syntax-table emacs-lisp-mode-syntax-table
-                (insert-file-contents source-file)
+                (insert-file-contents source)
 
                 (jmt--patch
-                 source-file source-base-name 'c-before-change
+                 source source-name-base #'c-before-change
                  (lambda (); Java mode uses the following list of faces for a `memq` test.
                    (when (search-forward "'(font-lock-comment-face font-lock-string-face)" nil t)
                      (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
@@ -2102,7 +2099,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      t)))
 
                 (jmt--patch
-                 source-file source-base-name 'c-font-lock-fontify-region
+                 source source-name-base #'c-font-lock-fontify-region
                  (lambda ()
                    (when (re-search-forward
                           (concat "(funcall (default-value 'font-lock-fontify-region-function)[[:space:]\n]*"
