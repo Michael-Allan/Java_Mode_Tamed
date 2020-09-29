@@ -61,7 +61,7 @@
 
 
 ;; The `Package-Requires` version of Emacs (above) was obtained from `package-lint-current-buffer`.
-(eval-when-compile (require 'cl-lib)); Built into Emacs 24.3+, required for macro `cl-assert`.
+(eval-when-compile (require 'cl-lib)); Built into Emacs since version 24.3.
 (require 'cc-mode)
 
 
