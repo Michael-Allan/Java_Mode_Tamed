@@ -2041,7 +2041,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
               (with-syntax-table emacs-lisp-mode-syntax-table
                 (insert-file-contents source)
 
-                ;; `c-fontify-recorded-types-and-refs`
+                ;; `c-fontify-recorded-types-and-refs` [PGV]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-fontify-recorded-types-and-refs
@@ -2292,6 +2292,19 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        (e.g. to a Javadoc tag) must not simply override the `font-lock-doc-face` of the surrounding
 ;;        comment, but rather prepend to it.  E.g. see `prepend` at
 ;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html`.
+;;
+;;   PGV  Patching via generalized variables (`setf`, `cl-letf`) as opposed to source (`jmt--patch`).
+;;        Where a ‘patch is just to call an alternative function’ in lieu of the original, it might
+;;        be implemented by applying advice that temporarily redefines the function symbol to that of
+;;        a replacement function.  https://github.com/melpa/melpa/pull/7131#issuecomment-699530740
+;;           The advantage would be simpler code and a faster patch.  Yet applying this method where
+;;        the original function must be called from within the replacement is problematic.
+;;        https://emacs.stackexchange.com/a/16810/21090
+;;           This is the case with `c-fontify-recorded-types-and-refs`, where the symbol to redefine
+;;        (after macro call `c-put-font-lock-face`) would be that of `put-text-property`, a function
+;;        the replacement itself must call.  The alternative of temporarily advising `put-text-property`
+;;        could easily erase the advantages of simplicity and speed, while that of redefining symbol
+;;        `c-put-font-lock-face` seems infeasible considering it must be done prior to macro expansion.
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
