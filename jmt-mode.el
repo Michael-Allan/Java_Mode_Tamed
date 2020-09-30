@@ -47,7 +47,7 @@
 ;;
 ;; Changes to Emacs
 ;;
-;;   This package applies monkey patches to the runtime session that redefine and replace functions
+;;   This package applies monkey patches to the runtime session that redefine functions
 ;;   of the built-in package CC Mode.  The patches are designed to leave the behaviour of Emacs
 ;;   unchanged in all buffers except those running `jmt-mode`.  The patched functions are:
 ;;
@@ -62,7 +62,8 @@
 
 ;; The `Package-Requires` version of Emacs (above) was obtained from `package-lint-current-buffer`.
 (eval-when-compile (require 'cl-lib)); Built into Emacs since version 24.3.
-(require 'cc-mode)
+(require 'cc-mode); Among other programming modes, it defines Java mode.
+  ;;; https://www.gnu.org/software/emacs/manual/html_node/ccmode/index.html
 
 
 
@@ -210,12 +211,12 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 (defun jmt--c-try-putting-face (beg end face)
   "Call `‘c-put-font-lock-face’ BEG END FACE` if the call appears to be valid.
-Either a) the present buffer must be untamed, or b) BEG and END must delimit
-a region under fontification by Font Lock, or the call is judged invalid
+Either a) the present buffer must be untamed or b) BEG and END must delimit
+a region under fontification by Font Lock, else the call is judged invalid
 and this function does nothing."
-  ;; Called from within a monkey-patched version of the underlying Java-mode code, this function prevents
-  ;; an endless tug of war between Java mode and Java Mode Tamed, which otherwise would destabilize tamed
-  ;; faces, causing them alternately to appear and disappear.
+  ;; Injected by a monkey patch into the underlying Java-mode code, this function prevents an endless
+  ;; tug of war between Java mode and Java Mode Tamed, which otherwise would destabilize tamed faces,
+  ;; causing them alternately to appear and disappear.
   (defvar jmt--is-level-3); [FV]
   (defvar jmt--present-fontification-beg)
   (defvar jmt--present-fontification-end)
@@ -676,7 +677,7 @@ An exception applies to type parameters; for those, see instead
 
 
 (defun jmt--patch (source source-name-base function-symbol patch-function)
-  "Apply a monkey patch to function FUNCTION-SYMBOL.
+  "Apply a source-based monkey patch to function FUNCTION-SYMBOL.
 You must call `jmt--patch` from a temporary buffer syntactically equivalent
 to a buffer in Emacs Lisp mode.  It monkey-patches the function denoted
 by FUNCTION-SYMBOL, originally defined in file SOURCE (with SOURCE-NAME-BASE
@@ -2008,8 +2009,9 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   :group 'jmt
 
   ;; ════════════════════════════
-  ;; Finish initializing the mode
+  ;; Finish initializing the mode if necessary
   ;; ════════════════════════════
+  ;; Deferred till now, after loading the first Java file, not to needlessly delay the start of Emacs.
 
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
@@ -2024,15 +2026,13 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
     ;; Apply monkey patches
     ;; ────────────────────
-    ;; Patching the underlying (Java-mode) functions.  Done only now, after loading the first Java file,
-    ;; so not to needlessly delay the start of Emacs.
     (define-error 'jmt-x "Broken monkey patch")
     (condition-case x
         (progn
           (let (source source-name-base); Adding or removing a patched function below?
                                       ;;; Sync with § *Changes to Emacs* at top.
             ;; `cc-fonts` functions
-            ;; ────────────────────
+            ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
             (setq source (locate-library "cc-fonts.el" t)
                   source-name-base (file-name-base source))
             (unless source (signal 'jmt-x `("No such source file on load path: `cc-fonts.el`")))
@@ -2041,6 +2041,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
               (with-syntax-table emacs-lisp-mode-syntax-table
                 (insert-file-contents source)
 
+                ;; `c-fontify-recorded-types-and-refs`
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-fontify-recorded-types-and-refs
                  (lambda ()
@@ -2050,6 +2052,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                        (setq is-patched t))
                      is-patched)))
 
+                ;; `c-font-lock-<>-arglists`
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-font-lock-<>-arglists
                  (lambda ()
@@ -2059,6 +2063,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                        (setq is-patched t))
                      is-patched)))
 
+                ;; `c-font-lock-declarations`
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-font-lock-declarations
                  (lambda ()
@@ -2069,6 +2075,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      (replace-match "jmt-faces-are-equivalent" t t nil 1)
                      t)))))
 
+                ;; `c-font-lock-labels`
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
             ;;; (jmt--patch
             ;;;  source source-name-base #'c-font-lock-labels
             ;;;  (lambda ()
@@ -2081,7 +2089,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
             ;;;;;; ‘This function is only used on decoration level 2’, ∴ no patch is needed. [L2U]
 
             ;; `cc-mode` functions
-            ;; ───────────────────
+            ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
             (setq source (locate-library "cc-mode.el" t)
                   source-name-base (file-name-base source))
             (unless source (signal 'jmt-x `("No such source file on load path: `cc-mode.el`")))
@@ -2090,6 +2098,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
               (with-syntax-table emacs-lisp-mode-syntax-table
                 (insert-file-contents source)
 
+                ;; `c-before-change`
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-before-change
                  (lambda (); Java mode uses the following list of faces for a `memq` test.
@@ -2099,6 +2109,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                       " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
                      t)))
 
+                ;; `c-font-lock-fontify-region`
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-font-lock-fontify-region
                  (lambda ()
@@ -2114,8 +2126,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                                     t)
                      t))))))
 
-          ;; Javadoc block tag fontifier
-          ;; ───────────────────────────
+          ;; `javadoc-font-lock-doc-comments`
+          ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
           (let* ((fontifier (nth 1 javadoc-font-lock-doc-comments))
                  (pattern (car fontifier))
                  (pattern-end "\\(@[a-z]+\\)"))
@@ -2123,7 +2135,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                 (jmt-message
                  "(jmt-mode): Patch failed to apply, `javadoc-font-lock-doc-comments`")
               (setq pattern (substring pattern 0 (- (length pattern-end)))
-                    pattern (concat pattern "\\(@[a-zA-Z]+\\)")); Allowing for e.g. `serialData`. [JBL]
+                    pattern (concat pattern "\\(@[a-zA-Z]+\\)"))
+                      ;;; Allowing for uppercase in a block tag, e.g. the standard `serialData`. [JBL]
               (setcar fontifier pattern))))
 
       (jmt-x (display-warning 'jmt-mode (error-message-string x) :error))))
