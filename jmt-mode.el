@@ -2280,7 +2280,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        The face only appears in Javadoc comments.  Meanwhile `c-maybe-decl-faces` is only used,
 ;;        in conjunction with `c-decl-start-re`, as a bounding argument in a call to `c-find-decl-spots`.
 ;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el?id=fd1b34bfba#n1490]
-;;           A trace in the source of both references indicates that a ‘decl-spot’ is not something
+;;            A trace in the source of both references indicates that a ‘decl-spot’ is not something
 ;;        that would appear in a Javadoc comment.
 ;;
 ;;   P↓ · Code that must execute before section *Package name*  of `jmt-specific-fontifiers-3`.
