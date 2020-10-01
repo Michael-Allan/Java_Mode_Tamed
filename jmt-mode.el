@@ -47,15 +47,20 @@
 ;;
 ;; Changes to Emacs
 ;;
-;;   This package applies monkey patches to the runtime session that redefine functions
-;;   of the built-in package CC Mode.  The patches are designed to leave the behaviour of Emacs
-;;   unchanged in all buffers except those running `jmt-mode`.  The patched functions are:
+;;   This package applies monkey patches to the runtime session that redefine parts of built-in package
+;;   CC Mode.  The patches are applied on first entrance to `jmt-mode`.  Most of them apply to function
+;;   definitions, in which case they are designed to leave the behaviour of Emacs unchanged in all
+;;   buffers except those running `jmt-mode`.  The patched functions are:
 ;;
 ;;       c-before-change
 ;;       c-fontify-recorded-types-and-refs
 ;;       c-font-lock-<>-arglists
 ;;       c-font-lock-declarations
 ;;       c-font-lock-fontify-region
+;;
+;;   Moreover, one variable is patched:
+;;
+;;       javadoc-font-lock-doc-comments - To allow for upper case letters in Javadoc block tags.
 ;;
 ;;; Code:
 
@@ -2128,17 +2133,15 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
           ;; `javadoc-font-lock-doc-comments`
           ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-          (let* ((fontifier (nth 1 javadoc-font-lock-doc-comments))
+          (let* ((fontifier (nth 1 javadoc-font-lock-doc-comments)); The block tag fontifier.
                  (pattern (car fontifier))
                  (pattern-end "\\(@[a-z]+\\)"))
             (if (not (string-suffix-p pattern-end pattern))
-                (jmt-message
-                 "(jmt-mode): Patch failed to apply, `javadoc-font-lock-doc-comments`")
-              (setq pattern (substring pattern 0 (- (length pattern-end)))
-                    pattern (concat pattern "\\(@[a-zA-Z]+\\)"))
-                      ;;; Allowing for uppercase in a block tag, e.g. the standard `serialData`. [JBL]
+                (jmt-message "(jmt-mode): Patch failed to apply, `javadoc-font-lock-doc-comments`")
+              (setq pattern (substring pattern 0 (- (length pattern-end))); Cutting `pattern-end` and
+                    pattern (concat pattern "\\(@[a-zA-Z]+\\)")); replacing it with a version modified
+                      ;;; to allow for upper case letters, as in the standard tag `serialData`. [JBL]
               (setcar fontifier pattern))))
-
       (jmt-x (display-warning 'jmt-mode (error-message-string x) :error))))
 
 
