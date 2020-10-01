@@ -2046,7 +2046,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
               (with-syntax-table emacs-lisp-mode-syntax-table
                 (insert-file-contents source)
 
-                ;; `c-fontify-recorded-types-and-refs` [PGV]
+                ;; `c-fontify-recorded-types-and-refs` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-fontify-recorded-types-and-refs
@@ -2057,7 +2057,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                        (setq is-patched t))
                      is-patched)))
 
-                ;; `c-font-lock-<>-arglists`
+                ;; `c-font-lock-<>-arglists` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-font-lock-<>-arglists
@@ -2068,7 +2068,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                        (setq is-patched t))
                      is-patched)))
 
-                ;; `c-font-lock-declarations`
+                ;; `c-font-lock-declarations` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-font-lock-declarations
@@ -2080,7 +2080,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      (replace-match "jmt-faces-are-equivalent" t t nil 1)
                      t)))))
 
-                ;; `c-font-lock-labels`
+                ;; `c-font-lock-labels` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
             ;;; (jmt--patch
             ;;;  source source-name-base #'c-font-lock-labels
@@ -2103,7 +2103,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
               (with-syntax-table emacs-lisp-mode-syntax-table
                 (insert-file-contents source)
 
-                ;; `c-before-change`
+                ;; `c-before-change` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-before-change
@@ -2114,7 +2114,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                       " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
                      t)))
 
-                ;; `c-font-lock-fontify-region`
+                ;; `c-font-lock-fontify-region` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-font-lock-fontify-region
@@ -2199,6 +2199,21 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   AST  At-sign as a token.  ‘It is possible to put whitespace between it and the TypeName,
 ;;        but this is discouraged as a matter of style.’
 ;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-9.html#jls-9.7.1
+;;
+;;   AW · Applying a wrapper using a source-based patch (`jmt--patch`).  A patch so marked either
+;;        replaces a call to an original function with a call to a wrapper function, or it could be
+;;        implemented this way making the alternatives below applicable all the same.
+;;            (1) One alternative would be advice on a containing function that temporarily advises the
+;;        original function for the duration of the call in order to wrap the call.  But temporary advice
+;;        would be both non-trivial to code and likely to result in slower execution.
+;;            (2) Another alternative would be advice on a containing function that temporarily redefines
+;;        the original function symbol to that of the wrapper.  This is infeasible, however, because the
+;;        wrapper call itself entails a call to the original function. [PGV]
+;;            In the case of the patch to `c-fontify-recorded-types-and-refs`, the symbol to redefine
+;;        (after expansion of macro call `c-put-font-lock-face`) would be that of `put-text-property`,
+;;        a function the replacement wrapper itself must call.  The alternative of redefining macro
+;;        symbol `c-put-font-lock-face` seems itself infeasible considering it would have to be done
+;;        prior to macro expansion.
 ;;
 ;;   BC · `c-before-change`: Any replacement face [RF] for a face referenced by this function
 ;;        must be included in its monkey patch.
@@ -2300,14 +2315,9 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        Where a ‘patch is just to call an alternative function’ in lieu of the original, it might
 ;;        be implemented by applying advice that temporarily redefines the function symbol to that of
 ;;        a replacement function.  https://github.com/melpa/melpa/pull/7131#issuecomment-699530740
-;;           The advantage would be simpler code and a faster patch.  Yet applying this method where
-;;        the original function must be called from within the replacement is problematic.
+;;            The advantage would be simpler code and a faster patch.  Yet to apply this method in cases
+;;        where the original function must be called from within the replacement is problematic. [AW]
 ;;        https://emacs.stackexchange.com/a/16810/21090
-;;           This is the case with `c-fontify-recorded-types-and-refs`, where the symbol to redefine
-;;        (after macro call `c-put-font-lock-face`) would be that of `put-text-property`, a function
-;;        the replacement itself must call.  The alternative of temporarily advising `put-text-property`
-;;        could easily erase the advantages of simplicity and speed, while that of redefining symbol
-;;        `c-put-font-lock-face` seems infeasible considering it must be done prior to macro expansion.
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
