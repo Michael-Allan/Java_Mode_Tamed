@@ -47,16 +47,16 @@
 ;;
 ;; Changes to Emacs
 ;;
-;;   This package applies monkey patches to the runtime session that redefine parts of built-in package
-;;   CC Mode.  The patches are applied on first entrance to `jmt-mode`.  Most of them apply to function
-;;   definitions, in which case they are designed to leave the behaviour of Emacs unchanged in all
-;;   buffers except those running `jmt-mode`.  The patched functions are:
+;;   This package applies monkey patches to the runtime session that redefine parts of built-in packages
+;;   CC Mode and Font Lock.  The patches are applied on first entrance to `jmt-mode`.  Most of them apply
+;;   to function definitions, in which case they are designed to leave the behaviour of Emacs unchanged
+;;   in all buffers except those running `jmt-mode`.  The patched functions are:
 ;;
 ;;       c-before-change
 ;;       c-fontify-recorded-types-and-refs
 ;;       c-font-lock-<>-arglists
 ;;       c-font-lock-declarations
-;;       c-font-lock-fontify-region
+;;       font-lock-fontify-region-function
 ;;
 ;;   Moreover, one variable is patched:
 ;;
@@ -2118,23 +2118,6 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
                      (insert
                       " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
-                     t)))
-
-                ;; `c-font-lock-fontify-region` [AW]
-                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-                (jmt--patch
-                 source source-name-base #'c-font-lock-fontify-region
-                 (lambda ()
-                   (when (re-search-forward
-                          (concat "(funcall (default-value 'font-lock-fontify-region-function)[[:space:]\n]*"
-                                  "new-beg new-end verbose)")
-                          nil t)
-                     (replace-match (concat; Wrapping the `funcall` to update relevant state variables.
-                                     "(set 'jmt--present-fontification-beg new-beg)"
-                                     "(set 'jmt--present-fontification-end new-end)"
-                                     "\\&"; `(funcall … new-end verbose)`
-                                     "(set 'jmt--present-fontification-end 0)")
-                                    t)
                      t))))))
 
           ;; `javadoc-font-lock-doc-comments`
@@ -2148,7 +2131,23 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                     pattern (concat pattern "\\(@[a-zA-Z]+\\)")); replacing it with a version modified
                       ;;; to allow for upper case letters, as in the standard tag `serialData`. [JBL]
               (setcar fontifier pattern))))
-      (jmt-x (display-warning 'jmt-mode (error-message-string x) :error))))
+      (jmt-x (display-warning 'jmt-mode (error-message-string x) :error)))
+
+    ;; global `font-lock-fontify-region-function`, typically `font-lock-default-fontify-region`
+    ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+    (advice-add
+     (default-value 'font-lock-fontify-region-function) :around
+       ;;; Locally CC Mode has bound `font-lock-fontify-region-function` to `c-font-lock-fontify-region`,
+       ;;; a function that simply calls the original (globally bound) function with an expanded region.
+       ;;; In order to track that expansion, the present advice attaches to the globally bound function.
+     (lambda (function-name &rest arguments)
+       (let ((a arguments))
+         (set 'jmt--present-fontification-beg (pop a))
+         (set 'jmt--present-fontification-end (pop a)))
+       (prog1 (apply function-name arguments)
+         (set 'jmt--present-fontification-end 0)))
+     '((name . "jmt-advice/font-lock-fontify-region-function")
+       (depth . 100)))); Deepest.
 
 
   ;; ═════════════════════
