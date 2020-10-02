@@ -2020,22 +2020,28 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
+
+  ;; Verify assumptions
+  ;; ──────────────────
     (cl-assert (char-equal ?> (char-syntax ?\n))); Newlines have endcomment syntax.
       ;;; (Consequently they have no whitespace syntax.)
     (cl-assert parse-sexp-ignore-comments)
+
+  ;; Tell Java mode of additional faces I
+  ;; ────────────────────────────────────
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
                    jmt-annotation-string-delimiter
                    jmt-string-delimiter)))
 
-    ;; Apply monkey patches
-    ;; ────────────────────
+    ;; Apply monkey patches                                 Adding or removing a patch below?
+    ;; ────────────────────                                 Sync with §*Changes to Emacs* at top.
     (define-error 'jmt-x "Broken monkey patch")
     (condition-case x
         (progn
-          (let (source source-name-base); Adding or removing a patched function below?
-                                      ;;; Sync with § *Changes to Emacs* at top.
+          (let (source source-name-base)
+
             ;; `cc-fonts` functions
             ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
             (setq source (locate-library "cc-fonts.el" t)
@@ -2154,8 +2160,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
     (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
-  ;; Tell Java mode of crucial changes
-  ;; ─────────────────────────────────
+  ;; Tell Java mode of additional faces II
+  ;; ─────────────────────────────────────
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
@@ -2173,8 +2179,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
              'jmt-type-variable-declaration
              'jmt-type-reference)))
 
-  ;; Tell Font Lock how to fontify this buffer
-  ;; ─────────────────────────────────────────
+  ;; Define the fontification levels
+  ;; ───────────────────────────────
   (jmt-set-for-buffer 'font-lock-defaults
        '((java-font-lock-keywords-1; 0 or nil    The alternative values of `font-lock-keywords`,
           java-font-lock-keywords-1; 1           each ordered according to the value of `font-lock-
