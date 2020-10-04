@@ -688,33 +688,63 @@ to a buffer in Emacs Lisp mode.  It monkey-patches the function denoted
 by FUNCTION-SYMBOL, originally defined in file SOURCE (with SOURCE-NAME-BASE
 as its ‘file-name-base’).  For this, it uses the named PATCH-FUNCTION,
 which must return t on success and nil on failure."; [ELM]
+
+  ;; Verify assumptions
+  ;; ──────────────────
   (unless (functionp function-symbol)
     (signal 'jmt-x `("No such function loaded" ,function-symbol)))
   (let ((load-file (symbol-file function-symbol)))
     (unless (string= (file-name-base load-file) source-name-base)
       (signal 'jmt-x `("Function loaded from file of base name contradictory to source file"
-                        ,function-symbol ,load-file ,source))))
-  (goto-char (point-min))
-  (unless (re-search-forward
-           (concat "^(defun[[:space:]\n]+" (symbol-name function-symbol) "[[:space:]\n]*(") nil t)
-    (signal 'jmt-x `("Function definition not found in source file" ,function-symbol ,source)))
-  (let ((beg (match-beginning 0))); Narrow the temporary buffer to the function definition alone:
-    (narrow-to-region beg (scan-lists beg 1 0)))
-  (goto-char (point-min))
-  (unless (funcall patch-function); Patching the definition.
-    (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
-  (let ((original-was-compiled (byte-code-function-p (symbol-function function-symbol))))
-    (eval-buffer); Redefining the function to the patched version.
-;;; (delete-region point-min point-max); Removing the definition, in hope it speeds later patching.
-;;;;;; Or might the deletion time exceed the time saved?
+                       ,function-symbol ,load-file ,source))))
+  (let ((function-name (symbol-name function-symbol))
+        beg function-name-beg function-name-end patched-function-name patched-function-symbol)
+
+    ;; Restrict the temporary buffer to the function definition alone
+    ;; ─────────────────────────────
+    (goto-char (point-min))
+    (unless (re-search-forward
+             (concat "^(defun[[:space:]\n]+\\(" function-name "\\)[[:space:]\n]*(") nil t)
+      (signal 'jmt-x `("Function definition not found in source file" ,source ,function-symbol)))
+    (setq beg (match-beginning 0)
+          function-name-beg (match-beginning 1)
+          function-name-end (match-end 1))
+    (narrow-to-region beg (scan-lists beg 1 0))
+
+    ;; Patch the function definition
+    ;; ─────────────────────────────
+    (goto-char beg)
+    (unless (funcall patch-function)
+      (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
+
+    ;; Load the patched function under a new name
+    ;; ─────────────────────────
+    (setq patched-function-name (concat "jmt-advice/" function-name))
+    (delete-region function-name-beg function-name-end)
+    (goto-char function-name-beg)
+    (insert patched-function-name)
+    (eval-buffer)
+
+    ;; Remove the buffer restriction
+    ;; ─────────────────────────────
+ ;;;(delete-region beg (point-max)); Removing the definition, in hope it speeds later patching.
+ ;;;;;; The deletion time is too likely to exceed the time saved.
     (widen)
-    (when original-was-compiled; Then recompile the redefined function.
-      (run-with-idle-timer; Recompile it during idle time.  This might improve initial load times,
-       1.3 nil            ; though early timing tests (with a single patch) showed no such effect.
+
+    ;; Replicate the compilation state of the original function
+    ;; ───────────────────────────────
+    (setq patched-function-symbol (intern-soft patched-function-name))
+    (cl-assert patched-function-symbol); Avoiding a silent failure.
+    (when (byte-code-function-p (symbol-function function-symbol))
+      (run-with-idle-timer; Compile during idle time.  This might improve package load times,
+       1.3 nil            ; though early tests (with a single patch) showed no such effect.
        (lambda ()
-         (unless (byte-compile function-symbol)
-           (jmt-message "(jmt-mode): Failed to recompile monkey-patched function `%s`"
-                         (symbol-name function-symbol))))))))
+         (unless (byte-compile patched-function-symbol)
+           (jmt-message "(jmt-mode): Patched function `%s` is running uncompiled" function-name)))))
+
+    ;; Replace the original function with the patched version
+    ;; ──────────────────────────────────────────────────────
+    (advice-add function-symbol :override patched-function-symbol)))
 
 
 
@@ -733,7 +763,7 @@ Point is left indeterminate."
 
 (defvar jmt--present-fontification-beg 0)
 (defvar jmt--present-fontification-end 0); Non-zero only when Font Lock is fontifying via
-  ;;; the default `font-lock-fontify-region-function`.
+  ;;; the global `font-lock-fontify-region-function`.
 
 
 
