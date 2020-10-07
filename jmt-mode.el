@@ -2025,13 +2025,13 @@ Faces for a shebang line atop a source-launch file."
 
 ;;;###autoload
 (unless (boundp 'jmt--autoload-guard); To execute only on `package-initialize`, not on file load. [GDA]
-  ;; Here one wishes to *append* versus cons not to override any pattern previously added by the user.
-  ;; One does not, however, expect a package to demur in installing itself.  (And indeed the built-in
-  ;; autoloads of CC Mode would clobber us here if we did.)  Rather let the package *manager* mend its
-  ;; own bugs, and the user meantime find recourse in the means that Emacs provides.
-  ;; https://stackoverflow.com/a/35949889/2402790
   (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'jmt-mode))
   (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode)))
+    ;;; In these one might wish to append versus cons not to override any pattern previously added
+    ;;; by the user.  But a package should not demur in installing itself (and indeed the autoloads
+    ;;; of CC Mode would clobber us here if we did).  Rather let the package *manager* mend its own bugs,
+    ;;; and the user meantime find recourse in the means that Emacs provides.
+    ;;; https://stackoverflow.com/a/35949889/2402790
 
 
 
