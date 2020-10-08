@@ -688,63 +688,72 @@ to a buffer in Emacs Lisp mode.  It monkey-patches the function denoted
 by FUNCTION-SYMBOL, originally defined in file SOURCE (with SOURCE-NAME-BASE
 as its ‘file-name-base’).  For this, it uses the named PATCH-FUNCTION,
 which must return t on success and nil on failure."; [ELM]
+  (condition-case x
+      (progn
 
-  ;; Verify assumptions
-  ;; ──────────────────
-  (unless (functionp function-symbol)
-    (signal 'jmt-x `("No such function loaded" ,function-symbol)))
-  (let ((load-file (symbol-file function-symbol)))
-    (unless (string= (file-name-base load-file) source-name-base)
-      (signal 'jmt-x `("Function loaded from file of base name contradictory to source file"
-                       ,function-symbol ,load-file ,source))))
-  (let ((function-name (symbol-name function-symbol))
-        beg function-name-beg function-name-end patched-function-name patched-function-symbol)
+        ;; Verify assumptions
+        ;; ──────────────────
+        (unless (functionp function-symbol)
+          (signal 'jmt-x `("No such function loaded" ,function-symbol)))
+        (let ((load-file (symbol-file function-symbol)))
+          (unless (string= (file-name-base load-file) source-name-base)
+            (signal 'jmt-x `("Function loaded from file of base name contradictory to source file"
+                             ,function-symbol ,load-file ,source))))
+        (let ((function-name (symbol-name function-symbol))
+              beg function-name-beg function-name-end patched-function-name patched-function-symbol)
 
-    ;; Restrict the temporary buffer to the function definition alone
-    ;; ─────────────────────────────
-    (goto-char (point-min))
-    (unless (re-search-forward
-             (concat "^(defun[[:space:]\n]+\\(" function-name "\\)[[:space:]\n]*(") nil t)
-      (signal 'jmt-x `("Function definition not found in source file" ,source ,function-symbol)))
-    (setq beg (match-beginning 0)
-          function-name-beg (match-beginning 1)
-          function-name-end (match-end 1))
-    (narrow-to-region beg (scan-lists beg 1 0))
+          ;; Restrict the temporary buffer to the function definition alone
+          ;; ─────────────────────────────
+          (goto-char (point-min))
+          (unless (re-search-forward
+                   (concat "^(defun[[:space:]\n]+\\(" function-name "\\)[[:space:]\n]*(") nil t)
+            (signal 'jmt-x `("Function definition not found in source file" ,source ,function-symbol)))
+          (setq beg (match-beginning 0)
+                function-name-beg (match-beginning 1)
+                function-name-end (match-end 1))
+          (narrow-to-region beg (scan-lists beg 1 0))
 
-    ;; Patch the function definition
-    ;; ─────────────────────────────
-    (goto-char beg)
-    (unless (funcall patch-function)
-      (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
+          ;; Patch the function definition
+          ;; ─────────────────────────────
+          (goto-char beg)
+          (unless (funcall patch-function)
+            (signal 'jmt-x `("Patch failed to apply" ,function-symbol)))
 
-    ;; Load the patched function under a new name
-    ;; ─────────────────────────
-    (setq patched-function-name (concat "jmt-advice/" function-name))
-    (delete-region function-name-beg function-name-end)
-    (goto-char function-name-beg)
-    (insert patched-function-name)
-    (eval-buffer)
+          ;; Load the patched function under a new name
+          ;; ─────────────────────────
+          (setq patched-function-name (concat "jmt-advice/" function-name))
+          (delete-region function-name-beg function-name-end)
+          (goto-char function-name-beg)
+          (insert patched-function-name)
+          (eval-buffer)
 
-    ;; Remove the buffer restriction
-    ;; ─────────────────────────────
- ;;;(delete-region beg (point-max)); Removing the definition, in hope it speeds later patching.
- ;;;;;; The deletion time is too likely to exceed the time saved.
-    (widen)
+          ;; Remove the buffer restriction
+          ;; ─────────────────────────────
+      ;;; (delete-region beg (point-max)); Removing the definition, in hope it speeds later patching.
+      ;;;;;; The deletion time is too likely to exceed the time saved.
+          (widen); Undoing the `narrow-to-region` above.
 
-    ;; Replicate the compilation state of the original function
-    ;; ───────────────────────────────
-    (setq patched-function-symbol (intern-soft patched-function-name))
-    (cl-assert patched-function-symbol); Avoiding a silent failure.
-    (when (byte-code-function-p (symbol-function function-symbol))
-      (run-with-idle-timer; Compile during idle time.  This might improve package load times,
-       1.3 nil            ; though early tests (with a single patch) showed no such effect.
-       (lambda ()
-         (unless (byte-compile patched-function-symbol)
-           (jmt-message "(jmt-mode): Patched function `%s` is running uncompiled" function-name)))))
+          ;; Replicate the compilation state of the original function
+          ;; ───────────────────────────────
+          (setq patched-function-symbol (intern-soft patched-function-name))
+          (cl-assert patched-function-symbol); Avoiding a silent failure.
+          (when (byte-code-function-p (symbol-function function-symbol))
+            (run-with-idle-timer; Compile during idle time.  This might improve package load times,
+             1.3 nil            ; though early tests (with a single patch) showed no such effect.
+             (lambda ()
+               (unless (byte-compile patched-function-symbol)
+                 (jmt-message
+                  "(jmt-mode): Patched function `%s` is running uncompiled" function-name)))))
 
-    ;; Replace the original function with the patched version
-    ;; ──────────────────────────────────────────────────────
-    (advice-add function-symbol :override patched-function-symbol)))
+          ;; Replace the original function with the patched version
+          ;; ──────────────────────────────────────────────────────
+          (advice-add function-symbol :override patched-function-symbol)))
+
+    ;; Recover from failure, if any
+    ;; ────────────────────
+    (jmt-x
+     (widen); Undoing any `narrow-to-region` still in effect above.
+     (delay-warning 'jmt-mode (error-message-string x) :error)))); [DW]
 
 
 
@@ -2068,9 +2077,9 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
     ;; Apply monkey patches                                 Adding or removing a patch below?
     ;; ────────────────────                                 Sync with §*Changes to Emacs* at top.
     (define-error 'jmt-x "Broken monkey patch")
-    (condition-case x
-        (progn
-          (let (source source-name-base)
+    (let (source source-name-base)
+      (condition-case x
+          (progn
 
             ;; `cc-fonts` functions
             ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
@@ -2114,7 +2123,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                                   "'font-lock-keyword-face)")
                           nil t)
                      (replace-match "jmt-faces-are-equivalent" t t nil 1)
-                     t)))))
+                     t))))))
 
                 ;; `c-font-lock-labels` [AW]
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
@@ -2126,8 +2135,11 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
             ;;;                   "c-label-face-name)"); [FLC]
             ;;;           nil t)
             ;;;      (replace-match "jmt-faces-are-equivalent" t t nil 1)
-            ;;;      t)))))
+            ;;;      t))))))
             ;;;;;; ‘This function is only used on decoration level 2’, ∴ no patch is needed. [L2U]
+        (jmt-x (delay-warning 'jmt-mode (error-message-string x) :error))); [DW]
+      (condition-case x
+          (progn
 
             ;; `cc-mode` functions
             ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
@@ -2149,22 +2161,10 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                      (insert
                       " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
                      t))))))
+        (jmt-x (delay-warning 'jmt-mode (error-message-string x) :error)))); [DW]
 
-          ;; `javadoc-font-lock-doc-comments`
-          ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-          (let* ((fontifier (nth 1 javadoc-font-lock-doc-comments)); The block tag fontifier.
-                 (pattern (car fontifier))
-                 (pattern-end "\\(@[a-z]+\\)"))
-            (if (not (string-suffix-p pattern-end pattern))
-                (jmt-message "(jmt-mode): Patch failed to apply, `javadoc-font-lock-doc-comments`")
-              (setq pattern (substring pattern 0 (- (length pattern-end))); Cutting `pattern-end` and
-                    pattern (concat pattern "\\(@[a-zA-Z]+\\)")); replacing it with a version modified
-                      ;;; to allow for upper case letters, as in the standard tag `serialData`. [JBL]
-              (setcar fontifier pattern))))
-      (jmt-x (display-warning 'jmt-mode (error-message-string x) :error)))
-
-    ;; global `font-lock-fontify-region-function`, typically `font-lock-default-fontify-region`
-    ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+    ;; `font-lock-fontify-region-function` (global binding), typically `font-lock-default-fontify-region`
+    ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
     (advice-add
      (default-value 'font-lock-fontify-region-function) :around
        ;;; Locally CC Mode has bound `font-lock-fontify-region-function` to `c-font-lock-fontify-region`,
@@ -2177,7 +2177,21 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
        (prog1 (apply function-name arguments)
          (set 'jmt--present-fontification-end 0)))
      '((name . "jmt-advice/font-lock-fontify-region-function")
-       (depth . 100)))); Deepest.
+       (depth . 100))); Deepest.
+
+    ;; `javadoc-font-lock-doc-comments`
+    ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+    (let* ((fontifier (nth 1 javadoc-font-lock-doc-comments)); The block tag fontifier.
+           (pattern (car fontifier))
+           (pattern-end "\\(@[a-z]+\\)"))
+      (condition-case x
+          (if (not (string-suffix-p pattern-end pattern))
+              (signal 'jmt-x `("Patch failed to apply" javadoc-font-lock-doc-comments))
+            (setq pattern (substring pattern 0 (- (length pattern-end))); Cutting `pattern-end` and
+                  pattern (concat pattern "\\(@[a-zA-Z]+\\)")); replacing it with a version modified
+                    ;;; to allow for upper case letters, as in the standard tag `serialData`. [JBL]
+            (setcar fontifier pattern))
+        (jmt-x (delay-warning 'jmt-mode (error-message-string x) :error))))); [DW]
 
 
   ;; ═════════════════════
@@ -2265,6 +2279,9 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;  ←CW · Backward across commentary (which in Java mode includes newlines) and whitespace.
 ;;
 ;;   CW→  Forward across commentary (including newlines) and whitespace.
+;;
+;;   DW · Use of `display-warning` (as opposed to `delay-warning`) would cause all fontifiers
+;;        of Java Mode Tamed to fail silently.
 ;;
 ;;   ELM  The syntax-related code that directly follows the opening of the temporary buffer effects a
 ;;        fast simulation of Emacs Lisp mode, faster presumeably than would a call to `emacs-lisp-mode`.
