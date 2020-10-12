@@ -454,15 +454,15 @@ The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
 
 
 (defun jmt-keyword-face (keyword beg end)
-  "Return the face (symbol) proper to the given Java KEYWORD (string).
-The buffer position of the keyword is given by the numbers BEG (inclusive)
-and END (exclusive).  Point is left indeterminate."
+  "Give the face (symbol) proper to a KEYWORD of Java (string).
+The buffer position of the keyword is from BEG (number, inclusive)
+to END (exclusive).  Point is left indeterminate."
   (defvar jmt-keyword-face-alist); [FV]
   (let ((f (assoc keyword jmt-keyword-face-alist)))
-    (if (not f) 'jmt-principal-keyword; Returning either a default face,
+    (if (not f) 'jmt-principal-keyword; Giving either a default face,
       (setq f (cdr f))                ; or, from `jmt-keyword-face-alist`,
       (if (not (functionp f)) f       ; a face either directly named
-        (funcall f beg end)))))       ; or given by a named function.
+        (funcall f beg end)))))       ; or got from a named function.
 
 
 
@@ -530,15 +530,15 @@ and END (exclusive).  Point is left indeterminate."
 An alist relating Java keywords to their proper facing.
 The car of each entry is a Java keyword (string), while the cdr is either
 its proper face (symbol) or a function in the form of ‘jmt-keyword-face-class’
-that returns a face symbol.  The list excludes the keywords that Java mode
+that gives a face symbol.  The list excludes the keywords that Java mode
 does not face with ‘font-lock-keyword-face’.")
 
 
 
 (defun jmt-keyword-face-class (beg _end)
-  "Return the face (symbol) proper to a `class` keyword.
-The buffer position of the keyword is given by the numbers BEG (inclusive)
-and END (exclusive).  Point is left indeterminate."
+  "Give the face (symbol) proper to a `class` keyword.
+The buffer position of the keyword is from BEG (number, inclusive)
+to END (exclusive).  Point is left indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
   (if (eq ?. (char-before)); [NCE]
@@ -548,9 +548,9 @@ and END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-default (_beg end)
-  "Return the face (symbol) proper to a `default` keyword.
-The buffer position of the keyword is given by the numbers _BEG (inclusive)
-and END (exclusive).  Point is left indeterminate."
+  "Give the face (symbol) proper to a `default` keyword.
+The buffer position of the keyword is from _BEG (number, inclusive)
+to END (exclusive).  Point is left indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
   (let ((c (char-after)))
@@ -562,9 +562,9 @@ and END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-static (beg end)
-  "Return the face (symbol) proper to a `static` keyword.
-The buffer position of the keyword is given by the numbers BEG (inclusive)
-and END (exclusive).  Point is left indeterminate."
+  "Give the face (symbol) proper to a `static` keyword.
+The buffer position of the keyword is from BEG (number, inclusive)
+to END (exclusive).  Point is left indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
   (setq end (point)); The presumed end of the preceding keyword.
@@ -576,9 +576,9 @@ and END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-sync (_beg end)
-  "Return the face (symbol) proper to a `synchronized` keyword.
-The buffer position of the keyword is given by the numbers _BEG (inclusive)
-and END (exclusive).  Point is left indeterminate."
+  "Give the face (symbol) proper to a `synchronized` keyword.
+The buffer position of the keyword is from _BEG (number, inclusive)
+to END (exclusive).  Point is left indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
   (if (eq ?\( (char-after)); [NCE]
@@ -687,7 +687,7 @@ You must call `jmt--patch` from a temporary buffer syntactically equivalent
 to a buffer in Emacs Lisp mode.  It monkey-patches the function denoted
 by FUNCTION-SYMBOL, originally defined in file SOURCE (with SOURCE-NAME-BASE
 as its ‘file-name-base’).  For this, it uses the named PATCH-FUNCTION,
-which must return t on success and nil on failure."; [ELM]
+which must give t on success and nil on failure."; [ELM]
   (condition-case x
       (progn
 
@@ -1170,7 +1170,7 @@ in case of an `env` interpreter."
        ;; i) pre-position to the start of the parameter declaration
        '(progn; (pre-form)
           (goto-char jmt-p); To `match-beg` effectively.
-          jmt-q); Limiting the search region (∵ returning > point) effectively to `match-end`.
+          jmt-q); Limiting the search region effectively to `match-end` (∵ return value is > point).
 
        ;; iv) clean up, recovering the proper position
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
@@ -1276,7 +1276,7 @@ in case of an `env` interpreter."
                   (when (< seg-beg seg-end)
                     (set 'jmt-f (cons seg-end jmt-f)); Pushing the bounds to the stack.
                     (set 'jmt-f (cons seg-beg jmt-f))))))
-          jmt-p); Limiting the search region (∵ returning > point) effectively to `match-beg`.
+          jmt-p); Limiting the search region effectively to `match-beg` (∵ return value is > point).
 
        ;; iv) clean up, recovering the proper position
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
@@ -1982,7 +1982,7 @@ The face for a type variable in a Javadoc `param` tag."
 
 
 (defun jmt-untamed-face (face)
-  "Return FACE itself if untamed, else its nearest untamed ancestor.
+  "Give FACE itself if untamed, else its nearest untamed ancestor.
 Every face defined by Java Mode Tamed (tamed face) ultimately inherits
 from an untamed ancestral face defined elsewhere."
   (catch 'untamed-face
@@ -2344,7 +2344,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        the (narrowed) buffer happens to cross lines. [SL]
 ;;
 ;;   NCE  Not `char-equal`; it fails if the position is out of bounds.  Rather `eq`, which instead
-;;        returns nil.
+;;        gives nil in that case.
 ;;
 ;;   NDF  Not a declaration face, therefore it need not be appended to `c-maybe-decl-faces`. [MDF]
 ;;        The face only appears in Javadoc comments.  Meanwhile `c-maybe-decl-faces` is only used,
