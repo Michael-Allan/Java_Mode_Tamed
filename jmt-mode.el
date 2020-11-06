@@ -380,7 +380,8 @@ see ‘jmt-block-tag-parameter’."
   "Answer whether string S is the principal keyword of a type declaration."
   (or (string= s "class")
       (string= s "interface")
-      (string= s "enum")))
+      (string= s "enum")
+      (string= s "record"))); [R]
 
 
 
@@ -522,6 +523,7 @@ to END (exclusive).  Point is left indeterminate."
     ("interface"    .     jmt-principal-keyword); Of a type declaration.
     ("native"       .     jmt-qualifier-keyword)
     ("package"      .   jmt-boilerplate-keyword)
+    ("record"       .     jmt-principal-keyword); Of a type declaration. [R]
 ;;; ("short"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
     ("strictfp"     .     jmt-qualifier-keyword)
     ("switch"       .     jmt-principal-keyword); Of a statement.
@@ -954,18 +956,20 @@ in case of an `env` interpreter."
     '(0 jmt-f t))
 
 
-   (cons; Fontify each `assert` keyword that was misfaced by Java mode, or incorrectly left unfaced.
+   (cons; Fontify each `assert` and `record` keyword that was misfaced by Java mode, or left unfaced.
     (let (f match-beg)
       (lambda (limit)
         (catch 'to-reface
-          (while (re-search-forward "\\<assert\\>" limit t)
+          (while (re-search-forward "\\<assert\\|record\\>" limit t)
             (setq match-beg (match-beginning 0)
                   f (get-text-property match-beg 'face))
             (when (or (null f) (jmt-is-Java-mode-type-face f)); [T↓]
-                ;;; Only identifiers left unfaced or misfaced as type names have been seen.  Unfaced is
-                ;;; the more common.  For an instance of misfacing, see `assert stators.getClass()`. [AM]
+                ;;; Misfacing as a type name has been seen for both `assert` and `record` keywords.
+                ;;; For an instance of `assert` misfacing, see `assert stators.getClass()`. [AM]
                 ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
-              (set 'jmt-f (jmt-keyword-face "assert" match-beg (match-end 0)))
+                ;;;     More commonly the `assert` keyword is left unfaced, but no instance of this
+                ;;; has been seen in the case of the `record` keyword.
+              (set 'jmt-f (jmt-keyword-face (match-string-no-properties 0) match-beg (match-end 0)))
               (throw 'to-reface t)))
           nil)))
     '(0 jmt-f t))
@@ -1013,7 +1017,7 @@ in case of an `env` interpreter."
 
               ;; Either defining a type
               ;; ───────────────
-              (when; A keyword `class`, `enum` or `interface` directly precedes the type name.
+              (when; Keyword `class`, `enum`, `record` or `interface` directly precedes the type name.
                   (let ((p (point)))
                     (and (< (skip-chars-backward jmt-name-character-set) 0)
                          (jmt-is-type-declarative-keyword (buffer-substring-no-properties (point) p))))
@@ -1034,66 +1038,78 @@ in case of an `env` interpreter."
 
    ;; Type declaration
    ;; ────────────────
-   (cons; Face each name of a type declaration that was left unfaced by Java mode.
+   (cons; Face each name of a type declaration that was misfaced or left unfaced by Java mode.
     (lambda (limit)
       (catch 'to-face
         (while (< (point) limit)
           (let* ((p (point))
-                 (match-end (next-single-property-change p 'face (current-buffer) limit)))
-            (when; A type declarative keyword (`class`, `enum` or `interface`) is found.
-                (and (eq 'jmt-principal-keyword (get-text-property p 'face)); [↑K]
-                     (jmt-is-type-declarative-keyword
-                      (buffer-substring-no-properties (point) match-end)))
+                 (match-end (next-single-property-change p 'face (current-buffer) limit))
+                 f keyword match-beg)
+            (when (and (eq 'jmt-principal-keyword (get-text-property p 'face)); [↑K]
+                       (jmt-is-type-declarative-keyword
+                        (setq keyword (buffer-substring-no-properties (point) match-end))))
               (goto-char match-end)
               (forward-comment most-positive-fixnum); [CW→]
-              (let ((match-beg (point)); Presumptively.
-                    (annotation-count 0))
-                (when (and (< match-beg limit)
-                           (> (skip-chars-forward jmt-name-character-set limit) 0); A name follows.
-                           (not (get-text-property match-beg 'face))); The name is unfaced.
+              (setq match-beg (point)); Presumptively.
+              (when (and (< match-beg limit)
+                         (> (skip-chars-forward jmt-name-character-set limit) 0)); A name follows.
+                (setq f (get-text-property match-beg 'face))
+                (cond
+
+                 ;; Record declaration
+                 ;; ──────────────────
+                 ((and (string= keyword "record")          ; Always it is misfaced as
+                      (eq f 'font-lock-function-name-face)); a function declaration.
+                  (set-match-data (list match-beg (point) (current-buffer)))
+                  (throw 'to-face t))
+
+                 ;; Other type declaration, viz. based on a `class`, `enum` or `interface` keyword
+                 ;; ──────────────────────
+                 ((not f); The type name is unfaced (misfacing has not been seen)
                   (setq match-end (point))
-                  (goto-char p); Back to the type declarative keyword.
-                  (forward-comment most-negative-fixnum); [←CW]
-                  (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
-                    (backward-char); as that of an annotation type.  Move back past the ‘@’.
-                    (forward-comment most-negative-fixnum)); [←CW]
-                  (catch 'is-modifier; Thrown as nil on discovery the answer is negative.
-                    (while t; Now point should (invariant) be directly after such a modifier.  So test:
-                      (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
-                        (condition-case _x                ; tation parameters, presumeably.
-                            (forward-sexp -1); Skip to the front of it.
-                          (scan-error (throw 'is-modifier nil)))
-                        (forward-comment most-negative-fixnum)); [←CW]
-                          ;;; Holding still the (would be) loop invariant.
-                      (setq p (point))
-                      (when (= (skip-chars-backward jmt-name-character-set) 0)
-                        (throw 'is-modifier nil))
-                      ;; The modifier should be either a keyword or annotation.
-                      (if (jmt-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
-
-                          ;; Keyword, the modifier is a keyword
-                          ;; ───────
-                          (if (= annotation-count 0)
-                              (forward-comment most-negative-fixnum); [←CW]
-                            (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                            (throw 'to-face t)); The keyword precedes annotation.  With this.
-                              ;;; Java mode fails at times to face the type name.  This was seen,
-                              ;;; for instance, here in the sequence `public @ThreadSafe class ID`.
-                              ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`]
-                              ;;;     It seems Java mode expects to find keywords *before* annotation,
-                              ;;; which, although it ‘is customary’, is nevertheless ‘not required’.
-                              ;;; [https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.1]
-                              ;;; Here therefore the missing face is applied.
-
-                        ;; Annotation, the modifier is an annotation modifier, or should be
-                        ;; ──────────
-                        (forward-comment most-negative-fixnum); [←CW]
-                          ;;; A form unconventional, but allowed. [AST]
-                        (unless (eq (char-before (point)) ?@); (and not nil)
+                  (let ((annotation-count 0))
+                    (goto-char p); Back to the type-declarative keyword.
+                    (forward-comment most-negative-fixnum); [←CW]
+                    (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
+                      (backward-char); as that of an annotation type.  Move back past the ‘@’.
+                      (forward-comment most-negative-fixnum)); [←CW]
+                    (catch 'is-modifier; Thrown as nil on discovery the answer is negative.
+                      (while t; Now point should (invariant) be directly after such a modifier.  So test:
+                        (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
+                          (condition-case _x                ; tation parameters, presumeably.
+                              (forward-sexp -1); Skip to the front of it.
+                            (scan-error (throw 'is-modifier nil)))
+                          (forward-comment most-negative-fixnum)); [←CW]
+                            ;;; Holding still the (would be) loop invariant.
+                        (setq p (point))
+                        (when (= (skip-chars-backward jmt-name-character-set) 0)
                           (throw 'is-modifier nil))
-                        (setq annotation-count (1+ annotation-count))
-                        (backward-char); To before the ‘@’.
-                        (forward-comment most-negative-fixnum))))))); [←CW]
+                        ;; The modifier should be either a keyword or annotation.
+                        (if (jmt-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
+
+                            ;; Keyword, the modifier is a keyword
+                            ;; ───────
+                            (if (= annotation-count 0)
+                                (forward-comment most-negative-fixnum); [←CW]
+                              (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                              (throw 'to-face t)); The keyword precedes annotation.  With this,
+                                ;;; Java mode fails at times to face the type name.  This was seen,
+                                ;;; for instance, here in the sequence `public @ThreadSafe class ID`.
+                                ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`]
+                                ;;;     It seems Java mode expects to find keywords *before* annotation,
+                                ;;; which, although it ‘is customary’, is nevertheless ‘not required’.
+                                ;;; [https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.1]
+                                ;;; Here therefore the missing face is applied.
+
+                          ;; Annotation, the modifier is an annotation modifier, or should be
+                          ;; ──────────
+                          (forward-comment most-negative-fixnum); [←CW]
+                            ;;; A form unconventional, but allowed. [AST]
+                          (unless (eq (char-before (point)) ?@); (and not nil)
+                            (throw 'is-modifier nil))
+                          (setq annotation-count (1+ annotation-count))
+                          (backward-char); To before the ‘@’.
+                          (forward-comment most-negative-fixnum))))))))); [←CW]
             (goto-char match-end)))
         nil))
     '(0 'jmt-type-declaration t))
@@ -2372,6 +2388,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        https://emacs.stackexchange.com/a/16810/21090
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
+;;
+;;   R ·· Records, a preview language feature at time of writing.  https://openjdk.java.net/jeps/384
 ;;
 ;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
