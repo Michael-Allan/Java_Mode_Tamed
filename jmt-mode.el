@@ -763,7 +763,7 @@ which must give t on success and nil on failure."; [ELM]
   "Answer whether the ‘>’ before point might terminate a generic return type.
 Point is left indeterminate."
   (when
-      (condition-case _x
+      (condition-case nil
           (progn (forward-sexp -1) t); Move backward to the front of the leading delimiter.
         (scan-error nil))
     (forward-comment most-negative-fixnum); [←CW]
@@ -902,7 +902,7 @@ in case of an `env` interpreter."
                 (when (eq ?\( (char-after)); [NCE]
                   (setq m3-beg (point); Start of trailing qualifier, it would be.
                         eol (line-end-position))
-                  (condition-case _x
+                  (condition-case nil
                       (progn
                         (forward-list 1)
                         (setq m5-end (point))); End of qualifier.  Point now stays here.
@@ -1076,7 +1076,7 @@ in case of an `env` interpreter."
                     (catch 'is-modifier; Thrown as nil on discovery the answer is negative.
                       (while t; Now point should (invariant) be directly after such a modifier.  So test:
                         (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
-                          (condition-case _x                ; tation parameters, presumeably.
+                          (condition-case nil               ; tation parameters, presumeably.
                               (forward-sexp -1); Skip to the front of it.
                             (scan-error (throw 'is-modifier nil)))
                           (forward-comment most-negative-fixnum)); [←CW]
