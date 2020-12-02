@@ -1185,8 +1185,8 @@ in case of an `env` interpreter."
 
        ;; i) pre-position to the start of the parameter declaration
        '(progn; (pre-form)
-          (goto-char jmt-p); To `match-beg` effectively.
-          jmt-q); Limiting the search region effectively to `match-end` (∵ return value is > point).
+          (goto-char jmt-p); To `match-beg` of the anchor effectively.
+          jmt-q); Limiting the search region (∵ return value is > point) effectively to `match-end`.
 
        ;; iv) clean up, recovering the proper position
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
@@ -1292,7 +1292,7 @@ in case of an `env` interpreter."
                   (when (< seg-beg seg-end)
                     (set 'jmt-f (cons seg-end jmt-f)); Pushing the bounds to the stack.
                     (set 'jmt-f (cons seg-beg jmt-f))))))
-          jmt-p); Limiting the search region effectively to `match-beg` (∵ return value is > point).
+          jmt-p); Limiting the search region (∵ return value is > point) effectively to `match-beg`.
 
        ;; iv) clean up, recovering the proper position
        '(goto-char jmt-q); (post-form) To `match-end` effectively.
