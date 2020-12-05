@@ -4,6 +4,7 @@
 ;;
 ;; Author: Michael Allan <mike@reluk.ca>
 ;; Version: 0-snapshot
+;; SPDX-License-Identifier: MIT
 ;; Package-Requires: ((emacs "24.4"))
 ;; Keywords: c, languages
 ;; URL: http://reluk.ca/project/Java/Emacs/
@@ -1149,7 +1150,7 @@ in case of an `env` interpreter."
                 (setq match-end (point))
                 (when (= 0 (skip-chars-backward jmt-name-character-set)); Start of parameter identifier.
                   (throw 'needs-facing nil)); Malformed catch block.
-                (unless (null (get-text-property (point) 'face))
+                (when (get-text-property (point) 'face)
                   ;; Already faced, in which case Java mode always faces the type identifier(s), too.
                   (throw 'needs-facing nil))
                 (set-match-data (list match-beg match-end (point) match-end (current-buffer)))
@@ -1696,8 +1697,8 @@ in case of an `env` interpreter."
                  ;; Method declaration
                  ;; ──────────────────
                  (catch 'is-method-declaration; One that needs fontifying, that is.
-                   (unless (null face)) (throw 'is-method-declaration nil); Definitions
-                     ;;; unfaced have been seen, but misfaced have not.  See for instance
+                   (when face) (throw 'is-method-declaration nil)
+                     ;;; While definitions misfaced have not been seen, unfaced have.  See for instance
                      ;;; the sequence `public @Override @Warning("non-API") void onCreate()`.
                      ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
                    (goto-char match-beg)
