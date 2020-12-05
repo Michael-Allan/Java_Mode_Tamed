@@ -1,5 +1,5 @@
 ;;; jmt-mode.el --- Java Mode Tamed  -*- lexical-binding: t; -*-
-;;
+
 ;; Copyright © 2019-2020 Michael Allan.
 ;;
 ;; Author: Michael Allan <mike@reluk.ca>
@@ -12,9 +12,9 @@
 ;;
 ;; This file is released under an MIT licence.  A copy of the licence normally accompanies it.
 ;; If not, then see `http://reluk.ca/project/Java/Emacs/LICENCE.txt`.
-;;
+
 ;;; Commentary:
-;;
+
 ;;   This package introduces a derived major mode (`jmt-mode`) that affords better control
 ;;   of the Java mode built into Emacs, particularly in regard to syntax highlighting.
 ;;   For more information, see `http://reluk.ca/project/Java/Emacs/`.
@@ -61,7 +61,7 @@
 ;;   Moreover, one variable is patched:
 ;;
 ;;       javadoc-font-lock-doc-comments - To allow for upper case letters in Javadoc block tags.
-;;
+
 ;;; Code:
 
 
@@ -2443,5 +2443,4 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.2
 
 
-;; - - - - - - - - - -
 ;;; jmt-mode.el ends here
