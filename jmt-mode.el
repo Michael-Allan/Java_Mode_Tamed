@@ -1617,7 +1617,7 @@ in case of an `env` interpreter."
 
 
    ;; ════════════════════════════════
-   ;; Method or constructor identifier  [↑A, ↑T]
+   ;; Method or constructor identifier  [↑A, ↑K, ↑T]
    ;; ════════════════════════════════
 
    (cons; Fontify each identifier that was misfaced by Java mode, or incorrectly left unfaced.
@@ -1630,7 +1630,7 @@ in case of an `env` interpreter."
              (setq match-beg (match-beginning 0); Presumptively.
                    match-end (match-end 0)
                    face (get-text-property match-beg 'face))
-             (when (or (null face) (eq face 'font-lock-function-name-face); Unfaced or misfaced.
+             (when (or (null face) (eq face 'font-lock-function-name-face)
                        (eq face 'jmt-type-reference)); [↑T]
                  ;;; Vanguard, redundant but for sake of speed.  See the other face guards below.
                (forward-comment most-positive-fixnum); [CW→]
@@ -1698,8 +1698,8 @@ in case of an `env` interpreter."
                  ;; ──────────────────
                  (catch 'is-method-declaration; One that needs fontifying, that is.
                    (when face) (throw 'is-method-declaration nil)
-                     ;;; While definitions misfaced have not been seen, unfaced have.  See for instance
-                     ;;; the sequence `public @Override @Warning("non-API") void onCreate()`.
+                     ;;; No misfaced definitions have been seen, only unfaced.  For instance,
+                     ;;; see the sequence `public @Override @Warning("non-API") void onCreate()`.
                      ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
@@ -1731,7 +1731,7 @@ in case of an `env` interpreter."
                        (or (char-equal (char-before) ?.)
                              ;;; (a) The character ‘.’, as in the sequence `assert stators.getClass()` at
                              ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
-                           (eq (get-text-property (1- (point)) 'face) 'jmt-principal-keyword))
+                           (eq (get-text-property (1- (point)) 'face) 'jmt-principal-keyword)); [↑K]
                              ;;; (b) A principal keyword, as in the sequence `assert verify(blocks)` at
                              ;;; `https://github.com/oracle/graal/blob/968c592cc6c1b3e6ee6b23b086adbc3c5007e6be/compiler/src/org.graalvm.compiler.core.common/src/org/graalvm/compiler/core/common/cfg/DominatorOptimizationProblem.java#L52`.
                      (goto-char match-end)
