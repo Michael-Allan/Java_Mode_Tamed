@@ -1697,7 +1697,7 @@ in case of an `env` interpreter."
                  ;; Method declaration
                  ;; ──────────────────
                  (catch 'is-method-declaration; One that needs fontifying, that is.
-                   (when face) (throw 'is-method-declaration nil)
+                   (when face (throw 'is-method-declaration nil))
                      ;;; No misfaced definitions have been seen, only unfaced.  For instance,
                      ;;; see the sequence `public @Override @Warning("non-API") void onCreate()`.
                      ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
