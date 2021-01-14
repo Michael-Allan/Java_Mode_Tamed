@@ -1,6 +1,6 @@
 ;;; jmt-mode.el --- Java Mode Tamed  -*- lexical-binding: t; -*-
 
-;; Copyright © 2019-2020 Michael Allan.
+;; Copyright © 2019-2021 Michael Allan.
 ;;
 ;; Author: Michael Allan <mike@reluk.ca>
 ;; Version: 0-snapshot
@@ -57,6 +57,7 @@
 ;;       c-fontify-recorded-types-and-refs
 ;;       c-font-lock-<>-arglists
 ;;       c-font-lock-declarations
+;;       c-font-lock-doc-comments
 ;;       font-lock-fontify-region-function
 ;;
 ;;   Moreover, one variable is patched:
@@ -215,14 +216,31 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 
 
 
-(defun jmt--c-try-putting-face (beg end face)
-  "Call `‘c-put-font-lock-face’ BEG END FACE` if the call appears to be valid.
-Either a) the present buffer must be untamed or b) BEG and END must delimit
-a region under fontification by Font Lock, else the call is judged invalid
-and this function does nothing."
-  ;; Injected by a monkey patch into the underlying Java-mode code, this function prevents an endless
-  ;; tug of war between Java mode and Java Mode Tamed, which otherwise would destabilize tamed faces,
-  ;; causing them alternately to appear and disappear.
+(defun jmt--c-put-face-tamed (beg end face)
+  "Call ‘c-put-font-lock-face’ with BEG END constrained to a valid region.
+The given region is never constrained when ‘jmt-mode’ is inactive, in which
+case the call is simply passed through as `c-put-font-lock-face BEG END FACE`.
+Otherwise, before calling `c-put-font-lock-face`, BEG and END are clipped
+to the region presently under fontification by Font Lock."
+  (defvar jmt--is-level-3); [FV]
+  (defvar jmt--present-fontification-beg)
+  (defvar jmt--present-fontification-end)
+  (if (and jmt--is-level-3
+           (eq major-mode 'jmt-mode))
+      (progn
+        (setq beg (max beg jmt--present-fontification-beg)
+              end (min end jmt--present-fontification-end))
+        (when (< beg end) (c-put-font-lock-face beg end face)))
+    (c-put-font-lock-face beg end face)))
+
+
+
+(defun jmt--c-put-face-unless-wild (beg end face)
+  "Call ‘c-put-font-lock-face’ on condition BEG END delimits a valid region.
+The given region is always judged valid when ‘jmt-mode’ is inactive, in which
+case the call is simply passed through as `‘c-put-font-lock-face’ BEG END FACE`.
+Otherwise the call is passed through only if BEG and END lie within the region
+presently under fontification by Font Lock."
   (defvar jmt--is-level-3); [FV]
   (defvar jmt--present-fontification-beg)
   (defvar jmt--present-fontification-end)
@@ -2115,7 +2133,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                  (lambda ()
                    (let (is-patched)
                      (while (search-forward "(c-put-font-lock-face " nil t)
-                       (replace-match "(jmt--c-try-putting-face " t t)
+                       (replace-match "(jmt--c-put-face-unless-wild " t t); [SFP]
                        (setq is-patched t))
                      is-patched)))
 
@@ -2127,6 +2145,17 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                    (let (is-patched)
                      (while (search-forward "(eq id-face" nil t)
                        (replace-match "(jmt-faces-are-equivalent id-face" t t)
+                       (setq is-patched t))
+                     is-patched)))
+
+                ;; `c-font-lock-doc-comments` [AW]
+                ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+                (jmt--patch
+                 source source-name-base #'c-font-lock-doc-comments
+                 (lambda ()
+                   (let (is-patched)
+                     (while (search-forward "(c-put-font-lock-face " nil t)
+                       (replace-match "(jmt--c-put-face-tamed " t t); [SFP]
                        (setq is-patched t))
                      is-patched)))
 
@@ -2275,11 +2304,11 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;            (2) Another alternative would be advice on a containing function that temporarily redefines
 ;;        the original function symbol to that of the wrapper.  This is infeasible, however, because the
 ;;        wrapper call itself entails a call to the original function. [PGV]
-;;            In the case of the patch to `c-fontify-recorded-types-and-refs`, the symbol to redefine
-;;        (after expansion of macro call `c-put-font-lock-face`) would be that of `put-text-property`,
-;;        a function the replacement wrapper itself must call.  The alternative of redefining macro
-;;        symbol `c-put-font-lock-face` seems itself infeasible considering it would have to be done
-;;        prior to macro expansion.
+;;            In the case of patches that replace macro calls `c-put-font-lock-face` with function calls,
+;;        the symbol to redefine (after macro expansion) would be that of `put-text-property`, a function
+;;        the replacement wrapper itself would have to call (invalid self-reference).  The alternative of
+;;        redefining the macro symbol seems infeasible, too, considering it would have to be done prior
+;;        to macro expansion.
 ;;
 ;;   BC · `c-before-change`: Any replacement face [RF] for a face referenced by this function
 ;;        must be included in its monkey patch.
@@ -2376,9 +2405,11 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   PDF  Prepending to the documentation face.  In order to duplicate the behaviour of Java mode
 ;;        (e.g. see `jmt-is-Java-mode-tag-faced`), a special face applied within a Javadoc comment
-;;        (e.g. to a Javadoc tag) must not simply override the `font-lock-doc-face` of the surrounding
-;;        comment, but rather prepend to it.  E.g. see `prepend` at
-;;        `https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html`.
+;;        (e.g. to a Javadoc tag) must not replace the `font-lock-doc-face` of the surrounding comment,
+;;        but rather prepend to it.  ‘If any face … but those above is used in comments, it doesn’t
+;;        replace them.’  http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el
+;;            See also e.g. the `prepend` value of the highlighter `override` argument.
+;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
 ;;
 ;;   PGV  Patching via generalized variables (`setf`, `cl-letf`) as opposed to source (`jmt--patch`).
 ;;        Where a ‘patch is just to call an alternative function’ in lieu of the original, it might
@@ -2395,6 +2426,9 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
 ;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
+;;
+;;   SFP  Stabilization of face properties.  This stops the underlying Java-mode code obliterating
+;;        the fontifications of Java Mode Tamed.
 ;;
 ;;   SI · Static import declaration.
 ;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-7.html#jls-7.5.3
