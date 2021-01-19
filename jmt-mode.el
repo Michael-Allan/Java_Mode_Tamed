@@ -123,8 +123,7 @@ Customizable items of Java Mode Tamed."
 
 
 
-(defface jmt-angle-bracket
-  `((t . (:inherit jmt-bracket))) "\
+(defface jmt-angle-bracket `((t . (:inherit jmt-bracket))) "\
 The face for an angle bracket, ‘<’ or ‘>’."
   :group 'delimiter-faces)
 
@@ -174,8 +173,7 @@ other annotation faces."
 
 
 
-(defface jmt-annotation-qualifier
-  `((t . (:inherit c-annotation-face))) "\
+(defface jmt-annotation-qualifier `((t . (:inherit c-annotation-face))) "\
 The face for the element assignments of annotation.  Customize it
 e.g. to give the assignments less prominence than the ‘c-annotation-face’
 of the preceding type name."
@@ -208,8 +206,7 @@ of a compilation unit."
 
 
 
-(defface jmt-bracket
-  `((t . (:inherit jmt-delimiter))) "\
+(defface jmt-bracket `((t . (:inherit jmt-delimiter))) "\
 The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’,
 ‘jmt-round-bracket’ and ‘jmt-square-bracket’."
   :group 'delimiter-faces)
@@ -219,8 +216,8 @@ The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket�
 (defun jmt--c-put-face-tamed (beg end face)
   "Call ‘c-put-font-lock-face’ with BEG END constrained to a valid region.
 The given region is never constrained when ‘jmt-mode’ is inactive, in which
-case the call is simply passed through as `c-put-font-lock-face BEG END FACE`.
-Otherwise, before calling `c-put-font-lock-face`, BEG and END are clipped
+case the call is simply passed through as \\=`c-put-font-lock-face BEG END FACE\\=`.
+Otherwise, before calling \\=`c-put-font-lock-face\\=`, BEG and END are clipped
 to the region presently under fontification by Font Lock."
   (defvar jmt--is-level-3); [FV]
   (defvar jmt--present-fontification-beg)
@@ -238,7 +235,7 @@ to the region presently under fontification by Font Lock."
 (defun jmt--c-put-face-unless-wild (beg end face)
   "Call ‘c-put-font-lock-face’ on condition BEG END delimits a valid region.
 The given region is always judged valid when ‘jmt-mode’ is inactive, in which
-case the call is simply passed through as `‘c-put-font-lock-face’ BEG END FACE`.
+case the call is simply passed through as \\=`c-put-font-lock-face BEG END FACE\\=`.
 Otherwise the call is passed through only if BEG and END lie within the region
 presently under fontification by Font Lock."
   (defvar jmt--is-level-3); [FV]
@@ -254,8 +251,7 @@ presently under fontification by Font Lock."
 
 
 
-(defface jmt-curly-bracket
-  `((t . (:inherit jmt-bracket))) "\
+(defface jmt-curly-bracket `((t . (:inherit jmt-bracket))) "\
 The face for a curly bracket, ‘{’ or ‘}’."
   :group 'delimiter-faces)
 
@@ -421,8 +417,8 @@ see ‘jmt-block-tag-parameter’."
 
 (defface jmt-Javadoc-outer-delimiter; [CI]
   `((t . (:inherit font-lock-doc-face))) "\
-The face for the outermost delimiters `/**` and `*/` that between them
-contain a Javadoc comment, and for the left-marginal asterisks `*`
+The face for the outermost delimiters \\=`/**\\=` and \\=`*/\\=` that between them
+contain a Javadoc comment, and for the left-marginal asterisks \\=`*\\=`
 that may lead any of its lines.  Customize it to better distinguish
 the delimiters from the content they delimit; making them more prominent
 or less prominent, for example."
@@ -557,7 +553,7 @@ does not face with ‘font-lock-keyword-face’.")
 
 
 (defun jmt-keyword-face-class (beg _end)
-  "Give the face (symbol) proper to a `class` keyword.
+  "Give the face (symbol) proper to a \\=`class\\=` keyword.
 The buffer position of the keyword is from BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char beg)
@@ -569,7 +565,7 @@ to END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-default (_beg end)
-  "Give the face (symbol) proper to a `default` keyword.
+  "Give the face (symbol) proper to a \\=`default\\=` keyword.
 The buffer position of the keyword is from _BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char end)
@@ -583,7 +579,7 @@ to END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-static (beg end)
-  "Give the face (symbol) proper to a `static` keyword.
+  "Give the face (symbol) proper to a \\=`static\\=` keyword.
 The buffer position of the keyword is from BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char beg)
@@ -597,7 +593,7 @@ to END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-sync (_beg end)
-  "Give the face (symbol) proper to a `synchronized` keyword.
+  "Give the face (symbol) proper to a \\=`synchronized\\=` keyword.
 The buffer position of the keyword is from _BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char end)
@@ -622,7 +618,7 @@ Any quote characters \\=`\\=`\\=` or \\=`\\='\\=` in the FORMAT-STRING are outpu
 
 (defface jmt-named-literal; [MDF, RF]
   `((t . (:inherit font-lock-constant-face))) "\
-The face for literal of type boolean or null; namely `true`, `false` or `null`.
+The face for literal of type boolean or null; namely \\=`true\\=`, \\=`false\\=` or \\=`null\\=`.
 It inherits from ‘font-lock-constant-face’; customize it to distinguish named
 literals from other constructs that use ‘font-lock-constant-face’, or to subdue
 the facing if you prefer to have these literals not stand out."
@@ -693,8 +689,7 @@ posed to a type reference.  Customize it to better distinguish between the two."
 
 
 
-(defface jmt-param-tag-parameter
-  `((t . (:inherit jmt-block-tag-parameter))) "\
+(defface jmt-param-tag-parameter `((t . (:inherit jmt-block-tag-parameter))) "\
 The face for the parameter-name parameter of a Javadoc `param` tag.
 An exception applies to type parameters; for those, see instead
 ‘jmt-type-variable-tag-parameter’."
@@ -704,7 +699,7 @@ An exception applies to type parameters; for those, see instead
 
 (defun jmt--patch (source source-name-base function-symbol patch-function)
   "Apply a source-based monkey patch to function FUNCTION-SYMBOL.
-You must call `jmt--patch` from a temporary buffer syntactically equivalent
+You must call \\=`jmt--patch\\=` from a temporary buffer syntactically equivalent
 to a buffer in Emacs Lisp mode.  It monkey-patches the function denoted
 by FUNCTION-SYMBOL, originally defined in file SOURCE (with SOURCE-NAME-BASE
 as its ‘file-name-base’).  For this, it uses the named PATCH-FUNCTION,
@@ -786,7 +781,7 @@ Point is left indeterminate."
           (progn (forward-sexp -1) t); Move backward to the front of the leading delimiter.
         (scan-error nil))
     (forward-comment most-negative-fixnum); [←CW]
-    (not (eq (char-before) ?.)))); (not `char-equal`, in case nil)
+    (not (eq (char-before) ?.)))); [NCE]
       ;;; Here a `.` would indicate a call to the method, as opposed to its declaration.
 
 
@@ -818,15 +813,13 @@ Cf. ‘jmt-principal-keyword’."
 
 
 
-(defface jmt-round-bracket
-  `((t . (:inherit jmt-bracket))) "\
+(defface jmt-round-bracket `((t . (:inherit jmt-bracket))) "\
 The face for a round bracket, ‘(’ or ‘)’."
   :group 'delimiter-faces)
 
 
 
-(defface jmt-separator
-  `((t . (:inherit jmt-delimiter))) "\
+(defface jmt-separator `((t . (:inherit jmt-delimiter))) "\
 The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot ‘.’."
   :group 'delimiter-faces)
 
@@ -840,23 +833,20 @@ Signal an error if VARIABLE is not buffer local."
 
 
 
-(defface jmt-shebang
-  `((t . (:inherit font-lock-comment-delimiter-face))) "\
+(defface jmt-shebang `((t . (:inherit font-lock-comment-delimiter-face))) "\
 The face for a shebang ‘#!’."
   :group 'shebang-faces)
 
 
 
-(defface jmt-shebang-body
-  `((t . (:inherit font-lock-comment-face))) "\
+(defface jmt-shebang-body `((t . (:inherit font-lock-comment-face))) "\
 The face for the body of a shebang line, exclusive of the shebang itself
 and any trailing comment."
   :group 'shebang-faces)
 
 
 
-(defface jmt-shebang-comment
-  `((t . (:inherit font-lock-comment-face))) "\
+(defface jmt-shebang-comment `((t . (:inherit font-lock-comment-face))) "\
 The face for the body of a trailing comment in a shebang line,
 in case of an `env` interpreter."
   :group 'shebang-faces
@@ -864,10 +854,9 @@ in case of an `env` interpreter."
 
 
 
-(defface jmt-shebang-comment-delimiter
-  `((t . (:inherit font-lock-comment-delimiter-face))) "\
+(defface jmt-shebang-comment-delimiter `((t . (:inherit font-lock-comment-delimiter-face))) "\
 The face for the delimiter ‘\\c’ of a trailing comment in a shebang line,
-in case of an `env` interpreter."
+in case of an \\=`env\\=` interpreter."
   :group 'shebang-faces
   :link '(url-link "https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html"))
 
@@ -1089,13 +1078,13 @@ in case of an `env` interpreter."
                   (let ((annotation-count 0))
                     (goto-char p); Back to the type-declarative keyword.
                     (forward-comment most-negative-fixnum); [←CW]
-                    (when (eq (char-before (point)) ?@); (and not nil)  A ‘@’ marks this declaration
+                    (when (eq (char-before (point)) ?@); [NCE]  A ‘@’ marks this declaration
                       (backward-char); as that of an annotation type.  Move back past the ‘@’.
                       (forward-comment most-negative-fixnum)); [←CW]
                     (catch 'is-modifier; Thrown as nil on discovery the answer is negative.
                       (while t; Now point should (invariant) be directly after such a modifier.  So test:
-                        (when (eq (char-before (point)) ?\)); (and not nil)  A list of anno-
-                          (condition-case nil               ; tation parameters, presumeably.
+                        (when (eq (char-before (point)) ?\)); [NCE]  Presumeably a list
+                          (condition-case nil               ; of annotation parameters.
                               (forward-sexp -1); Skip to the front of it.
                             (scan-error (throw 'is-modifier nil)))
                           (forward-comment most-negative-fixnum)); [←CW]
@@ -1124,7 +1113,7 @@ in case of an `env` interpreter."
                           ;; ──────────
                           (forward-comment most-negative-fixnum); [←CW]
                             ;;; A form unconventional, but allowed. [AST]
-                          (unless (eq (char-before (point)) ?@); (and not nil)
+                          (unless (eq (char-before (point)) ?@); [NCE]
                             (throw 'is-modifier nil))
                           (setq annotation-count (1+ annotation-count))
                           (backward-char); To before the ‘@’.
@@ -1876,7 +1865,7 @@ in case of an `env` interpreter."
                       (eq 'c-<-as-paren-syntax (setq j (get-text-property p 'category))); ‘<’
                       (eq 'c->-as-paren-syntax j)                                       ; ‘>’
                       (and (eq (get-text-property p 'c-type) 'c-<>-arg-sep)             ; ‘,’
-                           (eq i ?,)))); Not ‘&’, that is.
+                           (eq i ?,)))); Not ‘&’, that is. [NCE]
                      ;;; Leaving `i` set to that delimiter character.
                    (catch 'is-proven; And the matched name occurs at the top level of that list (depth
                      ;; of angle brackets 1).  And the list directly follows either (a) the identifier
@@ -1952,8 +1941,7 @@ Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
 
 
 
-(defface jmt-square-bracket
-  `((t . (:inherit jmt-bracket))) "\
+(defface jmt-square-bracket `((t . (:inherit jmt-bracket))) "\
 The face for a square bracket, ‘[’ or ‘]’."
   :group 'delimiter-faces)
 
@@ -1969,8 +1957,7 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
 
 
-(defface jmt-throws-tag-parameter
-  `((t . (:inherit jmt-block-tag-parameter))) "\
+(defface jmt-throws-tag-parameter `((t . (:inherit jmt-block-tag-parameter))) "\
 The face for the type-reference parameter of a Javadoc `throws` tag."
   :group 'jmt)
 
@@ -2007,7 +1994,7 @@ merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 (defface jmt-type-variable-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
-The face for a type variable in a Javadoc `param` tag."
+The face for a type variable in a Javadoc \\=`param\\=` tag."
   ;; Java mode has misfaced it as an HTML tag (the two have the same delimiters).  Therefore this face
   ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
   ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
@@ -2031,7 +2018,7 @@ from an untamed ancestral face defined elsewhere."
 
 (defface jmt-value-tag-name; [NDF, RF]
   `((t . (:inherit jmt-inline-tag-name))) "\
-The face for the proper identifier `value` of a Javadoc value tag."
+The face for the proper identifier \\=`value\\=` of a Javadoc value tag."
   :group 'javadoc-faces)
 
 (defconst jmt-value-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-value-tag-name))
