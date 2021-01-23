@@ -2056,8 +2056,9 @@ Faces for a shebang line atop a source-launch file."
 
 ;;;###autoload
 (unless (boundp 'jmt--autoload-guard); To execute only on `package-initialize`, not on file load. [GDA]
-  (add-to-list 'auto-mode-alist (cons "\\.java\\'" 'jmt-mode))
-  (add-to-list 'interpreter-mode-alist (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode)))
+   (set 'auto-mode-alist (cons (cons "\\.java\\'" 'jmt-mode) auto-mode-alist))
+   (set 'interpreter-mode-alist
+        (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode) interpreter-mode-alist)))
     ;;; In these one might wish to append versus cons not to override any pattern previously added
     ;;; by the user.  But a package should not demur in installing itself (and indeed the autoloads
     ;;; of CC Mode would clobber us here if we did).  Rather let the package *manager* mend its own bugs,
