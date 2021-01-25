@@ -1003,9 +1003,9 @@ in case of an \\=`env\\=` interpreter."
                               ;;;  └───────────────────────────────────────┘
                               ;;;                 TypeName                       [SI]
 
-                                  "\\.\\([" jmt-name-character-set "]+\\);")
-                              ;;;    ·   └───────────────────────────┘   ·
-                              ;;;   dot            Identifier            ;
+                                  "\\.\\(" jmt-identifier-pattern "\\);")
+                              ;;;    ·    └──────────────────────┘    ·
+                              ;;;   dot         Identifier            ;
                           limit t)
                          (jmt-is-Java-mode-type-face (get-text-property (match-beginning 1) 'face)))
                 (throw 'to-reface t)))
