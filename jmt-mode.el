@@ -285,7 +285,7 @@ of a formal Java expression."
 
 
 (defun jmt-faces-are-equivalent (f1 f2)
-  "Answer whether Java mode should treat face symbols F1 and F2 as equivalent."
+  "Tell whether Java mode should treat face symbols F1 and F2 as equivalent."
   (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
 
@@ -354,7 +354,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-annotation-ish-before (p)
-  "Answer whether the position before P (integer) might be within annotation."
+  "Tell whether the position before P (integer) might be within annotation."
   (let ((f (get-text-property (1- p) 'face)))
     (or (eq 'c-annotation-face (jmt-untamed-face f))
         (eq 'jmt-annotation-string f)
@@ -365,13 +365,13 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-annotation-terminal-face (f)
-  "Answer whether face F (symbol) might occur on the last character of annotation."
+  "Tell whether face F (symbol) might occur on the last character of annotation."
   (eq 'c-annotation-face (jmt-untamed-face f)))
 
 
 
 (defun jmt-is-Java-mode-tag-faced (p)
-  "Answer whether face property P (symbol or list) might occur on a Javadoc tag."
+  "Tell whether face property P (symbol or list) might occur on a Javadoc tag."
   (and (consp p); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
        (eq 'font-lock-constant-face (car p))
        (eq 'font-lock-doc-face (car (setq p (cdr p))))
@@ -380,7 +380,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-Java-mode-type-face (f)
-  "Answer whether face F (symbol) is a type face that Java mode might have set."
+  "Tell whether face F (symbol) is a type face that Java mode might have set."
   (eq f 'font-lock-type-face)); Java mode sets this face alone.
 
 
@@ -392,7 +392,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-type-declarative-keyword (s)
-  "Answer whether string S is the principal keyword of a type declaration."
+  "Tell whether string S is the principal keyword of a type declaration."
   (or (string= s "class")
       (string= s "interface")
       (string= s "enum")
@@ -401,7 +401,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 (defun jmt-is-type-modifier-keyword (s)
-  "Answer whether string S is a type declaration modifier in keyword form."
+  "Tell whether string S is a type declaration modifier in keyword form."
   ;; Keyword form as opposed e.g. to annotation form, that is."
   ;;     `ClassModifier` https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.1
   ;; `InterfaceModifier` https://docs.oracle.com/javase/specs/jls/se15/html/jls-9.html#jls-9.1.1
@@ -774,7 +774,7 @@ which must give t on success and nil on failure."; [ELM]
 
 
 (defun jmt-preceding->-marks-generic-return-type ()
-  "Answer whether the ‘>’ before point might terminate a generic return type.
+  "Tell whether the ‘>’ before point might terminate a generic return type.
 Point is left indeterminate."
   (when
       (condition-case nil
