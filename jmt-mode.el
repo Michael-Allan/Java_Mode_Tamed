@@ -1586,7 +1586,7 @@ in case of an \\=`env\\=` interpreter."
 
             ((or (string= tag-name "throws")
                  (string= tag-name "exception"))
-             (when (looking-at (concat "\\s-+\\([" jmt-name-character-set "]+\\).*$"))
+             (when (looking-at (concat "\\s-+\\([." jmt-name-character-set "]+\\).*$"))
                (set 'jmt-f 'jmt-throws-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
