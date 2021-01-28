@@ -69,7 +69,7 @@
 
 ;; The `Package-Requires` version of Emacs (above) was obtained from `package-lint-current-buffer`.
 (eval-when-compile (require 'cl-lib)); Built into Emacs since version 24.3.
-(require 'cc-mode); Among other programming modes, it defines Java mode.
+(require 'cc-mode); Among other programming modes, it defines Java Mode.
   ;;; https://www.gnu.org/software/emacs/manual/html_node/ccmode/index.html
 
 
@@ -258,10 +258,10 @@ The face for a curly bracket, ‘{’ or ‘}’."
 
 
 (defface jmt-delimiter nil "\
-The face for a delimiter not already faced by Java mode.  Customize it
+The face for a delimiter not already faced by Java Mode.  Customize it
 to better distinguish the delimiters from the content they delimit; making them
 more prominent or less prominent, for example.  See also subfaces ‘jmt-bracket’
-‘jmt-separator’.  And for delimiters that *are* already faced by Java mode,
+‘jmt-separator’.  And for delimiters that *are* already faced by Java Mode,
 see ‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’, ‘jmt-string-delimiter’
 and ‘font-lock-comment-delimiter-face’."
   :group 'delimiter-faces)
@@ -285,7 +285,7 @@ of a formal Java expression."
 
 
 (defun jmt-faces-are-equivalent (f1 f2)
-  "Tell whether Java mode should treat face symbols F1 and F2 as equivalent."
+  "Tell whether Java Mode should treat face symbols F1 and F2 as equivalent."
   (eq (jmt-untamed-face f1) (jmt-untamed-face f2))); [RF]
 
 
@@ -370,7 +370,7 @@ see ‘jmt-block-tag-parameter’."
 
 
 
-(defun jmt-is-Java-mode-tag-faced (p)
+(defun jmt-is-Java-Mode-tag-faced (p)
   "Tell whether face property P (symbol or list) might occur on a Javadoc tag."
   (and (consp p); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
        (eq 'font-lock-constant-face (car p))
@@ -379,9 +379,9 @@ see ‘jmt-block-tag-parameter’."
 
 
 
-(defun jmt-is-Java-mode-type-face (f)
-  "Tell whether face F (symbol) is a type face that Java mode might have set."
-  (eq f 'font-lock-type-face)); Java mode sets this face alone.
+(defun jmt-is-Java-Mode-type-face (f)
+  "Tell whether face F (symbol) is a type face that Java Mode might have set."
+  (eq f 'font-lock-type-face)); Java Mode sets this face alone.
 
 
 
@@ -487,14 +487,14 @@ to END (exclusive).  Point is left indeterminate."
     ;; Frequent
     ;; ────────
     ("assert"       .     jmt-principal-keyword); Of a statement.
-;;; ("boolean"      .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("boolean"      .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("break"        .     jmt-principal-keyword); Of a statement.
     ("else"         .     jmt-principal-keyword); Of a statement clause.
     ("final"        .     jmt-qualifier-keyword)
     ("if"           .     jmt-principal-keyword); Of a statement.
     ("import"       .   jmt-boilerplate-keyword)
-;;; ("int"          .          jmt-type-keyword); (but faced rather as a type by Java mode)
-;;; ("long"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("int"          .          jmt-type-keyword); (but faced rather as a type by Java Mode)
+;;; ("long"         .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("private"      .     jmt-qualifier-keyword)
     ("public"       .     jmt-qualifier-keyword)
     ("return"       .     jmt-principal-keyword); Of a statement.
@@ -505,11 +505,11 @@ to END (exclusive).  Point is left indeterminate."
     ("abstract"     .     jmt-qualifier-keyword)
     ("case"         .     jmt-principal-keyword); Of a statement clause.
     ("catch"        .     jmt-principal-keyword); Of a statement clause.
-;;; ("char"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("char"         .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("class"        .    jmt-keyword-face-class); (q.v.)
     ("continue"     .     jmt-principal-keyword); Of a statement.
     ("default"      .  jmt-keyword-face-default); (q.v.)
-;;; ("float"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("float"        .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("for"          .     jmt-principal-keyword); Of a statement.
     ("new"          .    jmt-expression-keyword)
     ("protected"    .     jmt-qualifier-keyword)
@@ -519,17 +519,17 @@ to END (exclusive).  Point is left indeterminate."
     ("throw"        .     jmt-principal-keyword); Of a statement.
     ("throws"       .     jmt-qualifier-keyword)
     ("try"          .     jmt-principal-keyword); Of a statement.
-;;; ("void"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("void"         .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("while"        .     jmt-principal-keyword); Of a statement.
 
     ;; Rare; typically once per buffer, if at all
     ;; ────
-;;; ("_"            .       jmt-misused-keyword); (reserved, yet unfaced by Java mode)
-;;; ("byte"         .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("_"            .       jmt-misused-keyword); (reserved, yet unfaced by Java Mode)
+;;; ("byte"         .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("const"        .     jmt-qualifier-keyword); (but reserved)
     ("enum"         .     jmt-principal-keyword); Of a type declaration.
     ("do"           .     jmt-principal-keyword); Of a statement.
-;;; ("double"       .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("double"       .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("extends"      .     jmt-qualifier-keyword)
     ("finally"      .     jmt-principal-keyword); Of a statement clause.
     ("goto"         .     jmt-principal-keyword); Of a statement (but reserved)
@@ -539,7 +539,7 @@ to END (exclusive).  Point is left indeterminate."
     ("native"       .     jmt-qualifier-keyword)
     ("package"      .   jmt-boilerplate-keyword)
     ("record"       .     jmt-principal-keyword); Of a type declaration. [R]
-;;; ("short"        .          jmt-type-keyword); (but faced rather as a type by Java mode)
+;;; ("short"        .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("strictfp"     .     jmt-qualifier-keyword)
     ("switch"       .     jmt-principal-keyword); Of a statement.
     ("transient"    .     jmt-qualifier-keyword)
@@ -547,7 +547,7 @@ to END (exclusive).  Point is left indeterminate."
 An alist relating Java keywords to their proper facing.
 The car of each entry is a Java keyword (string), while the cdr is either
 its proper face (symbol) or a function in the form of ‘jmt-keyword-face-class’
-that gives a face symbol.  The list excludes the keywords that Java mode
+that gives a face symbol.  The list excludes the keywords that Java Mode
 does not face with ‘font-lock-keyword-face’.")
 
 
@@ -638,16 +638,16 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
   (defvar jmt-specific-fontifiers-3); [FV]
   (nconc
 
-   ;; Underlying Java-mode fontifiers, lightly modified
+   ;; Underlying Java Mode fontifiers, lightly modified
    ;; ───────────────────────────────
-   (let* ((kk (java-font-lock-keywords-3)); List of Java mode’s fontifiers.
+   (let* ((kk (java-font-lock-keywords-3)); List of Java Mode’s fontifiers.
           was-found-annotation; Whether the annotation fontifier of was found in `kk`.
           (k kk); Current fontifier element of `kk`.
           k-last); Previous fontifier element.
      (while; Searching the list, fontifier by fontifier.
          (progn
            (if (equal (car k) '(eval list "\\<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face))
-               ;; Dud fontifier: works under Java mode, fails under Java Mode Tamed unless
+               ;; Dud fontifier: works under Java Mode, fails under Java Mode Tamed unless
                ;; changed in two places `"\\_<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face t`.
                (progn;                    1 ↑                                           2 ↑
                  ;; Moreover its pattern does not cover the complete, valid form of annotation.
@@ -658,7 +658,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
                    k (cdr k)))
            (and (not was-found-annotation) k)))
      (unless was-found-annotation
-       (jmt-message "(jmt-mode): Failed to remove unwanted Java-mode fontifier: `%s` = nil"
+       (jmt-message "(jmt-mode): Failed to remove unwanted Java Mode fontifier: `%s` = nil"
                     (symbol-name 'was-found-annotation)))
      kk)
 
@@ -870,7 +870,7 @@ in case of an \\=`env\\=` interpreter."
    ;; Annotation  [A, T↓]
    ;; ══════════
 
-   (list; Fontify each instance of annotation, overriding any misfontification of Java mode.
+   (list; Fontify each instance of annotation, overriding any misfontification of Java Mode.
     (lambda (limit)
       (catch 'to-fontify
         (let ((m1-beg (point)); Presumed start of leading annotation mark ‘@’.
@@ -903,7 +903,7 @@ in case of an \\=`env\\=` interpreter."
                         (unless (or (null face); The most common case.  Else a misfontification:
                                     (eq face 'font-lock-function-name-face); This one occurs in the case,
                                       ;;; for instance, of an empty `()` annotation qualifier.
-                                    (jmt-is-Java-mode-type-face face)); [T↓]
+                                    (jmt-is-Java-Mode-type-face face)); [T↓]
                           (throw 'is-annotation nil))
                         nil))); Quitting the loop, having matched the simple annotation name.
                 (skip-syntax-forward "-" limit); [SL]
@@ -964,14 +964,14 @@ in case of an \\=`env\\=` interpreter."
     '(0 jmt-f t))
 
 
-   (cons; Fontify each `assert` and `record` keyword that was misfaced by Java mode, or left unfaced.
+   (cons; Fontify each `assert` and `record` keyword that was misfaced by Java Mode, or left unfaced.
     (let (f match-beg)
       (lambda (limit)
         (catch 'to-reface
           (while (re-search-forward "\\<assert\\|record\\>" limit t)
             (setq match-beg (match-beginning 0)
                   f (get-text-property match-beg 'face))
-            (when (or (null f) (jmt-is-Java-mode-type-face f)); [T↓]
+            (when (or (null f) (jmt-is-Java-Mode-type-face f)); [T↓]
                 ;;; Misfacing as a type name has been seen for both `assert` and `record` keywords.
                 ;;; For an instance of `assert` misfacing, see `assert stators.getClass()`. [AM]
                 ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
@@ -988,7 +988,7 @@ in case of an \\=`env\\=` interpreter."
    ;; Type name  [↑K, T]
    ;; ═════════
 
-   (cons; Unface each terminal token of a static import incorrectly faced as a type name by Java mode.
+   (cons; Unface each terminal token of a static import incorrectly faced as a type name by Java Mode.
     (let (i j)
       (lambda (limit)
         (setq i (point)); Presumptively.
@@ -1007,7 +1007,7 @@ in case of an \\=`env\\=` interpreter."
                               ;;;    ·    └──────────────────────┘    ·
                               ;;;   dot         Identifier            ;
                           limit t)
-                         (jmt-is-Java-mode-type-face (get-text-property (match-beginning 1) 'face)))
+                         (jmt-is-Java-Mode-type-face (get-text-property (match-beginning 1) 'face)))
                 (throw 'to-reface t)))
             (setq i j))
           nil)))
@@ -1020,7 +1020,7 @@ in case of an \\=`env\\=` interpreter."
         (while (< (point) limit)
           (let* ((match-beg (point)); Presumptively.
                  (match-end (next-single-property-change match-beg 'face (current-buffer) limit)))
-            (when (jmt-is-Java-mode-type-face (get-text-property match-beg 'face))
+            (when (jmt-is-Java-Mode-type-face (get-text-property match-beg 'face))
               (forward-comment most-negative-fixnum); [←CW]
 
               ;; Either defining a type
@@ -1046,7 +1046,7 @@ in case of an \\=`env\\=` interpreter."
 
    ;; Type declaration
    ;; ────────────────
-   (cons; Face each name of a type declaration that was misfaced or left unfaced by Java mode.
+   (cons; Face each name of a type declaration that was misfaced or left unfaced by Java Mode.
     (lambda (limit)
       (catch 'to-face
         (while (< (point) limit)
@@ -1101,10 +1101,10 @@ in case of an \\=`env\\=` interpreter."
                                 (forward-comment most-negative-fixnum); [←CW]
                               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                               (throw 'to-face t)); The keyword precedes annotation.  With this,
-                                ;;; Java mode fails at times to face the type name.  This was seen,
+                                ;;; Java Mode fails at times to face the type name.  This was seen,
                                 ;;; for instance, here in the sequence `public @ThreadSafe class ID`.
                                 ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L8`]
-                                ;;;     It seems Java mode expects to find keywords *before* annotation,
+                                ;;;     It seems Java Mode expects to find keywords *before* annotation,
                                 ;;; which, although it ‘is customary’, is nevertheless ‘not required’.
                                 ;;; [https://docs.oracle.com/javase/specs/jls/se15/html/jls-8.html#jls-8.1.1]
                                 ;;; Here therefore the missing face is applied.
@@ -1126,7 +1126,7 @@ in case of an \\=`env\\=` interpreter."
    ;; Formal catch parameter  [FCP]
    ;; ──────────────────────
    (let (eol match-beg match-end); Face each type identifier and parameter identifier
-     (list                       ; left unfaced by Java mode.
+     (list                       ; left unfaced by Java Mode.
 
       ;; anchor, the whole parameter declaration, aka `CatchFormalParameter` [FCP]
       ;; ┈┈┈┈┈┈
@@ -1158,7 +1158,7 @@ in case of an \\=`env\\=` interpreter."
                 (when (= 0 (skip-chars-backward jmt-name-character-set)); Start of parameter identifier.
                   (throw 'needs-facing nil)); Malformed catch block.
                 (when (get-text-property (point) 'face)
-                  ;; Already faced, in which case Java mode always faces the type identifier(s), too.
+                  ;; Already faced, in which case Java Mode always faces the type identifier(s), too.
                   (throw 'needs-facing nil))
                 (set-match-data (list match-beg match-end (point) match-end (current-buffer)))
                 (goto-char match-end)
@@ -1183,8 +1183,8 @@ in case of an \\=`env\\=` interpreter."
              (let ((beg (match-beginning 0))
                    (case-fold-search nil))
                ;; Aside from the sought type identifiers, all that could match here is already faced,
-               ;; either by Java mode or the preceding highlighter (parameter identifier), with one
-               ;; exception, an edge case in which Java mode leaves a package qualifier unfaced.
+               ;; either by Java Mode or the preceding highlighter (parameter identifier), with one
+               ;; exception, an edge case in which Java Mode leaves a package qualifier unfaced.
                ;; Assuming ∴ that package names begin in lower case [BUG], these guards should suffice.
                (when (and (null (get-text-property beg 'face)); Unfaced, and the first character
                           (string-match-p "[[:upper:]]" (string (char-after beg)))); is upper case.
@@ -1242,7 +1242,7 @@ in case of an \\=`env\\=` interpreter."
                  (forward-char); To the (would be) loop invariant.
                (setq last-seg-was-found t))
              (setq face (get-text-property match-beg 'face))
-             (when (or (null face); Java mode leaves unfaced all but the last segment.
+             (when (or (null face); Java Mode leaves unfaced all but the last segment.
                        (eq face 'font-lock-constant-face))
                (set-match-data (list match-beg (point) match-beg match-end (current-buffer)))
                (throw 'to-reface t)))
@@ -1326,10 +1326,10 @@ in case of an \\=`env\\=` interpreter."
               (when (= ?. (char-after))
                 (set 'jmt-f
                      (if (string= "Lu" (get-char-code-property (char-after match-beg) 'general-category))
-                         'jmt-type-reference; Workaround for a probable misfacing by Java mode.
+                         'jmt-type-reference; Workaround for a probable misfacing by Java Mode.
                            ;;; It occurs e.g. with a class-qualified reference to a class member
                            ;;; whose name begins in upper case, such as `Foo.BAR` or `Foo.FooBar`;
-                           ;;; here Java mode misfaces the class name (`Foo`) as a package name segment.
+                           ;;; here Java Mode misfaces the class name (`Foo`) as a package name segment.
                            ;;; This workaround assumes that a real segment would begin in lower case,
                            ;;; which itself is not quite correct. [BUG]
                        'jmt-package-name))
@@ -1345,7 +1345,7 @@ in case of an \\=`env\\=` interpreter."
    ;; Delimiter
    ;; ═════════
 
-   (cons; Face each Java delimiter that was left unfaced by Java mode.
+   (cons; Face each Java delimiter that was left unfaced by Java Mode.
     (let (i j match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
@@ -1463,7 +1463,7 @@ in case of an \\=`env\\=` interpreter."
                       ;;;                 parameters 1,                        2, …          }
                   limit t)
             (setq match-beg (match-beginning 0))
-            (when (and (jmt-is-Java-mode-tag-faced (get-text-property match-beg 'face))
+            (when (and (jmt-is-Java-Mode-tag-faced (get-text-property match-beg 'face))
                        (>= (match-end 0); And that facing is uniform.
                            (next-single-property-change match-beg 'face (current-buffer) limit)))
               (setq tag-name (match-string-no-properties 3))
@@ -1506,7 +1506,7 @@ in case of an \\=`env\\=` interpreter."
           (while (< match-beg limit)
             (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
             (when (and (= ?< (char-after match-beg))
-                       (jmt-is-Java-mode-tag-faced (get-text-property match-beg 'face)))
+                       (jmt-is-Java-Mode-tag-faced (get-text-property match-beg 'face)))
               (goto-char match-beg)
               (save-restriction
                 (narrow-to-region match-beg match-end)
@@ -1549,7 +1549,7 @@ in case of an \\=`env\\=` interpreter."
           (while (< match-beg limit)
             (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
             (when (and (= ?@ (char-after match-beg))
-                       (jmt-is-Java-mode-tag-faced (get-text-property match-beg 'face)))
+                       (jmt-is-Java-Mode-tag-faced (get-text-property match-beg 'face)))
               (goto-char match-beg)
               (save-restriction
                 (narrow-to-region match-beg match-end)
@@ -1627,7 +1627,7 @@ in case of an \\=`env\\=` interpreter."
    ;; Method or constructor identifier  [↑A, ↑K, ↑T]
    ;; ════════════════════════════════
 
-   (cons; Fontify each identifier that was misfaced by Java mode, or incorrectly left unfaced.
+   (cons; Fontify each identifier that was misfaced by Java Mode, or incorrectly left unfaced.
     (let (face i match-beg match-end)
       (lambda (limit)
         (set
@@ -1695,7 +1695,7 @@ in case of an \\=`env\\=` interpreter."
                        (throw 'is-constructor-declaration nil)))
                    ;; A constructor modifier here before point would also indicate a declaration.
                    ;; However, the earlier test of ‘final’ (above) has eliminated the only case
-                   ;; in which Java mode is known to fail when a keyword modifier appears here.
+                   ;; in which Java Mode is known to fail when a keyword modifier appears here.
                    ;; That leaves only the case of an *annotation* modifier to remedy.
                    (when (jmt-is-annotation-terminal-face (get-text-property (1- (point)) 'face)); [↑A]
                      (goto-char match-end)
@@ -1916,7 +1916,7 @@ in case of an \\=`env\\=` interpreter."
    ;; Variable identifier in a variable declaration
    ;; ════════
 
-   (cons; Reface each loop-variable identifier that was misfaced by Java mode.
+   (cons; Reface each loop-variable identifier that was misfaced by Java Mode.
     (let (match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
@@ -1995,10 +1995,10 @@ merely referenced after the fact.  See also face ‘jmt-type-reference’."
 (defface jmt-type-variable-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for a type variable in a Javadoc \\=`param\\=` tag."
-  ;; Java mode has misfaced it as an HTML tag (the two have the same delimiters).  Therefore this face
+  ;; Java Mode has misfaced it as an HTML tag (the two have the same delimiters).  Therefore this face
   ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
   ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
-  ;; would be to repair Java mode’s error in order to elimate this complication. [BUG]
+  ;; would be to repair Java Mode’s error in order to elimate this complication. [BUG]
   :group 'javadoc-faces)
 
 
@@ -2048,7 +2048,7 @@ Faces for a shebang line atop a source-launch file."
 (unless jmt--early-initialization-was-begun
   (set 'jmt--early-initialization-was-begun t)
   (set 'c-default-style (cons '(jmt-mode . "java") c-default-style))); Setting the default style
-    ;;; (of indentation etc.) to `java` style, the same as the underlying Java mode.
+    ;;; (of indentation etc.) to `java` style, the same as underlying Java Mode.
 
 
 
@@ -2069,7 +2069,7 @@ Faces for a shebang line atop a source-launch file."
 
 ;;;###autoload
 (define-derived-mode jmt-mode java-mode
-  "JMT" "\
+  "Java Mode Tamed" "\
 A derived major mode that affords better control of the Java mode
 built into Emacs, particularly in regard to syntax highlighting.
 For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
@@ -2089,7 +2089,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
       ;;; (Consequently they have no whitespace syntax.)
     (cl-assert parse-sexp-ignore-comments)
 
-  ;; Tell Java mode of additional faces I
+  ;; Tell Java Mode of additional faces I
   ;; ────────────────────────────────────
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
@@ -2189,7 +2189,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                 ;; ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
                 (jmt--patch
                  source source-name-base #'c-before-change
-                 (lambda (); Java mode uses the following list of faces for a `memq` test.
+                 (lambda (); Java Mode uses the following list of faces for a `memq` test.
                    (when (search-forward "'(font-lock-comment-face font-lock-string-face)" nil t)
                      (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
                      (insert
@@ -2237,7 +2237,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
     (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
-  ;; Tell Java mode of additional faces II
+  ;; Tell Java Mode of additional faces II
   ;; ─────────────────────────────────────
   (jmt-set-for-buffer
    'c-maybe-decl-faces
@@ -2310,7 +2310,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   CSL  A comment in a shebang line is supported by the `env` interpreter.
 ;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 ;;
-;;  ←CW · Backward across commentary (which in Java mode includes newlines) and whitespace.
+;;  ←CW · Backward across commentary (which in Java Mode includes newlines) and whitespace.
 ;;
 ;;   CW→  Forward across commentary (including newlines) and whitespace.
 ;;
@@ -2322,15 +2322,15 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   FCP  Formal catch parameters, aka `CatchFormalParameter` in the language specification.
 ;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-14.html#jls-CatchFormalParameter
-;;            In multi-type parameters, Java mode tends to leave unfaced the type and variable identi-
+;;            In multi-type parameters, Java Mode tends to leave unfaced the type and variable identi-
 ;;        fiers.  https://docs.oracle.com/javase/7/docs/technotes/guides/language/catch-multiple.html
 ;;            It does the same in rare cases of single-type catch parameter.  For example, it leaves
 ;;        unfaced both `FooException` and `x` in this catch block:``catch( @y.A FooException x ) {}`.
 ;;            The corrective fontifier implemented here becomes unstable when annotations are attached
-;;        to the parameter declaration.  The likely cause is Java mode making buffer changes outside
+;;        to the parameter declaration.  The likely cause is Java Mode making buffer changes outside
 ;;        the region under fontification by Font Lock. [BUG]
 ;;
-;;   FLC  `font-lock-constant-face`: the Java-mode code refers to `font-lock-constant-face` indirectly
+;;   FLC  `font-lock-constant-face`: the Java Mode code refers to `font-lock-constant-face` indirectly
 ;;        by way of variables `c-constant-face-name`, `c-doc-markup-face-name`, `c-label-face-name`
 ;;        and `c-reference-face-name`.
 ;;
@@ -2346,7 +2346,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   JBL  Javadoc block tags.
 ;;        https://docs.oracle.com/en/java/javase/13/docs/specs/javadoc/doc-comment-spec.html#block-tags
 ;;
-;;   JIL  Javadoc inline tags.  Double anchoring the tag search on the bounds of a `jmt-is-Java-mode-
+;;   JIL  Javadoc inline tags.  Double anchoring the tag search on the bounds of a `jmt-is-Java-Mode-
 ;;        -tag-faced` region, like the other tag fontifiers do, might make it more reliable.
 ;;
 ;;        https://docs.oracle.com/en/java/javase/13/docs/specs/javadoc/doc-comment-spec.html#inline-tags
@@ -2391,8 +2391,8 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   P ·· Section *Package name* itself.
 ;;
-;;   PDF  Prepending to the documentation face.  In order to duplicate the behaviour of Java mode
-;;        (e.g. see `jmt-is-Java-mode-tag-faced`), a special face applied within a Javadoc comment
+;;   PDF  Prepending to the documentation face.  In order to duplicate the behaviour of Java Mode
+;;        (e.g. see `jmt-is-Java-Mode-tag-faced`), a special face applied within a Javadoc comment
 ;;        (e.g. to a Javadoc tag) must not replace the `font-lock-doc-face` of the surrounding comment,
 ;;        but rather prepend to it.  ‘If any face … but those above is used in comments, it doesn’t
 ;;        replace them.’  http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el
@@ -2412,10 +2412,10 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   R ·· Records, a preview language feature at time of writing.  https://openjdk.java.net/jeps/384
 ;;
 ;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
-;;        earlier applied by Java mode.  Every replacement face ultimately inherits from the face
+;;        earlier applied by Java Mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
-;;   SFP  Stabilization of face properties.  This stops the underlying Java-mode code obliterating
+;;   SFP  Stabilization of face properties.  This stops the underlying Java Mode code obliterating
 ;;        the fontifications of Java Mode Tamed.
 ;;
 ;;   SI · Static import declaration.
