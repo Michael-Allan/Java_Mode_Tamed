@@ -1813,16 +1813,17 @@ in case of an \\=`env\\=` interpreter."
                 ;; Elsewhere
                 ;; ─────────
                 (set 'jmt-f 'jmt-string-delimiter)
-                (when (>= (- match-end match-beg) 7); Then hypothesize a text block: [TB]
-                  (let* ((body-beg? (+ match-beg 3)); Allowing for the longer delimiters.
-                         (body-end? (- match-end 3))
-                         (beg-delimiter (buffer-substring-no-properties match-beg body-beg?))
-                         (end-delimiter (buffer-substring-no-properties match-end body-end?))
-                         (expected "\"\"\"")); In fact `beg-delimiter` would have to end in a newline
-                          ;;; optionally preceded by whitespace, hence the 7 in the guard above.
-                    (when (and (string= beg-delimiter expected) (string= end-delimiter expected))
-                      (setq body-beg body-beg?; Hypothesis verified.
-                            body-end body-end?))))
+            ;;; (when (>= (- match-end match-beg) 7); Then hypothesize a text block.
+            ;;;   (let* ((body-beg? (+ match-beg 3)); Allowing for the longer delimiters.
+            ;;;          (body-end? (- match-end 3))
+            ;;;          (beg-delimiter (buffer-substring-no-properties match-beg body-beg?))
+            ;;;          (end-delimiter (buffer-substring-no-properties match-end body-end?))
+            ;;;          (expected "\"\"\"")); In fact `beg-delimiter` would have to end in a newline
+            ;;;           ;;; optionally preceded by whitespace, hence the 7 in the guard above.
+            ;;;     (when (and (string= beg-delimiter expected) (string= end-delimiter expected))
+            ;;;       (setq body-beg body-beg?; Hypothesis verified.
+            ;;;             body-end body-end?))))
+            ;;;;;; No point at present, Java Mode has stopped facing text blocks as strings. [TB]
                 (set-match-data (list match-beg match-end match-beg body-beg nil nil
                                       body-end match-end (current-buffer))))
               (goto-char match-end)
@@ -2451,7 +2452,10 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;  ↑T ·· Code that must execute after section *Type name*.
 ;;
-;;   TB · Text blocks, a preview language feature at time of writing.  https://openjdk.java.net/jeps/378
+;;   TB · Text blocks.  https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10.6
+;;
+;;        Java Mode stopped facing text blocks as strings sometime between Emacs 26.3 and 27.1. [BUG]
+;;        Repair would likely be difficult.  http://reluk.ca/project/Java/Emacs/action_plan.brec
 ;;
 ;;   TP · See `TypeParameter`.  https://docs.oracle.com/javase/specs/jls/se15/html/jls-4.html#jls-4.4
 ;;
