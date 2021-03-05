@@ -81,7 +81,7 @@
 
 (defun jmt-make-Javadoc-tag-facing (f)
   "Make a face property for a Javadoc tag using face F (symbol) as a base."
-  (list f 'font-lock-doc-face)); [PDF]
+  (list f 'font-lock-doc-face)); [PJF]
 
 
 
@@ -108,7 +108,7 @@ Faces for Java separators and other delimiters."
 
 
 (defgroup javadoc-faces nil "\
-Faces for Java documentation comments."
+Faces for Java API descriptions."
   :group 'jmt
   :prefix "jmt-")
 
@@ -372,7 +372,7 @@ see ‘jmt-block-tag-parameter’."
 
 (defun jmt-is-Java-Mode-tag-faced (p)
   "Tell whether face property P (symbol or list) might occur on a Javadoc tag."
-  (and (consp p); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PDF]
+  (and (consp p); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PJF]
        (eq 'font-lock-constant-face (car p))
        (eq 'font-lock-doc-face (car (setq p (cdr p))))
        (null (cdr p))))
@@ -1420,7 +1420,7 @@ in case of an \\=`env\\=` interpreter."
                            (not (eq 'font-lock-doc-face (get-text-property (1- p) 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF]
+    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PJF]
 
 
    (cons; Reface each Javadoc left-marginal delimiter `*` using face `jmt-Javadoc-outer-delimiter`.
@@ -1430,7 +1430,7 @@ in case of an \\=`env\\=` interpreter."
           (when (eq 'font-lock-doc-face (get-text-property (match-beginning 1) 'face))
             (throw 'to-reface t)))
         nil))
-    '(1 'jmt-Javadoc-outer-delimiter prepend)); [PDF]
+    '(1 'jmt-Javadoc-outer-delimiter prepend)); [PJF]
 
 
    (cons; Reface each Javadoc outermost delimiter `*/` using face `jmt-Javadoc-outer-delimiter`.
@@ -1444,7 +1444,7 @@ in case of an \\=`env\\=` interpreter."
                            (not (eq 'font-lock-doc-face (get-text-property p 'face)))))
               (throw 'to-reface t)))
           nil)))
-    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PDF]
+    '(0 'jmt-Javadoc-outer-delimiter prepend)); [PJF]
 
 
    ;; Inline tag
@@ -1619,7 +1619,7 @@ in case of an \\=`env\\=` interpreter."
                (goto-char (match-end 0))
                (throw 'to-reface t))))
            nil))
-       nil nil '(1 jmt-f prepend)))); [PDF]
+       nil nil '(1 jmt-f prepend)))); [PJF]
 
 
 
@@ -2306,7 +2306,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   CI · Conservative inheritance.  This face inherits from `font-lock-doc-face` only to preserve
 ;;        the original appearance of the fontified text in default of user action to change it,
-;;        and not because it is a replacement face; in fact, it is a prepended face. [PDF, RF]
+;;        and not because it is a replacement face; in fact, it is a prepended face. [PJF, RF]
 ;;
 ;;   CSL  A comment in a shebang line is supported by the `env` interpreter.
 ;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
@@ -2362,13 +2362,13 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   LF · `c-literal-faces`: Any replacement face of a face listed in `c-literal-faces` must itself
 ;;        be appended to that list.  This applies only to replacement faces, not to prepended faces;
 ;;        all tests against `c-literal-faces` are done using `c-got-face-at`, which knows how to deal
-;;        with prepended faces. [PDF, RF]
+;;        with prepended faces. [PJF, RF]
 ;;
 ;;   MC · Method call.  See `MethodInvocation` at
 ;;        `https://docs.oracle.com/javase/specs/jls/se15/html/jls-15.html#jls-15.12`.
 ;;
 ;;   MD · How the value of `font-lock-maximum-decoration` governs the value of `font-lock-keywords`
-;;        is documented inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
+;;        is described inconsistently by Emacs.  See instead the `font-lock-choose-keywords` function
 ;;        of `http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/font-lock.el`.  It verifies the cor-
 ;;        rectness of `https://www.gnu.org/software/emacs/manual/html_node/elisp/Font-Lock-Basics.html`.
 ;;
@@ -2392,14 +2392,6 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   P ·· Section *Package name* itself.
 ;;
-;;   PDF  Prepending to the documentation face.  In order to duplicate the behaviour of Java Mode
-;;        (e.g. see `jmt-is-Java-Mode-tag-faced`), a special face applied within a Javadoc comment
-;;        (e.g. to a Javadoc tag) must not replace the `font-lock-doc-face` of the surrounding comment,
-;;        but rather prepend to it.  ‘If any face … but those above is used in comments, it doesn’t
-;;        replace them.’  http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el
-;;            See also e.g. the `prepend` value of the highlighter `override` argument.
-;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
-;;
 ;;   PGV  Patching via generalized variables (`setf`, `cl-letf`) as opposed to source (`jmt--patch`).
 ;;        Where a ‘patch is just to call an alternative function’ in lieu of the original, it might
 ;;        be implemented by applying advice that temporarily redefines the function symbol to that of
@@ -2407,6 +2399,14 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;            The advantage would be simpler code and a faster patch.  Yet to apply this method in cases
 ;;        where the original function must be called from within the replacement is problematic. [AW]
 ;;        https://emacs.stackexchange.com/a/16810/21090
+;;
+;;   PJF  Prepending to the Javadoc face.  In order to duplicate the behaviour of Java Mode
+;;        (e.g. see `jmt-is-Java-Mode-tag-faced`), a special face applied within a Javadoc comment
+;;        (e.g. to a Javadoc tag) must not replace the `font-lock-doc-face` of the surrounding comment,
+;;        but rather prepend to it.  ‘If any face … but those above is used in comments, it doesn’t
+;;        replace them.’  http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el
+;;            See also e.g. the `prepend` value of the highlighter `override` argument.
+;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
@@ -2442,7 +2442,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 15
 ;;
 ;;        Yet, while the above seems to work (GNU coreutils 8.3), omitting the space in this manner
-;;        is undocumented.  Therefore it might be better to avoid `-S` in favour of the long form,
+;;        is undescribed.  Therefore it might be better to avoid `-S` in favour of the long form,
 ;;        `--split-string`, which conventionally uses ‘=’ as a separator instead of a space.
 ;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 ;;
