@@ -129,7 +129,8 @@ The face for an angle bracket, ‘<’ or ‘>’."
 
 
 
-(defface jmt-annotation-delimiter; ↙ Only for sake of replacement subface `jmt-annotation-mark`.
+(defface jmt-annotation-delimiter; This non-replacement face inherits from `c-annotation-face` only
+    ;;; for sake of `jmt-is-annotation-terminal-face` and replacement subface `jmt-annotation-mark`.
   `((t . (:inherit c-annotation-face))) "\
 The face for the ‘@’, ‘(’ and ‘)’ delimiters of annotation.
 Customize it to better distinguish the delimiters from the content
@@ -1726,7 +1727,7 @@ in case of an \\=`env\\=` interpreter."
                     (forward-comment most-negative-fixnum); [←CW]
                     (when (bobp) (throw 'goto-next nil)); Skip any remaining §§.
                     (setq predecessor-end (point)))
-                  (setq i (char-before))
+                  (setq i (char-before)); The predecessor would have to be the method’s return type.
                   (when (= i ?\]); Return type declared as an array.
                     (goto-char match-end)
                     (throw 'face 'font-lock-function-name-face))
@@ -1735,10 +1736,18 @@ in case of an \\=`env\\=` interpreter."
                         (goto-char match-end)
                         (throw 'face 'font-lock-function-name-face)
                       (throw 'goto-next t)))
-                  (when (eq (get-text-property (1- (point)) 'face) 'jmt-type-reference); [↑T]
-                    ;; The return type is declared simply by a type name.
-                    (goto-char match-end)
+                  ;; The return type may be declared simply by a type name.
+                  (setq i (get-text-property (1- (point)) 'face))
+                  (when (eq i 'jmt-type-reference); [↑T]
+                    (goto-char match-end); Indeed it appears to be a type name.
                     (throw 'face 'font-lock-function-name-face))
+                  (unless i; What would be the return type has been left unfaced by Java Mode.
+                      ;;; Maybe ∵ it became confused by prior annotation?  Try moving there:
+                    (when (< (skip-chars-backward jmt-name-character-set) 0)
+                      (forward-comment most-negative-fixnum); [←CW]
+                      (when (jmt-is-annotation-terminal-face (get-text-property (1- (point)) 'face)); [↑A]
+                        (goto-char match-end); Indeed annotation precedes what would be the return type.
+                        (throw 'face 'font-lock-function-name-face))))
                   t)
 
                 ;; Method call
