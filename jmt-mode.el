@@ -1628,7 +1628,7 @@ in case of an \\=`env\\=` interpreter."
    ;; ════════════════════════════════
 
    (cons; Fontify each identifier that was misfaced by Java Mode, or incorrectly left unfaced.
-    (let (face i match-beg match-end)
+    (let (face i match-beg match-end predecessor-end)
       (lambda (limit)
         (set
          'jmt-f
@@ -1641,115 +1641,127 @@ in case of an \\=`env\\=` interpreter."
                        (eq face 'jmt-type-reference)); [↑T]
                  ;;; Vanguard, redundant but for sake of speed.  See the other face guards below.
                (forward-comment most-positive-fixnum); [CW→]
-               (when (eq ?\( (char-after)); [NCE]
+               (and; Any nil evaluation among the following advances `while` to the next identifier.
 
-                 ;; Constructor declaration  (assumption: point is directly before the ‘(’)
-                 ;; ───────────────────────
-                 (catch 'is-constructor-declaration; One that needs fontifying, that is.  Or some
-                   ;; cases of method declaration in need; this section will fontify those, too,
-                   ;; just because it happens to precede the method declaration section, below.
-                   (unless (or (null face) (eq face 'jmt-type-reference)); [↑T]
-                     (throw 'is-constructor-declaration nil)); Only identifiers left unfaced
-                     ;;; or misfaced as type references have been seen.  See for instance
-                     ;;; the sequences `public @Warning("non-API") ApplicationX()` at
-                     ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L23`,
-                     ;;; and `ID( final String string, final int cN ) throws MalformedID` at
-                     ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L30`.
+                (eq ?\( (char-after)); Else this identifier names neither a method nor contructor. [NCE]
 
-                   ;; After the identifier, in any parameter list
-                   ;; ·····················
-                   (forward-char); Past the ‘(’.
-                   (forward-comment most-positive-fixnum); [CW→]
-                   (setq i (point))
-                   (when (> (skip-chars-forward jmt-name-character-set) 0)
-                     (when (string= "final" (buffer-substring-no-properties i (point)))
-                       (goto-char match-end)
-                       (throw 'face 'font-lock-function-name-face))
-                     (catch 'is-past-package; Leaving `i` at either the next token to deal with,
-                       (while t; or the buffer end, scan past any itervening package name.
-                         ;; Now point lies (invariant) directly after a name (in form).
-                         (forward-comment most-positive-fixnum); [CW→, PPN]
-                         (when (eobp) (throw 'is-past-package t))
-                         (unless (= ?. (char-after))  ; Namely the delimiting dot of a
-                           (throw 'is-past-package t)); preceding package name segment.
-                         (forward-char); Past the ‘.’.
-                         (forward-comment most-positive-fixnum); [CW→] To the next token.
-                         (setq i (point)); What follows the package name follows its last dot.
-                         (when (= (skip-chars-forward jmt-name-character-set) 0)
-                           (throw 'is-past-package t)))))
-                   (when (and (/= i (point-max))
-                              (or (= ?@ (char-after i))
-                                  (eq (get-text-property i 'face) 'jmt-type-reference))); [↑T]
-                     (goto-char match-end)
-                     (throw 'face 'font-lock-function-name-face))
+                ;; Constructor declaration
+                ;; ───────────────────────
+                ;; Or some cases of method declaration in need; this section may fontify those, too,
+                ;; just because it happens to precede the method declaration section, below.
+                (catch 'goto-next
+                  (setq predecessor-end nil); [◦↓◦]
+                  (unless (or (null face) (eq face 'jmt-type-reference)); [↑T]
+                    (throw 'goto-next t)); Only identifiers left unfaced
+                    ;;; or misfaced as type references have been seen.  See for instance
+                    ;;; the sequences `public @Warning("non-API") ApplicationX()` at
+                    ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L23`,
+                    ;;; and `ID( final String string, final int cN ) throws MalformedID` at
+                    ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/spec/ID.java#L30`.
 
-                   ;; Before the identifier
-                   ;; ·····················
-                   (goto-char match-beg)
-                   (forward-comment most-negative-fixnum); [←CW]
-                   (when (bobp) (throw 'is-constructor-declaration nil))
+                  ;; After the identifier, in any parameter list
+                  ;; ·····················
+                  (forward-char); Past the ‘(’.
+                  (forward-comment most-positive-fixnum); [CW→]
+                  (setq i (point))
+                  (when (> (skip-chars-forward jmt-name-character-set) 0)
+                    (when (string= "final" (buffer-substring-no-properties i (point)))
+                      (goto-char match-end)
+                      (throw 'face 'font-lock-function-name-face))
+                    (catch 'is-past-package; Leaving `i` at either the next token to deal with,
+                      (while t; or the buffer end, scan past any itervening package name.
+                        ;; Now point lies (invariant) directly after a name (in form).
+                        (forward-comment most-positive-fixnum); [CW→, PPN]
+                        (when (eobp) (throw 'is-past-package t))
+                        (unless (= ?. (char-after))  ; Namely the delimiting dot of a
+                          (throw 'is-past-package t)); preceding package name segment.
+                        (forward-char); Past the ‘.’.
+                        (forward-comment most-positive-fixnum); [CW→] To the next token.
+                        (setq i (point)); What follows the package name follows its last dot.
+                        (when (= (skip-chars-forward jmt-name-character-set) 0)
+                          (throw 'is-past-package t)))))
+                  (when (and (/= i (point-max))
+                             (or (= ?@ (char-after i))
+                                 (eq (get-text-property i 'face) 'jmt-type-reference))); [↑T]
+                    (goto-char match-end)
+                    (throw 'face 'font-lock-function-name-face))
 
-               ;;; (when (= (char-before) ?>)
-               ;;;   (if (jmt-preceding->-marks-generic-return-type)
-               ;;;       (goto-char match-end)
-               ;;;       (throw 'face 'font-lock-function-name-face)
-               ;;;     (throw 'is-constructor-declaration nil)))
-               ;;;;;;;;; Disabled pending resolution of several problems: 1) Point is left indeterminate
-                     ;;; by the call to `jmt-preceding->-marks-generic-return-type`, breaking the code
-                     ;;; that follows; 2) nominally a call to `jmt-preceding->-marks-generic-return-type`
-                     ;;; makes no sense for constructors which necessarily declare no return type;
-                     ;;; and 3) the same code may end up running redundantly in the section that follows.
+                  ;; Before the identifier
+                  ;; ·····················
+                  (goto-char match-beg)
+                  (forward-comment most-negative-fixnum); [←CW]
+                  (when (bobp) (throw 'goto-next nil)); Skip any remaining §§.
+                  (setq predecessor-end (point)); [◦↓◦]
 
-                   ;; A constructor modifier here before point would also indicate a declaration.
-                   ;; However, the earlier test of ‘final’ (above) has eliminated the only case
-                   ;; in which Java Mode is known to fail when a keyword modifier appears here.
-                   ;; That leaves only the case of an *annotation* modifier to remedy.
-                   (when (jmt-is-annotation-terminal-face (get-text-property (1- (point)) 'face)); [↑A]
-                     (goto-char match-end)
-                     (throw 'face 'font-lock-function-name-face)))
+              ;;; (when (= (char-before) ?>)
+              ;;;   (if (jmt-preceding->-marks-generic-return-type)
+              ;;;       (goto-char match-end)
+              ;;;       (throw 'face 'font-lock-function-name-face)
+              ;;;     (throw 'goto-next t)))
+              ;;;;;;;;; Disabled pending resolution of several problems: 1) Point is left indeterminate
+                    ;;; by the call to `jmt-preceding->-marks-generic-return-type`, breaking the code
+                    ;;; that follows; 2) nominally a call to `jmt-preceding->-marks-generic-return-type`
+                    ;;; makes no sense for constructors which necessarily declare no return type;
+                    ;;; and 3) the same code may end up running redundantly in the section that follows.
 
-                 ;; Method declaration
-                 ;; ──────────────────
-                 (catch 'is-method-declaration; One that needs fontifying, that is.
-                   (when face (throw 'is-method-declaration nil))
-                     ;;; No misfaced definitions have been seen, only unfaced.  For instance,
-                     ;;; see the sequence `public @Override @Warning("non-API") void onCreate()`.
-                     ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
-                   (goto-char match-beg)
-                   (forward-comment most-negative-fixnum); [←CW]
-                   (when (bobp) (throw 'is-method-declaration nil))
-                   (setq i (char-before))
-                   (when (= i ?\]); Return type declared as an array.
-                     (goto-char match-end)
-                     (throw 'face 'font-lock-function-name-face))
-                   (when (= i ?>)
-                     (if (jmt-preceding->-marks-generic-return-type)
-                         (goto-char match-end)
-                         (throw 'face 'font-lock-function-name-face)
-                       (throw 'is-method-declaration nil)))
-                   (when (eq (get-text-property (1- (point)) 'face) 'jmt-type-reference); [↑T]
-                     ;; The return type is declared simply by a type name.
-                     (goto-char match-end)
-                     (throw 'face 'font-lock-function-name-face)))
+                  ;; A constructor modifier here before point would also indicate a declaration.
+                  ;; However, the earlier test of ‘final’ (above) has eliminated the only case
+                  ;; in which Java Mode is known to fail when a keyword modifier appears here.
+                  ;; That leaves only the case of an *annotation* modifier to remedy.
+                  (when (jmt-is-annotation-terminal-face (get-text-property (1- (point)) 'face)); [↑A]
+                    (goto-char match-end)
+                    (throw 'face 'font-lock-function-name-face))
+                  t)
 
-                 ;; Method call
-                 ;; ───────────
-                 (catch 'is-method-call; One that needs refacing, that is.
-                   (unless (eq face 'font-lock-function-name-face) (throw 'is-method-call nil))
-                     ;;; Only calls misfaced as declarations have been seen.
-                   (goto-char match-beg)
-                   (forward-comment most-negative-fixnum); [←CW]
-                   (when (bobp) (throw 'is-method-call nil))
-                   (when; When the possibility of the method identifier being proper to a declaration
-                       ;; as opposed to a call is excluded because it directly follows either: [AM]
-                       (or (= (char-before) ?.)
-                             ;;; (a) The character ‘.’, as in the sequence `assert stators.getClass()` at
-                             ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
-                           (eq (get-text-property (1- (point)) 'face) 'jmt-principal-keyword)); [↑K]
-                             ;;; (b) A principal keyword, as in the sequence `assert verify(blocks)` at
-                             ;;; `https://github.com/oracle/graal/blob/968c592cc6c1b3e6ee6b23b086adbc3c5007e6be/compiler/src/org.graalvm.compiler.core.common/src/org/graalvm/compiler/core/common/cfg/DominatorOptimizationProblem.java#L52`.
-                     (goto-char match-end)
-                     (throw 'face 'default))))
+                ;; Method declaration
+                ;; ──────────────────
+                (catch 'goto-next
+                  (when face (throw 'goto-next t))
+                    ;;; No misfaced definitions have been seen, only unfaced.  For instance,
+                    ;;; see the sequence `public @Override @Warning("non-API") void onCreate()`.
+                    ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/ApplicationX.java#L40]
+                  (if predecessor-end; [◦↕◦]
+                      (goto-char predecessor-end)
+                    (goto-char match-beg)
+                    (forward-comment most-negative-fixnum); [←CW]
+                    (when (bobp) (throw 'goto-next nil)); Skip any remaining §§.
+                    (setq predecessor-end (point)))
+                  (setq i (char-before))
+                  (when (= i ?\]); Return type declared as an array.
+                    (goto-char match-end)
+                    (throw 'face 'font-lock-function-name-face))
+                  (when (= i ?>)
+                    (if (jmt-preceding->-marks-generic-return-type)
+                        (goto-char match-end)
+                        (throw 'face 'font-lock-function-name-face)
+                      (throw 'goto-next t)))
+                  (when (eq (get-text-property (1- (point)) 'face) 'jmt-type-reference); [↑T]
+                    ;; The return type is declared simply by a type name.
+                    (goto-char match-end)
+                    (throw 'face 'font-lock-function-name-face))
+                  t)
+
+                ;; Method call
+                ;; ───────────
+                (catch 'goto-next
+                  (unless (eq face 'font-lock-function-name-face) (throw 'goto-next t))
+                    ;;; Only calls misfaced as declarations have been seen.
+                  (if predecessor-end; [◦↑◦]
+                      (goto-char predecessor-end)
+                    (goto-char match-beg)
+                    (forward-comment most-negative-fixnum); [←CW]
+                    (when (bobp) (throw 'goto-next nil))); Skip any remaining §§.
+                  (when; When the possibility of the method identifier being proper to a declaration
+                      ;; as opposed to a call is excluded because it directly follows either: [AM]
+                      (or (= (char-before) ?.)
+                            ;;; (a) The character ‘.’, as in the sequence `assert stators.getClass()` at
+                            ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
+                          (eq (get-text-property (1- (point)) 'face) 'jmt-principal-keyword)); [↑K]
+                            ;;; (b) A principal keyword, as in the sequence `assert verify(blocks)` at
+                            ;;; `https://github.com/oracle/graal/blob/968c592cc6c1b3e6ee6b23b086adbc3c5007e6be/compiler/src/org.graalvm.compiler.core.common/src/org/graalvm/compiler/core/common/cfg/DominatorOptimizationProblem.java#L52`.
+                    (goto-char match-end)
+                    (throw 'face 'default))
+                  t))
                (goto-char match-end))); Whence the next leg of the search begins.
            nil))))
     '(0 jmt-f t))
@@ -2280,6 +2292,12 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
 ;; NOTES
 ;; ─────
+;;   ◦↓◦  Code that is order dependent with like-marked code (◦↕◦, ◦↑◦) that comes after.
+;;
+;;   ◦↕◦  Code that is order dependent with like-marked code (◦↓◦, ◦↕◦, ◦↑◦) that comes before and after.
+;;
+;;   ◦↑◦  Code that is order dependent with like-marked code (◦↓◦, ◦↕◦) that comes before.
+;;
 ;;   A ·· Section *Annotation* of `jmt-specific-fontifiers-3`.
 ;;
 ;;  ↑A ·· Code that must execute after section *Annotation*.
