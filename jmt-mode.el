@@ -1688,11 +1688,18 @@ in case of an \\=`env\\=` interpreter."
                    (goto-char match-beg)
                    (forward-comment most-negative-fixnum); [←CW]
                    (when (bobp) (throw 'is-constructor-declaration nil))
-                   (when (= (char-before) ?>)
-                     (if (jmt-preceding->-marks-generic-return-type)
-                         (goto-char match-end)
-                         (throw 'to-fontify 'font-lock-function-name-face)
-                       (throw 'is-constructor-declaration nil)))
+
+               ;;; (when (= (char-before) ?>)
+               ;;;   (if (jmt-preceding->-marks-generic-return-type)
+               ;;;       (goto-char match-end)
+               ;;;       (throw 'to-fontify 'font-lock-function-name-face)
+               ;;;     (throw 'is-constructor-declaration nil)))
+               ;;;;;;;;; Disabled pending resolution of several problems: 1) Point is left indeterminate
+                     ;;; by the call to `jmt-preceding->-marks-generic-return-type`, breaking the code
+                     ;;; that follows; 2) nominally a call to `jmt-preceding->-marks-generic-return-type`
+                     ;;; makes no sense for constructors which necessarily declare no return type;
+                     ;;; and 3) the same code may end up running redundantly in the section that follows.
+
                    ;; A constructor modifier here before point would also indicate a declaration.
                    ;; However, the earlier test of ‘final’ (above) has eliminated the only case
                    ;; in which Java Mode is known to fail when a keyword modifier appears here.
