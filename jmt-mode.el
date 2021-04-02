@@ -1351,7 +1351,7 @@ in case of an \\=`env\\=` interpreter."
         (setq match-beg (point)); Presumptively.
         (set
          'jmt-f
-         (catch 'to-face
+         (catch 'face
            (while (< match-beg limit)
              (setq i (syntax-after match-beg)
                    j (car i); Numeric syntax code.
@@ -1364,28 +1364,28 @@ in case of an \\=`env\\=` interpreter."
                (when (or (= j ?<)
                          (= j ?>))
                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                 (throw 'to-face 'jmt-angle-bracket))
+                 (throw 'face 'jmt-angle-bracket))
 
                ;; Curly bracket
                ;; ─────────────
                (when (or (= j ?{)
                          (= j ?}))
                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                 (throw 'to-face 'jmt-curly-bracket))
+                 (throw 'face 'jmt-curly-bracket))
 
                ;; Round bracket
                ;; ─────────────
                (when (or (= j ?\()
                          (= j ?\)))
                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                 (throw 'to-face 'jmt-round-bracket))
+                 (throw 'face 'jmt-round-bracket))
 
                ;; Square bracket
                ;; ──────────────
                (when (or (= j ?\[)
                          (= j ?\]))
                  (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-                 (throw 'to-face 'jmt-square-bracket)))
+                 (throw 'face 'jmt-square-bracket)))
 
              ;; Separator
              ;; ─────────
@@ -1395,7 +1395,7 @@ in case of an \\=`env\\=` interpreter."
                        (= j ?:)
                        (= j ?.))
                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-               (throw 'to-face 'jmt-separator))
+               (throw 'face 'jmt-separator))
 
              (setq match-beg match-end))
            nil))))
@@ -1632,7 +1632,7 @@ in case of an \\=`env\\=` interpreter."
       (lambda (limit)
         (set
          'jmt-f
-         (catch 'to-fontify
+         (catch 'face
            (while (re-search-forward jmt-identifier-pattern limit t)
              (setq match-beg (match-beginning 0); Presumptively.
                    match-end (match-end 0)
@@ -1664,7 +1664,7 @@ in case of an \\=`env\\=` interpreter."
                    (when (> (skip-chars-forward jmt-name-character-set) 0)
                      (when (string= "final" (buffer-substring-no-properties i (point)))
                        (goto-char match-end)
-                       (throw 'to-fontify 'font-lock-function-name-face))
+                       (throw 'face 'font-lock-function-name-face))
                      (catch 'is-past-package; Leaving `i` at either the next token to deal with,
                        (while t; or the buffer end, scan past any itervening package name.
                          ;; Now point lies (invariant) directly after a name (in form).
@@ -1681,7 +1681,7 @@ in case of an \\=`env\\=` interpreter."
                               (or (= ?@ (char-after i))
                                   (eq (get-text-property i 'face) 'jmt-type-reference))); [↑T]
                      (goto-char match-end)
-                     (throw 'to-fontify 'font-lock-function-name-face))
+                     (throw 'face 'font-lock-function-name-face))
 
                    ;; Before the identifier
                    ;; ·····················
@@ -1692,7 +1692,7 @@ in case of an \\=`env\\=` interpreter."
                ;;; (when (= (char-before) ?>)
                ;;;   (if (jmt-preceding->-marks-generic-return-type)
                ;;;       (goto-char match-end)
-               ;;;       (throw 'to-fontify 'font-lock-function-name-face)
+               ;;;       (throw 'face 'font-lock-function-name-face)
                ;;;     (throw 'is-constructor-declaration nil)))
                ;;;;;;;;; Disabled pending resolution of several problems: 1) Point is left indeterminate
                      ;;; by the call to `jmt-preceding->-marks-generic-return-type`, breaking the code
@@ -1706,7 +1706,7 @@ in case of an \\=`env\\=` interpreter."
                    ;; That leaves only the case of an *annotation* modifier to remedy.
                    (when (jmt-is-annotation-terminal-face (get-text-property (1- (point)) 'face)); [↑A]
                      (goto-char match-end)
-                     (throw 'to-fontify 'font-lock-function-name-face)))
+                     (throw 'face 'font-lock-function-name-face)))
 
                  ;; Method declaration
                  ;; ──────────────────
@@ -1721,16 +1721,16 @@ in case of an \\=`env\\=` interpreter."
                    (setq i (char-before))
                    (when (= i ?\]); Return type declared as an array.
                      (goto-char match-end)
-                     (throw 'to-fontify 'font-lock-function-name-face))
+                     (throw 'face 'font-lock-function-name-face))
                    (when (= i ?>)
                      (if (jmt-preceding->-marks-generic-return-type)
                          (goto-char match-end)
-                         (throw 'to-fontify 'font-lock-function-name-face)
+                         (throw 'face 'font-lock-function-name-face)
                        (throw 'is-method-declaration nil)))
                    (when (eq (get-text-property (1- (point)) 'face) 'jmt-type-reference); [↑T]
                      ;; The return type is declared simply by a type name.
                      (goto-char match-end)
-                     (throw 'to-fontify 'font-lock-function-name-face)))
+                     (throw 'face 'font-lock-function-name-face)))
 
                  ;; Method call
                  ;; ───────────
@@ -1749,7 +1749,7 @@ in case of an \\=`env\\=` interpreter."
                              ;;; (b) A principal keyword, as in the sequence `assert verify(blocks)` at
                              ;;; `https://github.com/oracle/graal/blob/968c592cc6c1b3e6ee6b23b086adbc3c5007e6be/compiler/src/org.graalvm.compiler.core.common/src/org/graalvm/compiler/core/common/cfg/DominatorOptimizationProblem.java#L52`.
                      (goto-char match-end)
-                     (throw 'to-fontify 'default))))
+                     (throw 'face 'default))))
                (goto-char match-end))); Whence the next leg of the search begins.
            nil))))
     '(0 jmt-f t))
