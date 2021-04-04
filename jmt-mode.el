@@ -1800,7 +1800,7 @@ in case of an \\=`env\\=` interpreter."
 
 
    ;; ════════════
-   ;; Shebang line, as per `http://openjdk.java.net/jeps/330#Shebang_files`
+   ;; Shebang line, as described in `http://openjdk.java.net/jeps/330#Shebang_files`
    ;; ════════════
 
    (list; Fontify any shebang line in a source-launch file.
