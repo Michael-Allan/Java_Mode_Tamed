@@ -1314,7 +1314,7 @@ in case of an \\=`env\\=` interpreter."
    ;; ────────────
    (cons; Reface each name segment using face `jmt-package-name`, and each apparently misfaced
       ;;; type name using face `jmt-type-reference`.
-    (let (match-beg match-end)
+    (let (c match-beg match-end)
       (lambda (limit)
         (setq match-beg (point)); Presumptively.
         (catch 'to-reface
@@ -1324,16 +1324,20 @@ in case of an \\=`env\\=` interpreter."
               (goto-char match-end)
               (forward-comment most-positive-fixnum); [CW→, PPN]
               (when (eobp) (throw 'to-reface nil))
-              (when (= ?. (char-after))
+              (setq c (char-after))
+              (when (= ?. c)
                 (set 'jmt-f
                      (if (string= "Lu" (get-char-code-property (char-after match-beg) 'general-category))
                          'jmt-type-reference; Workaround for a probable misfacing by Java Mode.
-                           ;;; It occurs e.g. with a class-qualified reference to a class member
-                           ;;; whose name begins in upper case, such as `Foo.BAR` or `Foo.FooBar`;
-                           ;;; here Java Mode misfaces the class name (`Foo`) as a package name segment.
-                           ;;; This workaround assumes that a real segment would begin in lower case,
-                           ;;; which itself is not quite correct. [BUG]
+                           ;;; It occurs e.g. with a type name qualifying a reference to a type member,
+                           ;;; e.g. `Foo.BAR` or `Foo.Bar`.  Java Mode misfaces the type name (`Foo`) as
+                           ;;; a package name segment.  This workaround assumes that a real segment would
+                           ;;; begin in lower case, an assumption that itself is not quite correct. [BUG]
                        'jmt-package-name))
+                (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
+                (throw 'to-reface t))
+              (when (= ?< c)                     ; Then it cannot be a name segment.  Rather it is likely
+                (set 'jmt-f 'jmt-type-reference ); a type name qualifying a reference to a type member.
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t)))
             (setq match-beg match-end))
