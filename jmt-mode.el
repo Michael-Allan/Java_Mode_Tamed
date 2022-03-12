@@ -2464,20 +2464,20 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Multiline-Font-Lock.html
 ;;
 ;;   SLS  Source-launch files encoded with a shebang.
-;;        https://docs.oracle.com/en/java/javase/15/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
+;;        https://docs.oracle.com/en/java/javase/17/docs/specs/man/java.html#using-source-file-mode-to-launch-single-file-source-code-programs
 ;;        http://openjdk.java.net/jeps/330#Shebang_files
 ;;
 ;;        For a source-launch file that has no `.java` extension, if its shebang uses `-S` instead of
 ;;        `--split-string`, then it would have to omit the space that typically follows.  If it had the
 ;;        following shebang line, for instance, then auto-mode would fail:
 ;;
-;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 15
+;;            #!/usr/bin/env -S ${JDK_HOME}/bin/java --source 17
 ;;
 ;;        With the above shebang, an `interpreter-mode-alist` entry would have only `-S`
 ;;        to match against, which does not suffice to indicate a Java file.  To avoid this,
 ;;        the shebang line would have to appear as:
 ;;
-;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 15
+;;            #!/usr/bin/env -S${JDK_HOME}/bin/java --source 17
 ;;
 ;;        Yet, while the above seems to work (GNU coreutils 8.3), omitting the space in this manner
 ;;        is undescribed.  Therefore it might be better to avoid `-S` in favour of the long form,
