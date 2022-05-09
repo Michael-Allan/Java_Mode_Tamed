@@ -2116,14 +2116,14 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   (unless jmt--late-initialization-was-begun
     (set 'jmt--late-initialization-was-begun t)
 
-  ;; Verify assumptions
-  ;; ──────────────────
+    ;; Verify assumptions
+    ;; ──────────────────
     (cl-assert (= ?> (char-syntax ?\n))); Newlines have endcomment syntax.
       ;;; (Consequently they have no whitespace syntax.)
     (cl-assert parse-sexp-ignore-comments)
 
-  ;; Tell Java Mode of additional faces I
-  ;; ────────────────────────────────────
+    ;; Tell Java Mode of additional faces I
+    ;; ────────────────────────────────────
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
