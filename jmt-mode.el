@@ -2085,18 +2085,8 @@ Faces for a shebang line atop a source-launch file."
 
 
 
-(defvar jmt--autoload-guard); Bound from here to end of file load, void at all other times.
-
-;;;###autoload
-(unless (boundp 'jmt--autoload-guard); To execute only on `package-initialize`, not on file load. [GDA]
-   (set 'auto-mode-alist (cons (cons "\\.java\\'" 'jmt-mode) auto-mode-alist))
-   (set 'interpreter-mode-alist
-        (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode) interpreter-mode-alist)))
-    ;;; In these one might wish to append versus cons not to override any pattern previously added
-    ;;; by the user.  But a package should not demur in installing itself (and indeed the autoloads
-    ;;; of CC Mode would clobber us here if we did).  Rather let the package *manager* mend its own bugs,
-    ;;; and the user meantime find recourse in the means that Emacs provides.
-    ;;; https://stackoverflow.com/a/35949889/2402790
+;;;###autoload (set 'auto-mode-alist (cons (cons "\\.java\\'" 'jmt-mode) auto-mode-alist))
+;;;###autoload (set 'interpreter-mode-alist (cons (cons "\\(?:--split-string=\\|-S\\)?java" 'jmt-mode) interpreter-mode-alist))
 
 
 
@@ -2375,9 +2365,6 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   FV · Suppressing sporadic compiler warnings ‘reference to free variable’
 ;;        or ‘assignment to free variable’.
-;;
-;;   GDA  Guarded definition of autoloads.  It would be simpler to move the autoload definitions to
-;;        a separate, non-executing file, except that multi-file packages are difficult to maintain.
 ;;
 ;;   GVF  A global variable for the use of fontifiers, e.g. from within forms they quote and pass
 ;;        to Font Lock to be evaluated outside of their lexical scope.
