@@ -373,8 +373,8 @@ see ‘jmt-block-tag-parameter’."
 
 (defun jmt-is-Java-Mode-tag-faced (p)
   "Tell whether face property P (symbol or list) might occur on a Javadoc tag."
-  (and (consp p); Testing for precisely `(font-lock-constant-face font-lock-doc-face)`. [PJF]
-       (eq 'font-lock-constant-face (car p))
+  (and (consp p); Testing for precisely `(font-lock-doc-markup-face font-lock-doc-face)`. [PJF]
+       (eq 'font-lock-doc-markup-face (car p))
        (eq 'font-lock-doc-face (car (setq p (cdr p))))
        (null (cdr p))))
 
@@ -428,10 +428,10 @@ or less prominent, for example."
 
 
 (defface jmt-Javadoc-tag; [NDF, RF]
-  `((t . (:inherit font-lock-constant-face))) "\
+  `((t . (:inherit font-lock-doc-markup-face))) "\
 The face for a Javadoc or HTML tag embedded in a Javadoc comment.
-It inherits from ‘font-lock-constant-face’; customize it to distinguish
-Javadoc tags from other constructs that use ‘font-lock-constant-face’.
+It inherits from ‘font-lock-doc-markup-face’; customize it to distinguish
+Javadoc tags from other constructs that use ‘font-lock-doc-markup-face’.
 See also subfaces ‘jmt-Javadoc-tag-delimiter’, ‘jmt-Javadoc-tag-name’
 and  ‘jmt-inline-tag-parameter’."
   :group 'javadoc-faces)
@@ -2030,7 +2030,7 @@ merely referenced after the fact.  See also face ‘jmt-type-reference’."
 The face for a type variable in a Javadoc \\=`param\\=` tag."
   ;; Java Mode has misfaced it as an HTML tag (the two have the same delimiters).  Therefore this face
   ;; (like `jmt-HTML-tag-name`, and unlike `jmt-param-tag-parameter`) is necessarily a replacement
-  ;; face for `font-lock-constant-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
+  ;; face for `font-lock-doc-markup-face` (via `jmt-Javadoc-tag` as it happens).  A better solution
   ;; would be to repair Java Mode’s error in order to elimate this complication. [BUG]
   :group 'javadoc-faces)
 
