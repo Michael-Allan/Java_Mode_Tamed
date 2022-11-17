@@ -397,7 +397,7 @@ see ‘jmt-block-tag-parameter’."
   (or (string= s "class")
       (string= s "interface")
       (string= s "enum")
-      (string= s "record"))); [R]
+      (string= s "record")));
 
 
 
@@ -539,7 +539,7 @@ to END (exclusive).  Point is left indeterminate."
     ("interface"    .     jmt-principal-keyword); Of a type declaration.
     ("native"       .     jmt-qualifier-keyword)
     ("package"      .   jmt-boilerplate-keyword)
-    ("record"       .     jmt-principal-keyword); Of a type declaration. [R]
+    ("record"       .     jmt-principal-keyword); Of a type declaration.
 ;;; ("short"        .          jmt-type-keyword); (but faced rather as a type by Java Mode)
     ("strictfp"     .     jmt-qualifier-keyword)
     ("switch"       .     jmt-principal-keyword); Of a statement.
@@ -969,7 +969,7 @@ in case of an \\=`env\\=` interpreter."
     (let (f match-beg)
       (lambda (limit)
         (catch 'to-reface
-          (while (re-search-forward "\\<assert\\|record\\>" limit t)
+          (while (re-search-forward "\\_<\\(?:assert\\|record\\)\\_>" limit t)
             (setq match-beg (match-beginning 0)
                   f (get-text-property match-beg 'face))
             (when (or (null f) (jmt-is-Java-Mode-type-face f)); [T↓]
@@ -2108,7 +2108,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 
     ;; Verify assumptions
     ;; ──────────────────
-    (cl-assert (= ?> (char-syntax ?\n))); Newlines have endcomment syntax.
+    (cl-assert (= ?> (char-syntax ?\n))); Newlines have *endcomment* syntax.
       ;;; (Consequently they have no whitespace syntax.)
     (cl-assert parse-sexp-ignore-comments)
 
@@ -2434,8 +2434,6 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
-;;
-;;   R ·· Records, a preview language feature at time of writing.  https://openjdk.java.net/jeps/384
 ;;
 ;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
 ;;        earlier applied by Java Mode.  Every replacement face ultimately inherits from the face
