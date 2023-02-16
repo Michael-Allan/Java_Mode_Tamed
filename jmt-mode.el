@@ -1,12 +1,12 @@
 ;;; jmt-mode.el --- Java Mode Tamed  -*- lexical-binding: t; -*-
 
-;; Copyright © 2019-2021 Michael Allan.
+;; Copyright © 2019-2023 Michael Allan.
 ;;
 ;; Author: Michael Allan <mike@reluk.ca>
 ;; Version: 0-snapshot
 ;; SPDX-License-Identifier: MIT
-;; Package-Requires: ((emacs "24.4"))
-;; Keywords: c, languages
+;; Package-Requires: ((emacs "27.1"))
+;; Keywords: languages, c
 ;; URL: http://reluk.ca/project/Java/Emacs/
 ;;
 ;; This file is not part of GNU Emacs.
@@ -43,10 +43,10 @@
 ;;
 ;;          The `interpreter-mode-alist` entry is for source-launch files encoded with a shebang. [SLS]
 ;;
-;;   For a working example of manual installation, see the relevant lines
-;;   of `http://reluk.ca/.config/emacs/lisp/initialization.el`, and follow the reference there.
+;;   For a working example of manual installation, see the relevant lines of the file
+;;   `http://reluk.ca/.config/emacs/lisp/initialization.el` and follow the reference there.
 ;;
-;; Changes to Emacs
+;; Changes made to Emacs
 ;;
 ;;   This package applies monkey patches to the runtime session that redefine parts of built-in packages
 ;;   CC Mode and Font Lock.  The patches are applied on first entrance to `jmt-mode`.  Most of them apply
@@ -346,7 +346,7 @@ The face for the proper identifier of a Javadoc inline tag."
 (defface jmt-inline-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag))) "\
 The face for a parameter of a Javadoc inline tag, or attribute of an HTML tag.
-See also subface ‘jmt-inline-rendered-parameter’. And for block tags,
+See also subface ‘jmt-inline-rendered-parameter’.  And for block tags,
 see ‘jmt-block-tag-parameter’."
   :group 'javadoc-faces)
 
@@ -855,7 +855,8 @@ in case of an `env` interpreter."
 
 
 
-(defface jmt-shebang-comment-delimiter `((t . (:inherit font-lock-comment-delimiter-face))) "\
+(defface jmt-shebang-comment-delimiter
+  `((t . (:inherit font-lock-comment-delimiter-face))) "\
 The face for the delimiter ‘\\c’ of a trailing comment in a shebang line,
 in case of an \\=`env\\=` interpreter."
   :group 'shebang-faces
@@ -2009,7 +2010,7 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 (defface jmt-type-reference; [MDF, RF]
   `((t . (:inherit font-lock-type-face))) "\
 The face for the identifier of a class, interface or type parameter
-(viz. type variable) where it appears as a type reference.  See also
+\(viz. type variable) where it appears as a type reference.  See also
 faces ‘jmt-type-declaration’ and ‘jmt-type-variable-declaration’."
   :group 'jmt)
 
@@ -2019,7 +2020,7 @@ faces ‘jmt-type-declaration’ and ‘jmt-type-variable-declaration’."
   `((t . (:inherit jmt-type-declaration))) "\
 The face for a type variable in a type parameter declaration.
 Customize it to highlight the variable where initially it is declared
-(as ‘font-lock-variable-name-face’ does for non-type variables), rather than
+\(as ‘font-lock-variable-name-face’ does for non-type variables), rather than
 merely referenced after the fact.  See also face ‘jmt-type-reference’."
   :group 'jmt)
 
