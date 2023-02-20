@@ -172,8 +172,8 @@ with your other annotation faces."
 
 (defface jmt-annotation-string; [BC, LF, RF]
   `((t . (:inherit font-lock-string-face)))
-  "The face for a string in an annotation qualifier.  It defaults
-to ‘font-lock-string-face’; customize it if the default fits poorly
+  "The face for a string in an annotation qualifier.
+It defaults to ‘font-lock-string-face’; customize it if the default fits poorly
 with your other annotation faces."
   :group 'jmt)
 
@@ -181,17 +181,17 @@ with your other annotation faces."
 
 (defface jmt-annotation-string-delimiter; [BC, LF, RF]
   `((t . (:inherit jmt-string-delimiter)))
-  "The face for a string delimiter in an annotation qualifier.  It defaults
-to ‘jmt-string-delimiter’; customize it if the default fits poorly with your
-other annotation faces."
+  "The face for a string delimiter in an annotation qualifier.
+It defaults to ‘jmt-string-delimiter’; customize it if the default fits poorly
+with your other annotation faces."
   :group 'delimiter-faces)
 
 
 
 (defface jmt-annotation-qualifier `((t . (:inherit c-annotation-face)))
-  "The face for the element assignments of annotation.  Customize it
-e.g. to give the assignments less prominence than the ‘c-annotation-face’
-of the preceding type name."
+  "The face for the element assignments of annotation.
+Customize it e.g. to give the assignments less prominence
+than the ‘c-annotation-face’ of the preceding type name."
   :group 'jmt)
 
 
@@ -215,15 +215,14 @@ See also subfaces ‘jmt-param-tag-parameter’ and ‘jmt-throws-tag-parameter�
 
 (defface jmt-boilerplate-keyword; [MDF, RF]
   `((t . (:inherit jmt-principal-keyword)))
-  "The face for the keyword of a formal Java declaration in the preamble
-of a compilation unit."
+  "The face for the keyword of a formal Java declaration in the preamble of a compilation unit."
   :group 'keyword-faces)
 
 
 
 (defface jmt-bracket `((t . (:inherit jmt-delimiter)))
-  "The face for a bracket.  See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’,
-‘jmt-round-bracket’ and ‘jmt-square-bracket’."
+  "The face for a bracket.
+See also ‘jmt-angle-bracket’, ‘jmt-curly-bracket’, ‘jmt-round-bracket’ and ‘jmt-square-bracket’."
   :group 'delimiter-faces)
 
 
@@ -273,12 +272,12 @@ presently under fontification by Font Lock."
 
 
 (defface jmt-delimiter nil
-  "The face for a delimiter not already faced by Java Mode.  Customize it
-to better distinguish the delimiters from the content they delimit; making them
-more prominent or less prominent, for example.  See also subfaces ‘jmt-bracket’
-‘jmt-separator’.  And for delimiters that *are* already faced by Java Mode,
-see ‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’, ‘jmt-string-delimiter’
-and ‘font-lock-comment-delimiter-face’."
+  "The face for a delimiter not already faced by Java Mode.
+Customize it to better distinguish the delimiters from the content they delimit;
+making them more prominent or less prominent, for example.  See also subfaces
+‘jmt-bracket’, ‘jmt-separator’.  And for delimiters that *are* already faced
+by Java Mode, see ‘jmt-annotation-delimiter’, ‘jmt-annotation-mark’,
+‘jmt-string-delimiter’ and ‘font-lock-comment-delimiter-face’."
   :group 'delimiter-faces)
 
 
@@ -289,8 +288,7 @@ and ‘font-lock-comment-delimiter-face’."
 
 (defface jmt-expression-keyword; [MDF, RF]
   `((t . (:inherit jmt-principal-keyword)))
-  "The face for the keyword of an operator or other element
-of a formal Java expression."
+  "The face for the keyword of an operator or other element of a formal Java expression."
   :group 'keyword-faces)
 
 
@@ -307,8 +305,7 @@ of a formal Java expression."
 
 (defface jmt-HTML-end-tag-name; [NDF, RF]
   `((t . (:inherit jmt-HTML-tag-name)))
-  "The face for the tag name in the end tag of an HTML element
-in a Javadoc comment."
+  "The face for the tag name in the end tag of an HTML element in a Javadoc comment."
   :group 'javadoc-faces)
 
 (defconst jmt-HTML-end-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-HTML-end-tag-name))
@@ -317,8 +314,7 @@ in a Javadoc comment."
 
 (defface jmt-HTML-start-tag-name; [NDF, RF]
   `((t . (:inherit jmt-HTML-tag-name)))
-  "The face for the tag name in the start tag of an HTML element
-in a Javadoc comment."
+  "The face for the tag name in the start tag of an HTML element in a Javadoc comment."
   :group 'javadoc-faces)
 
 (defconst jmt-HTML-start-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-HTML-start-tag-name))
@@ -340,8 +336,8 @@ See also subfaces ‘jmt-HTML-start-tag-name’ and ‘jmt-HTML-end-tag-name’.
 
 (defface jmt-inline-rendered-parameter; [NDF, RF]
   `((t . (:inherit jmt-inline-tag-parameter)))
-  "The face for a rendered parameter of a Javadoc inline tag; one that appears
-more-or-less literally in the resulting Javadocs, that is."
+  "The face for a rendered parameter of a Javadoc inline tag.
+One that appears more-or-less literally in the resulting Javadocs, that is."
   :group 'javadoc-faces)
 
 (defconst jmt-inline-rendered-parameter-f (jmt-make-Javadoc-tag-facing 'jmt-inline-rendered-parameter))
@@ -432,10 +428,11 @@ see ‘jmt-block-tag-parameter’."
 
 (defface jmt-Javadoc-outer-delimiter; [CI]
   `((t . (:inherit font-lock-doc-face)))
-  "The face for the outermost delimiters \\=`/**\\=` and \\=`*/\\=` that between them
-contain a Javadoc comment, and for the left-marginal asterisks \\=`*\\=`
-that may lead any of its lines.  Customize it to better distinguish
-the delimiters from the content they delimit; making them more prominent
+  "The face for the outer delimiters of a Javadoc comment.
+These comprise the outermost delimiters \\=`/**\\=` and \\=`*/\\=` that between
+them contain the Javadoc comment, and the left-marginal asterisks \\=`*\\=`
+that may lead any of its lines.  Customize this face to better distinguish
+these delimiters from the content they delimit; making them more prominent
 or less prominent, for example."
   :group 'delimiter-faces :group 'javadoc-faces)
 
@@ -454,9 +451,10 @@ and  ‘jmt-inline-tag-parameter’."
 
 (defface jmt-Javadoc-tag-delimiter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag)))
-  "The face for the ‘@’, ‘{’ and ‘}’ delimiters of a Javadoc tag,
+  "The face for the delimiters of a Javadoc tag.
+These comprise the ‘@’, ‘{’ and ‘}’ delimiters of a Javadoc tag,
 and the ‘<’, ‘</’, ‘/>’ and ‘>’ delimiters of an HTML tag.
-Customize it to better distinguish the delimiters from the content
+Customize this face to better distinguish these delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also subface ‘jmt-Javadoc-tag-mark’."
   :group 'javadoc-faces)
@@ -476,8 +474,9 @@ See also subface ‘jmt-Javadoc-tag-mark’."
 
 (defface jmt-Javadoc-tag-name; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag)))
-  "The face for the proper identifier of a Javadoc or HTML tag.  See also subfaces
-‘jmt-block-tag-name’, ‘jmt-inline-tag-name’ and ‘jmt-HTML-tag-name’."
+  "The face for the proper identifier of a Javadoc or HTML tag.
+See also subfaces ‘jmt-block-tag-name’, ‘jmt-inline-tag-name’
+and ‘jmt-HTML-tag-name’."
   :group 'javadoc-faces)
 
 (defconst jmt-Javadoc-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-name))
@@ -689,17 +688,18 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
 
 (defface jmt-package-name; [MDF, RF]
   `((t . (:inherit font-lock-constant-face)))
-  "The face for each segment of a package name in a type reference.  It inherits
-from ‘font-lock-constant-face’; customize it to distinguish package names from
-other constructs that use ‘font-lock-constant-face’."
+  "The face for each segment of a package name in a type reference.
+It inherits from ‘font-lock-constant-face’; customize it to distinguish
+package names from other constructs that use ‘font-lock-constant-face’."
   :group 'jmt)
 
 
 
 (defface jmt-package-name-declared; [MDF, RF]
   `((t . (:inherit jmt-package-name)))
-  "The face for each segment of a package name in a package declaration, as op-
-posed to a type reference.  Customize it to better distinguish between the two."
+  "The face for each segment of a package name in a package declaration.
+Customize it to better distinguish between a package name appearing
+in that context versus one appearing in a type reference."
   :group 'jmt)
 
 
@@ -855,15 +855,15 @@ Signal an error if VARIABLE is not buffer local."
 
 
 (defface jmt-shebang-body `((t . (:inherit font-lock-comment-face)))
-  "The face for the body of a shebang line, exclusive of the shebang itself
-and any trailing comment."
+  "The face for the body of a shebang line.
+The body excludes the shebang itself and any trailing comment."
   :group 'shebang-faces)
 
 
 
 (defface jmt-shebang-comment `((t . (:inherit font-lock-comment-face)))
-  "The face for the body of a trailing comment in a shebang line,
-in case of an `env` interpreter."
+  "The face for the body of a trailing comment in a shebang line.
+Such a comment may appear in case of an \\=`env\\=` interpreter."
   :group 'shebang-faces
   :link '(url-link "https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html"))
 
@@ -871,8 +871,8 @@ in case of an `env` interpreter."
 
 (defface jmt-shebang-comment-delimiter
   `((t . (:inherit font-lock-comment-delimiter-face)))
-  "The face for the delimiter ‘\\c’ of a trailing comment in a shebang line,
-in case of an \\=`env\\=` interpreter."
+  "The face for the delimiter ‘\\c’ of a trailing comment in a shebang line.
+Such a comment may appear in case of an \\=`env\\=` interpreter."
   :group 'shebang-faces
   :link '(url-link "https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html"))
 
@@ -1997,10 +1997,10 @@ in case of an \\=`env\\=` interpreter."
 
 (defface jmt-string-delimiter; [BC, LF, RF]
   `((t . (:inherit font-lock-string-face)))
-  "The face for the delimiter of a string literal (\" or \"\"\") or character
-literal (\\=').  Customize it to better distinguish these delimiters from
-the content they delimit; making them less prominent, for example.
-See also ‘jmt-delimiter’ and the faces that inherit from it."
+  "The face for the delimiter of a string literal or character literal.
+These are \", \"\"\" or \\='.  Customize this face to better distinguish these
+delimiters from the content they delimit; making them less prominent,
+for example.  See also ‘jmt-delimiter’ and the faces that inherit from it."
   :group 'delimiter-faces)
 
 
@@ -2023,8 +2023,9 @@ to merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 (defface jmt-type-reference; [MDF, RF]
   `((t . (:inherit font-lock-type-face)))
-  "The face for the identifier of a class, interface or type parameter
-\(viz. type variable) where it appears as a type reference.  See also
+  "The face for the identifier in a type reference.
+This is the identifier of a class, interface or type parameter (viz.
+type variable) where it appears as a type reference.  See also
 faces ‘jmt-type-declaration’ and ‘jmt-type-variable-declaration’."
   :group 'jmt)
 
@@ -2108,8 +2109,7 @@ from an untamed ancestral face defined elsewhere."
 ;;;###autoload
 (define-derived-mode jmt-mode java-mode
   "Java Mode Tamed"
-  "A derived major mode that affords better control of the Java mode
-built into Emacs, particularly in regard to syntax highlighting.
+  "A derived major mode affording better control of the Java mode built into Emacs.
 For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   :group 'jmt
 
