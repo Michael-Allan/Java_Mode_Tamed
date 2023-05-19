@@ -336,7 +336,7 @@ See also subfaces ‘jmt-HTML-start-tag-name’ and ‘jmt-HTML-end-tag-name’.
 
 (defface jmt-inline-rendered-parameter; [NDF, RF]
   `((t . (:inherit jmt-inline-tag-parameter)))
-  "The face for a rendered parameter of a Javadoc inline tag.
+  "The face for a rendered parameter of a Javadoc in-line tag.
 One that appears more-or-less literally in the resulting Javadocs, that is."
   :group 'javadoc-faces)
 
@@ -346,7 +346,7 @@ One that appears more-or-less literally in the resulting Javadocs, that is."
 
 (defface jmt-inline-tag-name; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag-name)))
-  "The face for the proper identifier of a Javadoc inline tag."
+  "The face for the proper identifier of a Javadoc in-line tag."
   :group 'javadoc-faces)
 
 (defconst jmt-inline-tag-name-f (jmt-make-Javadoc-tag-facing 'jmt-inline-tag-name))
@@ -355,7 +355,7 @@ One that appears more-or-less literally in the resulting Javadocs, that is."
 
 (defface jmt-inline-tag-parameter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag)))
-  "The face for a parameter of a Javadoc inline tag, or attribute of an HTML tag.
+  "The face for a parameter of a Javadoc in-line tag, or attribute of an HTML tag.
 See also subface ‘jmt-inline-rendered-parameter’.  And for block tags,
 see ‘jmt-block-tag-parameter’."
   :group 'javadoc-faces)
@@ -1467,9 +1467,9 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
     '(0 'jmt-Javadoc-outer-delimiter prepend)); [PJF]
 
 
-   ;; Inline tag
-   ;; ──────────
-   (list; Reface each Javadoc inline tag. [JIL]
+   ;; In-Line tag
+   ;; ───────────
+   (list; Reface each Javadoc in-line tag. [JIL]
     (let (match-beg tag-name)
       (lambda (limit)
         (catch 'to-reface
@@ -2387,7 +2387,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   JBL  Javadoc block tags.
 ;;        https://docs.oracle.com/en/java/javase/13/docs/specs/javadoc/doc-comment-spec.html#block-tags
 ;;
-;;   JIL  Javadoc inline tags.  Double anchoring the tag search on the bounds of a `jmt-is-Java-Mode-
+;;   JIL  Javadoc in-line tags.  Double anchoring the tag search on the bounds of a `jmt-is-Java-Mode-
 ;;        -tag-faced` region, like the other tag fontifiers do, might make it more reliable.
 ;;
 ;;        https://docs.oracle.com/en/java/javase/13/docs/specs/javadoc/doc-comment-spec.html#inline-tags
