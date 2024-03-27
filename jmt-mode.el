@@ -1,6 +1,6 @@
 ;;; jmt-mode.el --- Java Mode Tamed  -*- lexical-binding: t; -*-
 
-;; Copyright © 2019-2023 Michael Allan.
+;; Copyright © 2019-2024 Michael Allan.
 ;;
 ;; Author: Michael Allan <mike@reluk.ca>
 ;; Version: 0-snapshot
@@ -102,10 +102,6 @@
 (defconst jmt-name-character-set "[:alnum:]_$"
   "The set of characters from which a Java identifier may be formed.")
   ;;; https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.8
-
-
-
-(defvar jmt-value-tag-name-f); [FV]
 
 
 
@@ -623,10 +619,20 @@ to END (exclusive).  Point is left indeterminate."
 
 
 
+;;  jmt-make-Javadoc-tag-facing  (defined above in § Preliminary declarations)
+(cl-assert (fboundp 'jmt-make-Javadoc-tag-facing))
+
+
+
 (defun jmt-message (format-string &rest arguments)
   "Call `‘message’ FORMAT-STRING ARGUMENTS` without translating embedded quotes.
 Any quote characters \\=`\\=`\\=` or \\=`\\='\\=` in the FORMAT-STRING are output as is."
   (message "%s" (apply #'format format-string arguments)))
+
+
+
+;;  jmt-name-character-set  (defined above in § Preliminary declarations)
+(cl-assert (boundp 'jmt-name-character-set))
 
 
 
@@ -1472,6 +1478,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
    (list; Reface each Javadoc in-line tag. [JIL]
     (let (match-beg tag-name)
       (lambda (limit)
+        (defvar jmt-value-tag-name-f); [FV]
         (catch 'to-reface
           (while (re-search-forward
                   (concat "\\({\\)\\s-*\\(@\\)\\s-*\\([[:alnum:]]+\\)";    This search might be made
