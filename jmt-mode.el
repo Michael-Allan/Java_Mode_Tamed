@@ -977,7 +977,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
           (while (< match-beg limit)
             (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
             (when (eq 'font-lock-keyword-face (get-text-property match-beg 'face))
-              (set 'jmt-f (jmt-keyword-face
+              (setq jmt-f (jmt-keyword-face
                            (buffer-substring-no-properties match-beg match-end) match-beg match-end))
               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
               (throw 'to-reface t))
@@ -999,7 +999,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                 ;;; [https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58]
                 ;;;     More commonly the `assert` keyword is left unfaced, but no instance of this
                 ;;; has been seen in the case of the `record` keyword.
-              (set 'jmt-f (jmt-keyword-face (match-string-no-properties 0) match-beg (match-end 0)))
+              (setq jmt-f (jmt-keyword-face (match-string-no-properties 0) match-beg (match-end 0)))
               (throw 'to-reface t)))
           nil)))
     '(0 jmt-f t))
@@ -1051,13 +1051,13 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                   (let ((p (point)))
                     (and (< (skip-chars-backward jmt-name-character-set) 0)
                          (jmt-is-type-declarative-keyword (buffer-substring-no-properties (point) p))))
-                (set 'jmt-f 'jmt-type-declaration)
+                (setq jmt-f 'jmt-type-declaration)
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t))
 
               ;; Or referring to one already defined
               ;; ────────────
-              (set 'jmt-f 'jmt-type-reference)
+              (setq jmt-f 'jmt-type-reference)
               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
               (throw 'to-reface t))
 
@@ -1184,8 +1184,8 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                   (throw 'needs-facing nil))
                 (set-match-data (list match-beg match-end (point) match-end (current-buffer)))
                 (goto-char match-end)
-                (set 'jmt-p match-beg); Saving the anchor’s bounds.
-                (set 'jmt-q match-end)
+                (setq jmt-p match-beg; Saving the anchor’s bounds.
+                      jmt-q match-end)
                 (throw 'to-face t)))
             (setq match-beg match-end))
           nil))
@@ -1286,8 +1286,8 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
             (setq match-end (next-single-property-change match-beg 'face (current-buffer) limit))
             (when (eq 'c-annotation-face (get-text-property match-beg 'face)); [↑A]
               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
-              (set 'jmt-p match-beg); Saving the anchor’s bounds.
-              (set 'jmt-q match-end)
+              (setq jmt-p match-beg; Saving the anchor’s bounds.
+                    jmt-q match-end)
               (throw 'is-type-ref t))
             (setq match-beg match-end))
           nil))
@@ -1347,7 +1347,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
               (when (eobp) (throw 'to-reface nil))
               (setq c (char-after))
               (when (= ?. c)
-                (set 'jmt-f
+                (setq jmt-f
                      (if (string= "Lu" (get-char-code-property (char-after match-beg) 'general-category))
                          'jmt-type-reference; Workaround for a probable misfacing by Java Mode.
                            ;;; It occurs e.g. with a type name qualifying a reference to a type member,
@@ -1358,7 +1358,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t))
               (when (= ?< c)                     ; Then it cannot be a name segment.  Rather it is likely
-                (set 'jmt-f 'jmt-type-reference ); a type name qualifying a reference to a type member.
+                (setq jmt-f 'jmt-type-reference ); a type name qualifying a reference to a type member.
                 (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                 (throw 'to-reface t)))
             (setq match-beg match-end))
@@ -1597,31 +1597,31 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
            (cond
             ((string= tag-name "param")
              (when (looking-at (concat "\\s-+<\\s-*\\([" jmt-name-character-set "]+\\).*$"))
-               (set 'jmt-f 'jmt-type-variable-tag-parameter)
+               (setq jmt-f 'jmt-type-variable-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t))
              (when (looking-at (concat "\\s-+\\([" jmt-name-character-set "]+\\).*$"))
-               (set 'jmt-f 'jmt-param-tag-parameter)
+               (setq jmt-f 'jmt-param-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((string= tag-name "see")
              (when (looking-at "\\s-+\\([^<\n].*\\)$"); Excepting an HTML tag.
-               (set 'jmt-f 'jmt-block-tag-parameter)
+               (setq jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((or (string= tag-name "throws")
                  (string= tag-name "exception"))
              (when (looking-at (concat "\\s-+\\([." jmt-name-character-set "]+\\).*$"))
-               (set 'jmt-f 'jmt-throws-tag-parameter)
+               (setq jmt-f 'jmt-throws-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((or (string= tag-name "uses")
                  (string= tag-name "provides"))
              (when (looking-at "\\s-+\\([^[:space:]\n]+\\).*$")
-               (set 'jmt-f 'jmt-block-tag-parameter)
+               (setq jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
@@ -1629,20 +1629,20 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                  (string= tag-name "author")
                  (string= tag-name "version"))
              (when (looking-at "\\s-+\\([^[:space:]\n].+\\)$")
-               (set 'jmt-f 'jmt-block-tag-parameter)
+               (setq jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((string= tag-name "serial")
              (when (looking-at "\\s-+\\(\\(?:ex\\|in\\)clude\\)\\s-*$")
-               (set 'jmt-f 'jmt-block-tag-parameter)
+               (setq jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t)))
 
             ((string= tag-name "serialField")
              (when (looking-at (concat "\\s-+\\([" jmt-name-character-set
                                        "]+\\s-+[" jmt-name-character-set "]+\\).*$"))
-               (set 'jmt-f 'jmt-block-tag-parameter)
+               (setq jmt-f 'jmt-block-tag-parameter)
                (goto-char (match-end 0))
                (throw 'to-reface t))))
            nil))
@@ -1861,12 +1861,12 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
                   ;; Within annotation
                   ;; ─────────────────
-                    (set 'jmt-f 'jmt-annotation-string-delimiter)
+                    (setq jmt-f 'jmt-annotation-string-delimiter)
                     (set-match-data (list match-beg match-end match-beg body-beg body-beg body-end
                                           body-end match-end (current-buffer))))
                 ;; Elsewhere
                 ;; ─────────
-                (set 'jmt-f 'jmt-string-delimiter)
+                (setq jmt-f 'jmt-string-delimiter)
             ;;; (when (>= (- match-end match-beg) 7); Then hypothesize a text block.
             ;;;   (let* ((body-beg? (+ match-beg 3)); Allowing for the longer delimiters.
             ;;;          (body-end? (- match-end 3))
@@ -2102,8 +2102,8 @@ from an untamed ancestral face defined elsewhere."
 
 
 (unless jmt--early-initialization-was-begun
-  (set 'jmt--early-initialization-was-begun t)
-  (set 'c-default-style (cons '(jmt-mode . "java") c-default-style))); Setting the default style
+  (setq jmt--early-initialization-was-begun t
+        c-default-style (cons '(jmt-mode . "java") c-default-style))); Setting the default style
     ;;; (of indentation etc.) to `java` style, the same as underlying Java Mode.
 
 
@@ -2126,7 +2126,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   ;; Deferred till now, after loading the first Java file, not to needlessly delay the start of Emacs.
 
   (unless jmt--late-initialization-was-begun
-    (set 'jmt--late-initialization-was-begun t)
+    (setq jmt--late-initialization-was-begun t)
 
     ;; Verify assumptions
     ;; ──────────────────
@@ -2251,10 +2251,10 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
        ;;; In order to track that expansion, the present advice attaches to the globally bound function.
      (lambda (function-name &rest arguments)
        (let ((a arguments))
-         (set 'jmt--present-fontification-beg (pop a))
-         (set 'jmt--present-fontification-end (pop a)))
+         (setq jmt--present-fontification-beg (pop a)
+               jmt--present-fontification-end (pop a)))
        (prog1 (apply function-name arguments)
-         (set 'jmt--present-fontification-end 0)))
+         (setq jmt--present-fontification-end 0)))
      '((name . "jmt-advice/font-lock-fontify-region-function")
        (depth . 100))); Deepest.
 
@@ -2280,7 +2280,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   ;; Cache the decoration level in `jmt--is-level-3`, q.v.
   ;; ──────────────────────────
   (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
-    (set 'jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
+    (setq jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
   ;; Tell Java Mode of additional faces II
   ;; ─────────────────────────────────────
