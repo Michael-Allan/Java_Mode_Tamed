@@ -848,7 +848,9 @@ Cf. ‘jmt-principal-keyword’."
 
 (defun jmt-set-for-buffer (variable value)
   "Set buffer-local VARIABLE (a symbol) to VALUE.
-Signal an error if VARIABLE is not buffer local."
+Signal an error if the binding is not actually buffer-local.
+This might happen, for example, if an externally defined VARIABLE
+that was documented as being buffer-local no longer is."
   (set variable value)
   (cl-assert (local-variable-p variable)))
 
