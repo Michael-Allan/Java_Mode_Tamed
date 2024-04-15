@@ -134,7 +134,7 @@
 
 
 (defface jmt-angle-bracket `((t . (:inherit jmt-bracket)))
-  "The face for an angle bracket, ‘<’ or ‘>’."
+  "The face for an angle bracket, \\=`<\\=` or \\=`>\\=`."
   :group 'delimiter-faces)
 
 
@@ -142,7 +142,7 @@
 (defface jmt-annotation-delimiter; This non-replacement face inherits from `c-annotation-face` only
     ;;; for sake of `jmt-is-annotation-terminal-face` and replacement subface `jmt-annotation-mark`.
   `((t . (:inherit c-annotation-face)))
-  "The face for the ‘@’, ‘(’ and ‘)’ delimiters of annotation.
+  "The face for the \\=`@\\=`, \\=`(\\=` and \\=`)\\=` delimiters of annotation.
 Customize it to better distinguish the delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also ‘jmt-delimiter’ and the faces that inherit from it."
@@ -152,7 +152,7 @@ See also ‘jmt-delimiter’ and the faces that inherit from it."
 
 (defface jmt-annotation-mark; [RF]
   `((t . (:inherit jmt-annotation-delimiter)))
-  "The face for the ‘@’ symbol denoting annotation."
+  "The face for the \\=`@\\=` symbol denoting annotation."
   :group 'delimiter-faces)
 
 
@@ -262,7 +262,7 @@ presently under fontification by Font Lock."
 
 
 (defface jmt-curly-bracket `((t . (:inherit jmt-bracket)))
-  "The face for a curly bracket, ‘{’ or ‘}’."
+  "The face for a curly bracket, \\=`{\\=` or \\=`}\\=`."
   :group 'delimiter-faces)
 
 
@@ -367,7 +367,7 @@ see ‘jmt-block-tag-parameter’."
         (eq 'jmt-annotation-string f)
         (eq 'jmt-annotation-string-delimiter f)
         (eq 'jmt-annotation-package-name f); A package name in an annotation type reference.
-        (and (eq 'jmt-separator f) (= ?. (char-before p)))))); A dot ‘.’ in the package name.
+        (and (eq 'jmt-separator f) (= ?. (char-before p)))))); A dot `.` in the package name.
 
 
 
@@ -448,8 +448,8 @@ and  ‘jmt-inline-tag-parameter’."
 (defface jmt-Javadoc-tag-delimiter; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag)))
   "The face for the delimiters of a Javadoc tag.
-These comprise the ‘@’, ‘{’ and ‘}’ delimiters of a Javadoc tag,
-and the ‘<’, ‘</’, ‘/>’ and ‘>’ delimiters of an HTML tag.
+These comprise the \\=`@\\=`, \\=`{\\=` and \\=`}\\=` delimiters of a Javadoc tag,
+and the \\=`<\\=`, \\=`</\\=`, \\=`/>\\=` and \\=`>\\=` delimiters of an HTML tag.
 Customize this face to better distinguish these delimiters from the content
 they delimit; making them more prominent or less prominent, for example.
 See also subface ‘jmt-Javadoc-tag-mark’."
@@ -461,7 +461,7 @@ See also subface ‘jmt-Javadoc-tag-mark’."
 
 (defface jmt-Javadoc-tag-mark; [NDF, RF]
   `((t . (:inherit jmt-Javadoc-tag-delimiter)))
-  "The face for the ‘@’ symbol denoting a Javadoc tag."
+  "The face for the \\=`@\\=` symbol denoting a Javadoc tag."
   :group 'javadoc-faces)
 
 (defconst jmt-Javadoc-tag-mark-f (jmt-make-Javadoc-tag-facing 'jmt-Javadoc-tag-mark))
@@ -795,7 +795,7 @@ which must give t on success and nil on failure."; [ELM]
 
 
 (defun jmt-preceding->-marks-generic-return-type ()
-  "Tell whether the ‘>’ before point might terminate a generic return type.
+  "Tell whether the \\=`>\\=` before point might terminate a generic return type.
 Point is left indeterminate."
   (when
       (condition-case nil
@@ -835,13 +835,13 @@ Cf. ‘jmt-principal-keyword’."
 
 
 (defface jmt-round-bracket `((t . (:inherit jmt-bracket)))
-  "The face for a round bracket, ‘(’ or ‘)’."
+  "The face for a round bracket, \\=`(\\=` or \\=`)\\=`."
   :group 'delimiter-faces)
 
 
 
 (defface jmt-separator `((t . (:inherit jmt-delimiter)))
-  "The face for a separator: a comma ‘,’ semicolon ‘;’ colon ‘:’ or dot ‘.’."
+  "The face for a comma \\=`,\\=` semicolon \\=`;\\=` colon \\=`:\\=` or dot \\=`.\\=` separator."
   :group 'delimiter-faces)
 
 
@@ -857,7 +857,7 @@ that was documented as being buffer-local no longer is."
 
 
 (defface jmt-shebang `((t . (:inherit font-lock-comment-delimiter-face)))
-  "The face for a shebang ‘#!’."
+  "The face for a shebang \\=`#!\\=`."
   :group 'shebang-faces)
 
 
@@ -879,7 +879,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
 (defface jmt-shebang-comment-delimiter
   `((t . (:inherit font-lock-comment-delimiter-face)))
-  "The face for the delimiter ‘\\c’ of a trailing comment in a shebang line.
+  "The face for the delimiter \\=`\\c\\=` of a trailing comment in a shebang line.
 Such a comment may appear in case of an \\=`env\\=` interpreter."
   :group 'shebang-faces
   :link '(url-link "https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html"))
@@ -897,7 +897,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
    (list; Fontify each instance of annotation, overriding any misfontification of Java Mode.
     (lambda (limit)
       (catch 'to-fontify
-        (let ((m1-beg (point)); Presumed start of leading annotation mark ‘@’.
+        (let ((m1-beg (point)); Presumed start of leading annotation mark `@`.
               (m1-beg-limit (1- limit)); Room for two characters, the minimal length.
               eol face m1-end m2-beg m2-end m3-beg m3-end m4-beg m4-end m5-beg m5-end)
           (while (< m1-beg m1-beg-limit)
@@ -910,7 +910,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                 (while; Capture as group 2 the simple annotation name.
                     (progn
                       (skip-syntax-forward "-" limit); Though unconventional, whitespace is allowed
-                        ;;; between ‘@’ and name.  Nevertheless this fontifier excludes newlines; also
+                        ;;; between `@` and name.  Nevertheless this fontifier excludes newlines; also
                         ;;; commentary, which would be perverse here, not worth coding for. [AST, SL]
                       (setq m2-beg (point))
                       (skip-chars-forward jmt-name-character-set limit)
@@ -922,7 +922,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                             (skip-syntax-forward "-" limit); [SL]
                             (unless (eq ?. (char-after)); [NCE]
                               (throw 'is-annotation nil))
-                            (forward-char); Past the ‘.’.
+                            (forward-char); Past the `.`.
                             t); Continuing the loop, so skipping past this segment of the name.
                         (unless (or (null face); The most common case.  Else a misfontification:
                                     (eq face 'font-lock-function-name-face); This one occurs in the case,
@@ -945,9 +945,9 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
                     ;; Qualified
                     ;; ─────────
-                    (setq m3-end (1+ m3-beg); ‘(’
+                    (setq m3-end (1+ m3-beg); `(`
                           m4-beg m3-end
-                          m5-beg (1- m5-end); ‘)’
+                          m5-beg (1- m5-end); `)`
                           m4-end m5-beg)
                     (set-match-data (list m1-beg m5-end m1-beg m1-end m2-beg m2-end m3-beg m3-end
                                           m4-beg m4-end m5-beg m5-end (current-buffer)))
@@ -1102,8 +1102,8 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                   (let ((annotation-count 0))
                     (goto-char p); Back to the type-declarative keyword.
                     (forward-comment most-negative-fixnum); [←CW]
-                    (when (eq (char-before (point)) ?@); [NCE]  A ‘@’ marks this declaration
-                      (backward-char); as that of an annotation type.  Move back past the ‘@’.
+                    (when (eq (char-before (point)) ?@); [NCE]  A `@` marks this declaration
+                      (backward-char); as that of an annotation type.  Move back past the `@`.
                       (forward-comment most-negative-fixnum)); [←CW]
                     (catch 'is-modifier; Thrown as nil on discovery the answer is negative.
                       (while t; Now point should (invariant) be directly after such a modifier.  So test:
@@ -1140,7 +1140,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                           (unless (eq (char-before (point)) ?@); [NCE]
                             (throw 'is-modifier nil))
                           (setq annotation-count (1+ annotation-count))
-                          (backward-char); To before the ‘@’.
+                          (backward-char); To before the `@`.
                           (forward-comment most-negative-fixnum))))))))); [←CW]
             (goto-char match-end)))
         nil))
@@ -1163,20 +1163,20 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                        (string= "catch" (buffer-substring-no-properties match-beg match-end)))
               (goto-char match-end)
               (setq eol (line-end-position))
-              (forward-comment most-positive-fixnum); To the opening paranthesis ‘(’. [CW→]
+              (forward-comment most-positive-fixnum); To the opening paranthesis `(`. [CW→]
               (catch 'needs-facing; Thrown as nil on discovery the answer is negative.
                 (unless (eq ?\( (char-after)); [NCE]
                   (throw 'needs-facing nil)); Malformed catch block.
-                (forward-char); Past the ‘(’.
+                (forward-char); Past the `(`.
                 (forward-comment most-positive-fixnum); To the start of the parameter declaration. [CW→]
                 (setq match-beg (point))
-                (up-list); To just after the closing paranthesis ‘)’.
+                (up-list); To just after the closing paranthesis `)`.
                 (unless (eq ?\) (char-before)); On `up-list` error, ‘point is unspecified.’ [NCE]
                   (throw 'needs-facing nil)); Malformed catch block.
                 (when (or (> (point) eol); [SL]
                           (> (point) limit))
                   (throw 'needs-facing nil)); Out of bounds.
-                (backward-char); Before the ‘)’.
+                (backward-char); Before the `)`.
                 (forward-comment most-negative-fixnum); To the end of the parameter declaration. [←CW]
                 (setq match-end (point))
                 (when (= 0 (skip-chars-backward jmt-name-character-set)); Start of parameter identifier.
@@ -1542,7 +1542,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
                 ;; End tag
                 ;; ───────
-                (when (looking-at "\\\(./\\)\\([[:alnum:]]+\\)\\(\\s-*\\)\\(>\\)$"); ‘$’ [NBE]
+                (when (looking-at "\\\(./\\)\\([[:alnum:]]+\\)\\(\\s-*\\)\\(>\\)$"); `$` [NBE]
                               ;;;     └────┘  └──────────────┘              ·
                               ;;;       </        tag name                  >
 
@@ -1553,7 +1553,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
                 ;; Start tag
                 ;; ─────────
-                (when (looking-at "\\(.\\)\\([[:alnum:]]+\\)\\(\\s-.*\\)?\\(/?>\\)$"); ‘$’ [NBE]
+                (when (looking-at "\\(.\\)\\([[:alnum:]]+\\)\\(\\s-.*\\)?\\(/?>\\)$"); `$` [NBE]
                               ;;;     ·     └──────────────┘  └────────┘    · ·
                               ;;;     <         tag name      attributes    / >
 
@@ -1572,7 +1572,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
        (match-beg match-end tag-name)
      (list
 
-      (lambda (limit); (1) Anchoring on the ‘@’ mark and name that begins each tag.
+      (lambda (limit); (1) Anchoring on the `@` mark and name that begins each tag.
         (setq match-beg (point)); Presumptively.
         (catch 'to-reface
           (while (< match-beg limit)
@@ -1582,7 +1582,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
               (goto-char match-beg)
               (save-restriction
                 (narrow-to-region match-beg match-end)
-                (when (looking-at "\\(.\\)\\([[:alnum:]]+\\)$"); ‘$’ [NBE]
+                (when (looking-at "\\(.\\)\\([[:alnum:]]+\\)$"); `$` [NBE]
                               ;;;     ·     └──────────────┘
                               ;;;     @         tag name
 
@@ -1690,7 +1690,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
                   ;; After the identifier, in any parameter list
                   ;; ·····················
-                  (forward-char); Past the ‘(’.
+                  (forward-char); Past the `(`.
                   (forward-comment most-positive-fixnum); [CW→]
                   (setq i (point))
                   (when (> (skip-chars-forward jmt-name-character-set) 0)
@@ -1704,7 +1704,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                         (when (eobp) (throw 'is-past-package t))
                         (unless (= ?. (char-after))  ; Namely the delimiting dot of a
                           (throw 'is-past-package t)); preceding package name segment.
-                        (forward-char); Past the ‘.’.
+                        (forward-char); Past the `.`.
                         (forward-comment most-positive-fixnum); [CW→] To the next token.
                         (setq i (point)); What follows the package name follows its last dot.
                         (when (= (skip-chars-forward jmt-name-character-set) 0)
@@ -1734,7 +1734,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                     ;;; and 3) the same code may end up running redundantly in the section that follows.
 
                   ;; A constructor modifier here before point would also indicate a declaration.
-                  ;; However, the earlier test of ‘final’ (above) has eliminated the only case
+                  ;; However, the earlier test of `final` (above) has eliminated the only case
                   ;; in which Java Mode is known to fail when a keyword modifier appears here.
                   ;; That leaves only the case of an *annotation* modifier to remedy.
                   (when (jmt-is-annotation-terminal-face (get-text-property (1- (point)) 'face)); [↑A]
@@ -1791,7 +1791,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                   (when; When the possibility of the method identifier being proper to a declaration
                       ;; as opposed to a call is excluded because it directly follows either: [AM]
                       (or (= (char-before) ?.)
-                            ;;; (a) The character ‘.’, as in the sequence `assert stators.getClass()` at
+                            ;;; (a) The character `.`, as in the sequence `assert stators.getClass()` at
                             ;;; `https://github.com/Michael-Allan/waymaker/blob/3eaa6fc9f8c4137bdb463616dd3e45f340e1d34e/waymaker/gen/KittedPolyStatorSR.java#L58`.
                           (eq (get-text-property (1- (point)) 'face) 'jmt-principal-keyword)); [↑K]
                             ;;; (b) A principal keyword, as in the sequence `assert verify(blocks)` at
@@ -1919,10 +1919,10 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                    (progn
                      (setq i (char-after p))
                      (or; And the character after `p` is indeed such a list delimiter, viz. one of:
-                      (eq 'c-<-as-paren-syntax (setq j (get-text-property p 'category))); ‘<’
-                      (eq 'c->-as-paren-syntax j)                                       ; ‘>’
-                      (and (eq (get-text-property p 'c-type) 'c-<>-arg-sep)             ; ‘,’
-                           (eq i ?,)))); Not ‘&’, that is. [NCE]
+                      (eq 'c-<-as-paren-syntax (setq j (get-text-property p 'category))); `<`
+                      (eq 'c->-as-paren-syntax j)                                       ; `>`
+                      (and (eq (get-text-property p 'c-type) 'c-<>-arg-sep)             ; `,`
+                           (eq i ?,)))); Not `&`, that is. [NCE]
                      ;;; Leaving `i` set to that delimiter character.
                    (catch 'is-proven; And the matched name occurs at the top level of that list (depth
                      ;; of angle brackets 1).  And the list directly follows either (a) the identifier
@@ -1999,7 +1999,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 
 
 (defface jmt-square-bracket `((t . (:inherit jmt-bracket)))
-  "The face for a square bracket, ‘[’ or ‘]’."
+  "The face for a square bracket, \\=`[\\=` or \\=`]\\=`."
   :group 'delimiter-faces)
 
 
@@ -2238,7 +2238,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
                  source source-name-base #'c-before-change
                  (lambda (); Java Mode uses the following list of faces for a `memq` test.
                    (when (search-forward "'(font-lock-comment-face font-lock-string-face)" nil t)
-                     (backward-char); Before the trailing ‘)’, insert their replacement faces: [BC]
+                     (backward-char); Before the trailing `)`, insert their replacement faces: [BC]
                      (insert
                       " jmt-annotation-string jmt-annotation-string-delimiter jmt-string-delimiter")
                      t))))))
@@ -2289,7 +2289,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
-           ;;   Quoted individually only because `c-maybe-decl-faces` “must be evaluated (with ‘eval’)
+           ;;   Quoted individually only because `c-maybe-decl-faces` “must be evaluated (with `eval`)
            ;; ↙  at runtime to get the actual list of faces”; e.g. `(eval c-maybe-decl-faces)`.
            '('jmt-annotation-package-name
              'jmt-boilerplate-keyword
@@ -2405,7 +2405,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;  ↑K ·· Code that must execute after section *Keyword*.
 ;;
-;;   L2U  Level-two highlighting is untamed.  ‘L2U’ marks code that enforces the fact and code
+;;   L2U  Level-two highlighting is untamed.  “L2U” marks code that enforces the fact and code
 ;;        that depends on it.
 ;;
 ;;   LF · `c-literal-faces`: Any replacement face of a face listed in `c-literal-faces` must itself
@@ -2424,7 +2424,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   MDF  `c-maybe-decl-faces`: Any replacement face [RF] for a face listed in `c-maybe-decl-faces`
 ;;        must itself be appended to that list.
 ;;
-;;   NBE  Not ‘\'’ to match only the buffer end.  Rather ‘$’ to include the line end in the event
+;;   NBE  Not `\'` to match only the buffer end.  Rather `$` to include the line end in the event
 ;;        the (narrowed) buffer happens to cross lines. [SL]
 ;;
 ;;   NCE  Not `char-equal` or `=`, which fail if the position is out of bounds.
@@ -2434,7 +2434,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;        The face only appears in Javadoc comments.  Meanwhile `c-maybe-decl-faces` is only used,
 ;;        in conjunction with `c-decl-start-re`, as a bounding argument in a call to `c-find-decl-spots`.
 ;;        [http://git.savannah.gnu.org/cgit/emacs.git/tree/lisp/progmodes/cc-fonts.el?id=fd1b34bfba#n1490]
-;;            A trace in the source of both references indicates that a ‘decl-spot’ is not something
+;;            A trace in the source of both references indicates that a “decl-spot” is not something
 ;;        that would appear in a Javadoc comment.
 ;;
 ;;   P↓ · Code that must execute before section *Package name*  of `jmt-specific-fontifiers-3`.
@@ -2490,7 +2490,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;        Yet, while the above seems to work (GNU coreutils 8.3), omitting the space in this manner
 ;;        is undescribed.  Therefore it might be better to avoid `-S` in favour of the long form,
-;;        `--split-string`, which conventionally uses ‘=’ as a separator instead of a space.
+;;        `--split-string`, which conventionally uses `=` as a separator instead of a space.
 ;;        https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html
 ;;
 ;;   T↓ · Code that must execute before section *Type name*  of `jmt-specific-fontifiers-3`.
