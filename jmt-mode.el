@@ -480,8 +480,8 @@ and ‘jmt-HTML-tag-name’."
 
 
 (defun jmt-keyword-face (keyword beg end)
-  "Give the face (symbol) proper to a KEYWORD of Java (string).
-The buffer position of the keyword is from BEG (number, inclusive)
+  "The face (symbol) proper to a Java KEYWORD (string).
+The keyword extends from buffer position BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (defvar jmt-keyword-face-alist); [FV]
   (let ((f (assoc keyword jmt-keyword-face-alist)))
@@ -563,9 +563,9 @@ does not face with ‘font-lock-keyword-face’.")
 
 
 (defun jmt-keyword-face-class (beg _end)
-  "Give the face (symbol) proper to a \\=`class\\=` keyword.
-The buffer position of the keyword is from BEG (number, inclusive)
-to END (exclusive).  Point is left indeterminate."
+  "The face (symbol) proper to a \\=`class\\=` keyword.
+The keyword extends from buffer position BEG (number, inclusive)
+to _END (exclusive).  Point is left indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
   (if (eq ?. (char-before)); [NCE]
@@ -575,8 +575,8 @@ to END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-default (_beg end)
-  "Give the face (symbol) proper to a \\=`default\\=` keyword.
-The buffer position of the keyword is from _BEG (number, inclusive)
+  "The face (symbol) proper to a \\=`default\\=` keyword.
+The keyword extends from buffer position _BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
@@ -589,8 +589,8 @@ to END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-static (beg end)
-  "Give the face (symbol) proper to a \\=`static\\=` keyword.
-The buffer position of the keyword is from BEG (number, inclusive)
+  "The face (symbol) proper to a \\=`static\\=` keyword.
+The keyword extends from buffer position BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char beg)
   (forward-comment most-negative-fixnum); [←CW]
@@ -603,8 +603,8 @@ to END (exclusive).  Point is left indeterminate."
 
 
 (defun jmt-keyword-face-sync (_beg end)
-  "Give the face (symbol) proper to a \\=`synchronized\\=` keyword.
-The buffer position of the keyword is from _BEG (number, inclusive)
+  "The face (symbol) proper to a \\=`synchronized\\=` keyword.
+The keyword extends from buffer position _BEG (number, inclusive)
 to END (exclusive).  Point is left indeterminate."
   (goto-char end)
   (forward-comment most-positive-fixnum); [CW→]
@@ -2062,7 +2062,7 @@ merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 
 (defun jmt-untamed-face (face)
-  "Give FACE itself if untamed, else its nearest untamed ancestor.
+  "FACE itself if untamed, else its nearest untamed ancestor.
 Every face defined by Java Mode Tamed (tamed face) ultimately inherits
 from an untamed ancestral face defined elsewhere."
   (catch 'untamed-face
