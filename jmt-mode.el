@@ -26,7 +26,7 @@
 ;;   should activate for any loaded file that has either a `.java` extension or `java` shebang.
 ;;   Alternatively you may want to install the mode manually:
 ;;
-;;       1. Put a copy of `jmt-mode.el` on your load path.
+;;       1. Put a copy of the file `jmt-mode.el` on your load path.
 ;;          https://www.gnu.org/software/emacs/manual/html_node/elisp/Library-Search.html
 ;;
 ;;       2. Optionally compile that copy.  E.g. load it into an Emacs buffer and type
@@ -50,7 +50,7 @@
 ;;
 ;;   To see a list of customizeable faces, enter a `jmt-mode` buffer (or otherwise load `jmt-mode`)
 ;;   and type `M-x customize-group <RET> jmt <RET>`.  Alternatively, look through the `defface`
-;;   definitions in `jmt-mode.el`.
+;;   definitions of file `jmt-mode.el`.
 ;;
 ;;   For reference, a working example of customization is available:
 ;;
