@@ -1,4 +1,4 @@
-;;; jmt-mode.el --- Java Mode Tamed  -*- lexical-binding: t; -*-
+;;; jmt-mode.el --- JMT Mode  -*- lexical-binding: t; -*-
 
 ;; Copyright © 2019-2024 Michael Allan.
 ;;
@@ -16,13 +16,13 @@
 
 ;;; Commentary:
 
-;;   This package introduces a derived major mode (`jmt-mode`) that offers better control
-;;   of the Java mode built into Emacs, particularly in regard to syntax highlighting.
+;;   This package implements JMT Mode, a major mode that affords better control
+;;   of Emacs’s Java mode, particularly in regard to syntax highlighting.
 ;;   For more information, see `http://reluk.ca/project/Java/Emacs/`.
 ;;
 ;; Installation
 ;;
-;;   If you install this package from MELPA using a package manager, then already `jmt-mode`
+;;   If you install this package from MELPA using a package manager, then already JMT Mode
 ;;   should activate for any loaded file that has either a `.java` extension or `java` shebang.
 ;;   Alternatively you may want to install the mode manually:
 ;;
@@ -48,7 +48,7 @@
 ;;
 ;; Customization
 ;;
-;;   To see a list of customizeable faces, enter a `jmt-mode` buffer (or otherwise load `jmt-mode`)
+;;   To see a list of customizeable faces, enter a JMT Mode buffer (or otherwise load JMT Mode)
 ;;   and type `M-x customize-group <RET> jmt <RET>`.  Alternatively, look through the `defface`
 ;;   definitions of file `jmt-mode.el`.
 ;;
@@ -63,9 +63,9 @@
 ;; Changes made to Emacs
 ;;
 ;;   This package applies monkey patches to the runtime session that redefine parts of built-in packages
-;;   CC Mode and Font Lock.  The patches are applied on first entrance to `jmt-mode`.  Most of them apply
+;;   CC Mode and Font Lock.  The patches are applied on first entrance to JMT Mode.  Most of them apply
 ;;   to function definitions, in which case they are designed to leave the behaviour of Emacs unchanged
-;;   in all buffers except those running `jmt-mode`.  The patched functions are:
+;;   in all buffers except those running JMT Mode.  The patched functions are:
 ;;
 ;;       c-before-change
 ;;       c-fontify-recorded-types-and-refs
@@ -125,7 +125,7 @@
 
 
 (defgroup jmt nil
-  "Customizable items of Java Mode Tamed."
+  "A major mode affording better control of Emacs's Java mode."
   :group 'languages :group 'faces
   :prefix "jmt-"
   :tag "JMT"
@@ -667,7 +667,7 @@ See also ‘java-font-lock-keywords-1’, which is for minimal untamed highlight
      (while; Searching the list, fontifier by fontifier.
          (progn
            (if (equal (car k) '(eval list "\\<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face))
-               ;; Dud fontifier: works under Java Mode, fails under Java Mode Tamed unless
+               ;; Dud fontifier: works under Java Mode, fails under JMT Mode unless
                ;; changed in two places `"\\_<\\(@[a-zA-Z0-9]+\\)\\>" 1 c-annotation-face t`.
                (progn;                    1 ↑                                           2 ↑
                  ;; Moreover its pattern does not cover the complete, valid form of annotation.
@@ -1994,7 +1994,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
           nil)))
     '(0 'font-lock-variable-name-face t)))
 
-  "Elements of ‘jmt-new-fontifiers-3’ which are specific to Java Mode Tamed.")
+  "Elements of ‘jmt-new-fontifiers-3’ which are specific to JMT Mode.")
 
 
 
@@ -2063,7 +2063,7 @@ merely referenced after the fact.  See also face ‘jmt-type-reference’."
 
 (defun jmt-untamed-face (face)
   "FACE itself if untamed, else its nearest untamed ancestor.
-Every face defined by Java Mode Tamed (tamed face) ultimately inherits
+Every face defined by JMT Mode (tamed face) ultimately inherits
 from an untamed ancestral face defined elsewhere."
   (catch 'untamed-face
     (while (string-prefix-p "jmt-" (symbol-name face))
@@ -2117,8 +2117,8 @@ from an untamed ancestral face defined elsewhere."
 
 ;;;###autoload
 (define-derived-mode jmt-mode java-mode
-  "Java Mode Tamed"
-  "A derived major mode affording better control of the Java mode built into Emacs.
+  "JMT Mode"
+  "A major mode affording better control of Emacs's Java mode.
 For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
   :group 'jmt
 
@@ -2368,7 +2368,7 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;   CW→  Forward across commentary (including newlines) and whitespace.
 ;;
 ;;   DW · Use of `display-warning` (as opposed to `delay-warning`) would cause all fontifiers
-;;        of Java Mode Tamed to fail silently.
+;;        of JMT Mode to fail silently.
 ;;
 ;;   ELM  The syntax-related code that directly follows the opening of the temporary buffer effects a
 ;;        fast simulation of Emacs Lisp mode, faster presumeably than would a call to `emacs-lisp-mode`.
@@ -2459,12 +2459,12 @@ For more information, see URL ‘http://reluk.ca/project/Java/Emacs/’."
 ;;
 ;;   PPN  Parsing a package name segment.  Compare with similar code elsewhere.
 ;;
-;;   RF · Replacement face: a tamed face used by `jmt-mode` to override and replace a face
+;;   RF · Replacement face: a tamed face used by JMT Mode to override and replace a face
 ;;        earlier applied by Java Mode.  Every replacement face ultimately inherits from the face
 ;;        it replaces.  Function `jmt-faces-are-equivalent` depends on this.
 ;;
 ;;   SFP  Stabilization of face properties.  This stops the underlying Java Mode code obliterating
-;;        the fontifications of Java Mode Tamed.
+;;        the fontifications of JMT Mode.
 ;;
 ;;   SI · Static import declaration.
 ;;        https://docs.oracle.com/javase/specs/jls/se15/html/jls-7.html#jls-7.5.3
