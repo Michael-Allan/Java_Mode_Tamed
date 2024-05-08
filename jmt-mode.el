@@ -1108,14 +1108,14 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                           (forward-comment most-negative-fixnum)); [←CW]
                             ;;; Holding still the (would be) loop invariant.
                         (setq p (point))
-                        (when (= (skip-chars-backward jmt-name-character-set) 0)
+                        (when (zerop (skip-chars-backward jmt-name-character-set))
                           (throw 'is-modifier nil))
                         ;; The modifier should be either a keyword or annotation.
                         (if (jmt-is-type-modifier-keyword (buffer-substring-no-properties (point) p))
 
                             ;; Keyword, the modifier is a keyword
                             ;; ───────
-                            (if (= annotation-count 0)
+                            (if (zerop annotation-count)
                                 (forward-comment most-negative-fixnum); [←CW]
                               (set-match-data (list match-beg (goto-char match-end) (current-buffer)))
                               (throw 'to-face t)); The keyword precedes annotation.  With this,
@@ -1172,8 +1172,8 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                   (throw 'needs-facing nil)); Out of bounds.
                 (backward-char); Before the `)`.
                 (forward-comment most-negative-fixnum); To the end of the parameter declaration. [←CW]
-                (setq match-end (point))
-                (when (= 0 (skip-chars-backward jmt-name-character-set)); Start of parameter identifier.
+                (setq match-end (point))              ; Thence to the start of parameter identifier:
+                (when (zerop (skip-chars-backward jmt-name-character-set))
                   (throw 'needs-facing nil)); Malformed catch block.
                 (when (get-text-property (point) 'face)
                   ;; Already faced, in which case Java Mode always faces the type identifier(s), too.
@@ -1701,7 +1701,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                         (forward-char); Past the `.`.
                         (forward-comment most-positive-fixnum); [CW→] To the next token.
                         (setq i (point)); What follows the package name follows its last dot.
-                        (when (= (skip-chars-forward jmt-name-character-set) 0)
+                        (when (zerop (skip-chars-forward jmt-name-character-set))
                           (throw 'is-past-package t)))))
                   (when (and (/= i (point-max))
                              (or (= ?@ (char-after i))
@@ -1928,7 +1928,7 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                          (progn; moving it leftward as necessary.
                            (cond ((= i ?<); Ascending from the present bracket pair.
                                   (setq depth (1- depth))
-                                  (when (= 0 depth); Then presumeably `p` has emerged left of list.
+                                  (when (zerop depth); Then presumeably `p` has emerged left of list.
                                     (goto-char p)
                                     (forward-comment most-negative-fixnum); [←CW]
                                     (when (bobp) (throw 'is-proven t))
