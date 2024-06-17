@@ -883,7 +883,6 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
 (defconst jmt-specific-fontifiers-3
   (list
 
-
    ;; ══════════
    ;; Annotation  [A, T↓]
    ;; ══════════
@@ -1204,8 +1203,8 @@ Such a comment may appear in case of an \\=`env\\=` interpreter."
                ;; either by Java Mode or the preceding highlighter (parameter identifier), with one
                ;; exception, an edge case in which Java Mode leaves a package qualifier unfaced.
                ;; Assuming ∴ that package names begin in lower case [BUG], these guards should suffice.
-               (when (and (null (get-text-property beg 'face)); Unfaced, and the first character
-                          (string-match-p "[[:upper:]]" (string (char-after beg)))); is upper case.
+               (when (and (null (get-text-property beg 'face)); Unfaced, and the first character is
+                          (string-match-p "[[:upper:]]" (char-to-string (char-after beg)))); upper case.
                  (throw 'to-face t))))
            nil))
 
@@ -2116,13 +2115,14 @@ from an untamed ancestral face defined elsewhere."
 For more information, see URL `http://reluk.ca/project/Java/Emacs/'."
   :group 'jmt
 
-  ;; ════════════════════════════
-  ;; Finish initializing the mode if necessary
-  ;; ════════════════════════════
+  ;; ═══════════════
+  ;; II. Late set-up, if necessary
+  ;; ═══════════════
   ;; Deferred till now, after loading the first Java file, not to needlessly delay the start of Emacs.
 
   (unless jmt--late-initialization-was-begun
     (setq jmt--late-initialization-was-begun t)
+
 
     ;; Verify assumptions
     ;; ──────────────────
@@ -2130,13 +2130,15 @@ For more information, see URL `http://reluk.ca/project/Java/Emacs/'."
       ;;; (Consequently they have no whitespace syntax.)
     (cl-assert parse-sexp-ignore-comments)
 
-    ;; Tell Java Mode of additional faces I
-    ;; ────────────────────────────────────
+
+    ;; Tell Java Mode of additional faces II
+    ;; ─────────────────────────────────────
     (set 'c-literal-faces
          (append c-literal-faces; [LF]
                  '(jmt-annotation-string
                    jmt-annotation-string-delimiter
                    jmt-string-delimiter)))
+
 
     ;; Apply monkey patches                                 Adding or removing a patch below?
     ;; ────────────────────                                 Sync with §*Changes to Emacs* at top.
@@ -2269,17 +2271,19 @@ For more information, see URL `http://reluk.ca/project/Java/Emacs/'."
         (jmt-x (delay-warning 'jmt-mode (error-message-string x) :error))))); [DW]
 
 
-  ;; ═════════════════════
-  ;; Initialize the buffer
-  ;; ═════════════════════
+
+  ;; ═══════════════
+  ;; I. Early set-up
+  ;; ═══════════════
 
   ;; Cache the decoration level in `jmt--is-level-3`, q.v.
   ;; ──────────────────────────
   (let ((level (font-lock-value-in-major-mode font-lock-maximum-decoration)))
     (setq jmt--is-level-3 (or (eq level t) (and (numberp level) (>= level 3)))))
 
-  ;; Tell Java Mode of additional faces II
-  ;; ─────────────────────────────────────
+
+  ;; Tell Java Mode of additional faces I
+  ;; ────────────────────────────────────
   (jmt-set-for-buffer
    'c-maybe-decl-faces
    (append c-maybe-decl-faces; [MDF]
@@ -2296,6 +2300,7 @@ For more information, see URL `http://reluk.ca/project/Java/Emacs/'."
              'jmt-type-declaration
              'jmt-type-variable-declaration
              'jmt-type-reference)))
+
 
   ;; Define the fontification levels
   ;; ───────────────────────────────
